@@ -4,6 +4,7 @@
     "": {
       "name": "@tsci/seveibar.biscuit-boards",
       "devDependencies": {
+        "@biomejs/biome": "^2.3.4",
         "@tscircuit/common": "^0.0.20",
         "@types/react": "^19.2.2",
         "tscircuit": "^0.0.866",
