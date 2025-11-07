@@ -61,13 +61,13 @@ export default () => (
 			connectsTo="net.GND"
 			layer="top"
 			coveredWithSolderMask
-			name="P1"
+			name="PourTop"
 		/>
 		<copperpour
 			connectsTo="net.GND"
 			layer="bottom"
 			coveredWithSolderMask
-			name="P1"
+			name="PourBottom"
 		/>
 		<pcbnotedimension
 			from={{ x: -25, y: 22 }}
