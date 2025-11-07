@@ -55,7 +55,7 @@ const ViaRow = (props: {
 
 export default () => (
 	<board width="50mm" height="40mm">
-		{/* <chip footprint="qfp80" name="U1" pcbX={-6} /> */}
+		{/* <chip footprint="stampreceiver" name="U1" pcbX={-6} /> */}
 		<net name="GND" />
 		<copperpour
 			connectsTo="net.GND"
@@ -122,7 +122,7 @@ export default () => (
 		<ViaRow viaCount={9} startX={22.5} startY={18} direction="y-" spacing={2} />
 		<ViaRow viaCount={9} startX={0} startY={17} direction="x-" spacing={2} />
 		<ViaRow viaCount={4} startX={-13} startY={-11} spacing={2} direction="x+" />
-		<TYPE_C_16P_QTWT
+		{/* <TYPE_C_16P_QTWT
 			name="J1"
 			pcbX={-11}
 			pcbY={-16}
@@ -144,6 +144,6 @@ export default () => (
 				pin15: "net.GND",
 				pin16: "net.GND",
 			}}
-		/>
+		/> */}
 	</board>
 );

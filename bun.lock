@@ -4,6 +4,7 @@
     "": {
       "name": "@tsci/seveibar.biscuit-boards",
       "devDependencies": {
+        "@tscircuit/common": "^0.0.20",
         "@types/react": "^19.2.2",
         "tscircuit": "^0.0.866",
       },
@@ -145,6 +146,8 @@
     "@tscircuit/circuit-json-util": ["@tscircuit/circuit-json-util@0.0.72", "", { "dependencies": { "parsel-js": "^1.1.2" }, "peerDependencies": { "circuit-json": "*", "transformation-matrix": "*", "zod": "3" } }, "sha512-8KqdPYz1Q+rYgPuP9VBBxusLgq0MmpVw4FjLORNHYr2qfWmM1m/1OQEokZHZZZLTUbfcn86zUOcv69+LqHa0FA=="],
 
     "@tscircuit/cli": ["@tscircuit/cli@0.1.455", "", { "dependencies": { "@rollup/plugin-commonjs": "^29.0.0", "@rollup/plugin-node-resolve": "^16.0.3", "@rollup/plugin-typescript": "^12.3.0", "rollup": "^4.52.5", "rollup-plugin-dts": "^6.2.3" }, "peerDependencies": { "tscircuit": "*" }, "bin": { "tscircuit-cli": "cli/entrypoint.js" } }, "sha512-9rHerUFV75LlUed2j9hWlQa/a2jlNst+bHXboJO1flB1mR1wpIBHewlK3NmVo03Q3NEvHzZwQw1X2ZUvXckEyg=="],
+
+    "@tscircuit/common": ["@tscircuit/common@0.0.20", "", {}, "sha512-r7628gJpohb9vuyvHQvJ7ysWDaeW7c1lL3xlaEqXuA6pJpj3cRjENDPZdAwi/WDrtqA3ATQ3IJIQLygwddqvWw=="],
 
     "@tscircuit/core": ["@tscircuit/core@0.0.845", "", { "dependencies": { "@flatten-js/core": "^1.6.2", "@lume/kiwi": "^0.4.3", "calculate-packing": "0.0.50", "css-select": "5.1.0", "format-si-unit": "^0.0.3", "nanoid": "^5.0.7", "performance-now": "^2.1.0", "react-reconciler": "^0.32.0", "transformation-matrix": "^2.16.1", "zod": "^3.25.67" }, "peerDependencies": { "@tscircuit/capacity-autorouter": "*", "@tscircuit/checks": "*", "@tscircuit/circuit-json-util": "*", "@tscircuit/footprinter": "*", "@tscircuit/infgrid-ijump-astar": "*", "@tscircuit/matchpack": "*", "@tscircuit/math-utils": "*", "@tscircuit/props": "*", "@tscircuit/schematic-autolayout": "*", "@tscircuit/schematic-match-adapt": "*", "bpc-graph": "*", "circuit-json": "*", "circuit-json-to-bpc": "*", "circuit-json-to-connectivity-map": "*", "schematic-symbols": "*", "typescript": "^5.0.0" } }, "sha512-CqZoFDAks9z3ensMhUZEBVUE8HNYsUVnINk2cRyXKU4LI9q9EperSb+YFM9uvjimfk7Bi5hwosaVdVSaeObGtg=="],
 
