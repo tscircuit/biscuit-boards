@@ -68,12 +68,11 @@ export default () => (
       pcbX={-6}
       pcbY={-18}
     /> */}
-    <silkscreentext text="UP" pcbX={-30} pcbY={25} layer="top" fontSize="2mm" />
     <silkscreentext
       text="UP"
-      pcbX={-30}
-      pcbY={25}
-      layer="bottom"
+      pcbX={30}
+      pcbY={25.5}
+      layer="top"
       fontSize="2mm"
     />
     <hole pcbX={40} pcbY={25} diameter="2.2mm" />
