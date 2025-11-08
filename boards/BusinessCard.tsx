@@ -53,7 +53,7 @@ const ViaZone = (props: {
   )
 }
 
-const boardWidthMm = 85
+const boardWidthMm = 75
 const boardHeightMm = 55
 export default () => (
   <board
@@ -70,16 +70,36 @@ export default () => (
     /> */}
     <silkscreentext
       text="UP"
-      pcbX={30}
+      pcbX={boardWidthMm / 2 - 10}
       pcbY={25.5}
       layer="top"
       fontSize="2mm"
     />
-    <hole pcbX={40} pcbY={25} diameter="2.2mm" />
-    <hole pcbX={40 - 5} pcbY={25} diameter="2.2mm" />
-    <hole pcbX={40} pcbY={-25} diameter="2.2mm" />
-    <hole pcbX={-40} pcbY={-25} diameter="2.2mm" />
-    <hole pcbX={-40} pcbY={25} diameter="2.2mm" />
+    <hole
+      pcbX={boardWidthMm / 2 - 2.5}
+      pcbY={boardHeightMm / 2 - 2.5}
+      diameter="2.2mm"
+    />
+    <hole
+      pcbX={boardWidthMm / 2 - 2.5 - 4}
+      pcbY={boardHeightMm / 2 - 2.5}
+      diameter="2.2mm"
+    />
+    <hole
+      pcbX={boardWidthMm / 2 - 2.5}
+      pcbY={-boardHeightMm / 2 + 2.5}
+      diameter="2.2mm"
+    />
+    <hole
+      pcbX={-boardWidthMm / 2 + 2.5}
+      pcbY={-boardHeightMm / 2 + 2.5}
+      diameter="2.2mm"
+    />
+    <hole
+      pcbX={-boardWidthMm / 2 + 2.5}
+      pcbY={boardHeightMm / 2 - 2.5}
+      diameter="2.2mm"
+    />
     <net name="GND" />
     <copperpour
       connectsTo="net.GND"
