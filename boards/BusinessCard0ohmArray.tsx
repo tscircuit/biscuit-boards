@@ -1,4 +1,6 @@
 // import { XiaoBoardFootprint } from "../lib/XiaoBoardFootprint"
+import { A_4D03WGJ0000T5E as ResistorArray0603 } from "../imports/A_4D03WGJ0000T5E"
+import { DF40C_100DS_0_4V_51_ as CM5100PinConnector } from "../imports/DF40C_100DS_0_4V_51_"
 
 const Via = (props: { pcbX: number | string; pcbY: number | string }) => (
   <via
@@ -123,34 +125,33 @@ export default () => (
       to={{ x: boardWidthMm / 2 + 2.5, y: boardHeightMm / 2 }}
       text={`${boardHeightMm}mm`}
     />
-    <ViaZone
-      minX={-boardWidthMm / 2 + 2}
-      maxX={-boardWidthMm / 2 + 10}
-      minY={-boardHeightMm / 2 + 2}
-      maxY={-boardHeightMm / 2 + 10}
-      spacing={2}
+    <ResistorArray0603
+      name="R1"
+      pcbX={-boardWidthMm / 2 + 8}
+      pcbY={-boardHeightMm / 2 + 8}
     />
-    <ViaZone
-      minX={-boardWidthMm / 2 + 2}
-      maxX={-boardWidthMm / 2 + 10}
-      minY={boardHeightMm / 2 - 10}
-      maxY={boardHeightMm / 2 - 2}
-      spacing={2}
+    <ResistorArray0603
+      name="R2"
+      pcbX={-boardWidthMm / 2 + 8}
+      pcbY={boardHeightMm / 2 - 8}
     />
-    <ViaZone
-      minX={10}
-      maxX={boardWidthMm / 2 - 10}
-      minY={boardHeightMm / 2 - 10}
-      maxY={boardHeightMm / 2 - 2}
-      spacing={3}
-    />
-    <ViaZone
-      minX={boardWidthMm / 2 - 5 - 2}
-      maxX={boardWidthMm / 2 - 5 + 2}
-      minY={-boardHeightMm / 2 + 5}
-      maxY={boardHeightMm / 2 - 5}
-      spacing={2}
-    />
-    <ViaZone minX={-20} maxX={0} minY={-8} maxY={8} spacing={4} />
+    <ResistorArray0603 name="R3" pcbX={-5} pcbY={6} />
+    <ResistorArray0603 name="R4" pcbX={-5} pcbY={-6} />
+    <ResistorArray0603 name="R5" pcbX={-11.5} pcbY={6} />
+    <ResistorArray0603 name="R6" pcbX={-11.5} pcbY={-6} />
+    <ResistorArray0603 name="R7" pcbX={-18} pcbY={6} />
+    <ResistorArray0603 name="R8" pcbX={-18} pcbY={-6} />
+
+    <ResistorArray0603 name="R9" pcbX={14} pcbY={21} />
+    <ResistorArray0603 name="R10" pcbX={22} pcbY={21} />
+
+    {range(0, 5).map((n) => (
+      <ResistorArray0603
+        name={`RR_${n + 1}`}
+        pcbX={boardWidthMm / 2 - 6}
+        pcbY={boardHeightMm / 2 - 11.5 - n * 8}
+        pcbRotation="90deg"
+      />
+    ))}
   </board>
 )

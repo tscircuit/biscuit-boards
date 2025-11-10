@@ -9,6 +9,7 @@ const Via = (props: { pcbX: number | string; pcbY: number | string }) => (
     toLayer={"bottom"}
     holeDiameter={"0.2mm"}
     outerDiameter={"0.4mm"}
+    connectsTo="net.GND"
   />
 )
 
