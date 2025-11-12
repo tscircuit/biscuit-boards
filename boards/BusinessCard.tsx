@@ -7,8 +7,8 @@ const Via = (props: { pcbX: number | string; pcbY: number | string }) => (
     pcbY={props.pcbY}
     fromLayer={"top"}
     toLayer={"bottom"}
-    holeDiameter={"0.2mm"}
-    outerDiameter={"0.4mm"}
+    holeDiameter={"0.8mm"}
+    outerDiameter={"2mm"}
     connectsTo="net.GND"
   />
 )
@@ -125,32 +125,32 @@ export default () => (
       text={`${boardHeightMm}mm`}
     />
     <ViaZone
-      minX={-boardWidthMm / 2 + 2}
-      maxX={-boardWidthMm / 2 + 10}
-      minY={-boardHeightMm / 2 + 2}
-      maxY={-boardHeightMm / 2 + 10}
-      spacing={2}
+      minX={-boardWidthMm / 2 + 4}
+      maxX={-boardWidthMm / 2 + 16}
+      minY={-boardHeightMm / 2 + 4}
+      maxY={-boardHeightMm / 2 + 12}
+      spacing={4}
     />
     <ViaZone
-      minX={-boardWidthMm / 2 + 2}
-      maxX={-boardWidthMm / 2 + 10}
-      minY={boardHeightMm / 2 - 10}
-      maxY={boardHeightMm / 2 - 2}
-      spacing={2}
+      minX={-boardWidthMm / 2 + 4}
+      maxX={-boardWidthMm / 2 + 16}
+      minY={boardHeightMm / 2 - 12}
+      maxY={boardHeightMm / 2 - 4}
+      spacing={4}
     />
     <ViaZone
       minX={10}
       maxX={boardWidthMm / 2 - 10}
       minY={boardHeightMm / 2 - 10}
       maxY={boardHeightMm / 2 - 2}
-      spacing={3}
+      spacing={4}
     />
     <ViaZone
       minX={boardWidthMm / 2 - 5 - 2}
       maxX={boardWidthMm / 2 - 5 + 2}
       minY={-boardHeightMm / 2 + 5}
       maxY={boardHeightMm / 2 - 5}
-      spacing={2}
+      spacing={4}
     />
     <ViaZone minX={-20} maxX={0} minY={-8} maxY={8} spacing={4} />
   </board>
