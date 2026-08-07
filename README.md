@@ -23,12 +23,14 @@ other layer transition. The router uses negotiated rip-and-replace with
 history costs and precomputed trace-edge conflict lists.
 
 The complete STM32C071FBP6 + SWD + status LED circuit is in
-[`examples/stm32c071.tsx`](./examples/stm32c071.tsx).
+[`examples/stm32c071.tsx`](./examples/stm32c071.tsx). Its checked-in
+`tsci snapshot` artifacts cover both the routed PCB and schematic views.
 
 ```sh
 bun install
 bun run typecheck
 bun test
+bun run snapshot:stm32
 bun run build
 bun run build:example
 ```
