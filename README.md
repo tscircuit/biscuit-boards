@@ -15,10 +15,12 @@ export default () => (
 
 `BiscuitBoard` owns the fixed 75 mm x 55 mm outline, copper pours, mounting
 holes, and assignable prefabricated vias. Its `<board>` uses a local
-`autorouter.algorithmFn` backed by `AutoroutingPipelineSolver8` from the
-standalone `@tscircuit/capacity-autorouter` package. Pipeline 8 uses
-rip-and-replace pathing and permits layer changes only at the board's
-prefabricated vias.
+`autorouter.algorithmFn` backed by the standalone
+[`@tscircuit/biscuit-board-autorouter`](https://github.com/tscircuit/biscuit-board-autorouter)
+package. Its graph generator creates cross-layer hyperedges only at
+`netIsAssignable` multi-layer obstacles, and its output validator rejects any
+other layer transition. The router uses negotiated rip-and-replace with
+history costs and precomputed trace-edge conflict lists.
 
 The complete STM32C071FBP6 + SWD + status LED circuit is in
 [`examples/stm32c071.tsx`](./examples/stm32c071.tsx).

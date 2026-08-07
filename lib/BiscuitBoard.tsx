@@ -1,6 +1,9 @@
 import type { AutorouterProp } from "@tscircuit/props"
 import { Fragment, type ReactNode } from "react"
-import { createBiscuitBoardAutorouter } from "./biscuit-board-autorouter"
+import {
+  type BiscuitBoardAutorouterOptions,
+  createBiscuitBoardAutorouter,
+} from "./biscuit-board-autorouter"
 
 export const BISCUIT_BOARD_WIDTH = 75
 export const BISCUIT_BOARD_HEIGHT = 55
@@ -60,7 +63,7 @@ const mountingHoles = [
 export interface BiscuitBoardProps {
   children?: ReactNode
   autorouter?: AutorouterProp
-  autorouterEffort?: number
+  autorouterOptions?: BiscuitBoardAutorouterOptions
   routingDisabled?: boolean
 }
 
@@ -72,7 +75,7 @@ export interface BiscuitBoardProps {
 export const BiscuitBoard = ({
   children,
   autorouter,
-  autorouterEffort = 2,
+  autorouterOptions,
   routingDisabled = false,
 }: BiscuitBoardProps) => (
   <board
@@ -85,9 +88,7 @@ export const BiscuitBoard = ({
     minTraceWidth="0.15mm"
     minViaHoleDiameter="0.2mm"
     minViaPadDiameter="0.4mm"
-    autorouter={
-      autorouter ?? createBiscuitBoardAutorouter({ effort: autorouterEffort })
-    }
+    autorouter={autorouter ?? createBiscuitBoardAutorouter(autorouterOptions)}
     routingDisabled={routingDisabled}
   >
     <net name="GND" isGroundNet />

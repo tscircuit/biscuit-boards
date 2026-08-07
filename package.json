@@ -27,7 +27,7 @@
     "typescript": "5.9.3"
   },
   "dependencies": {
-    "@tscircuit/capacity-autorouter": "0.0.766",
+    "@tscircuit/biscuit-board-autorouter": "github:tscircuit/biscuit-board-autorouter#5d64d480e582e30933a6631e9f0a06a94df7a6a4",
     "@tscircuit/core": "0.0.1621",
     "@tscircuit/props": "0.0.617"
   },

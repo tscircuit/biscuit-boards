@@ -1,4 +1,7 @@
-import { BiscuitBoard } from "../lib/BiscuitBoard"
+import {
+  BiscuitBoard,
+  type BiscuitBoardProps,
+} from "../lib/BiscuitBoard"
 import { S5B_PH_SM4_TB, STM32C071FBP6 } from "./stm32c071-parts"
 
 const gnd = { displayName: "GND", schDisplayLabel: "GND" } as const
@@ -9,8 +12,10 @@ const schSections = {
   debug: "debug",
 } as const
 
-export const Stm32c071BiscuitBoard = () => (
-  <BiscuitBoard autorouterEffort={2}>
+export const Stm32c071BiscuitBoard = (
+  props: Pick<BiscuitBoardProps, "autorouter" | "routingDisabled"> = {},
+) => (
+  <BiscuitBoard {...props}>
     <net name="V3V3" isPowerNet />
 
     <schematicsection name={schSections.mcu} displayName="STM32C071 MCU" />
