@@ -1,4 +1,9 @@
 import { expect, test } from "bun:test"
+import {
+  checkEachPcbTraceNonOverlapping,
+  checkPadTraceClearance,
+  checkViaTraceClearance,
+} from "@tscircuit/checks"
 import { Circuit } from "@tscircuit/core"
 import { Stm32c071BiscuitBoard } from "../examples/stm32c071"
 import { BISCUIT_BOARD_VIA_POSITIONS } from "../lib/BiscuitBoard"
@@ -22,8 +27,14 @@ test(
       BISCUIT_BOARD_VIA_POSITIONS.map(pointKey),
     )
     const vias = circuitJson.filter((element) => element.type === "pcb_via")
+    const clearanceErrors = [
+      ...checkEachPcbTraceNonOverlapping(circuitJson, { minClearance: 0.2 }),
+      ...checkPadTraceClearance(circuitJson, { minClearance: 0.2 }),
+      ...checkViaTraceClearance(circuitJson, { minClearance: 0.2 }),
+    ]
 
     expect(errors).toEqual([])
+    expect(clearanceErrors).toEqual([])
     expect(traces).toHaveLength(17)
     expect(vias).toHaveLength(BISCUIT_BOARD_VIA_POSITIONS.length)
     expect(
