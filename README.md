@@ -29,6 +29,27 @@ The complete STM32C071FBP6 + SWD + status LED circuit is in
 [`examples/stm32c071.tsx`](./examples/stm32c071.tsx). Its checked-in
 `tsci snapshot` artifacts cover both the routed PCB and schematic views.
 
+## LightBurn export
+
+Generate the routed Circuit JSON and all laser-ready files for the STM32 board
+with one command:
+
+```sh
+bun run export:lightburn
+```
+
+The output is written to `dist/lightburn/stm32c071/` and includes the original
+Circuit JSON, a LightBurn-prepared Circuit JSON, a combined `.lbrn2` project,
+an SVG preview, a manifest, and separate `.lbrn2` files for each operation.
+
+The fabrication preparation is deliberately top-side and drill-free. It
+removes board holes, cutouts, unused prefabricated vias, and all through-board
+LightBurn operations. A prefabricated via is included only when a routed trace
+uses it; it is emitted as solid copper so the laser ablates around the via
+without trying to cut its existing hole. Top pads are emitted as a fill/scan
+operation, and routed copper receives a 0.5 mm clipped ablation band by
+default.
+
 ```sh
 bun install
 bun run typecheck
@@ -36,4 +57,5 @@ bun test
 bun run snapshot:stm32
 bun run build
 bun run build:example
+bun run export:lightburn
 ```

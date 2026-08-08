@@ -12,6 +12,13 @@ export {
   type BiscuitBoardAutorouterOptions,
   createBiscuitBoardAutorouter,
 } from "./lib/biscuit-board-autorouter"
+export {
+  BISCUIT_BOARD_LIGHTBURN_COPPER_MARGIN_MM,
+  type BiscuitBoardLightburnArtifacts,
+  type BiscuitBoardLightburnOptions,
+  createBiscuitBoardLightburnArtifacts,
+  prepareCircuitJsonForBiscuitBoardLightburn,
+} from "./lib/biscuit-board-lightburn"
 
 import { BiscuitBoard } from "./lib/BiscuitBoard"
 
