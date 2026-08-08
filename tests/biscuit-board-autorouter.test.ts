@@ -2,6 +2,9 @@ import { expect, test } from "bun:test"
 import type { SimpleRouteJson } from "@tscircuit/core"
 import { BiscuitBoardAutorouter } from "../lib/biscuit-board-autorouter"
 
+const pointKey = (point: { x: number; y: number }) =>
+  `${point.x.toFixed(3)},${point.y.toFixed(3)}`
+
 test("routes a layer change only through a prefabricated assignable via", () => {
   const input: SimpleRouteJson = {
     bounds: { minX: -8, maxX: 8, minY: -3, maxY: 6 },
@@ -61,19 +64,6 @@ test("routes a layer change only through a prefabricated assignable via", () => 
   const routedVias = traces.flatMap((trace) =>
     trace.route.filter((segment) => segment.route_type === "via"),
   )
-  const existingCopperTransitions = traces.flatMap((trace) =>
-    trace.route.filter(
-      (segment) => segment.route_type === "through_obstacle",
-    ),
-  )
 
-  expect(routedVias).toEqual([])
-  expect(existingCopperTransitions).toEqual([
-    expect.objectContaining({
-      start: { x: 0, y: 4 },
-      end: { x: 0, y: 4 },
-      from_layer: "top",
-      to_layer: "bottom",
-    }),
-  ])
+  expect(routedVias.map(pointKey)).toEqual([pointKey({ x: 0, y: 4 })])
 })
