@@ -8,14 +8,34 @@
   "scripts": {
     "dev": "tsci dev",
     "build": "tsci build",
+    "build:example": "tsci build examples/stm32c071.tsx --disable-parts-engine --svgs",
+    "setup:test-deps": "bun run --cwd node_modules/sharp install",
     "snapshot": "tsci snapshot",
     "snapshot:update": "tsci snapshot --update",
-    "start": "tsci dev"
+    "snapshot:stm32": "tsci snapshot examples/stm32c071.tsx --disable-parts-engine --ci",
+    "snapshot:stm32:update": "tsci snapshot examples/stm32c071.tsx --disable-parts-engine --update",
+    "start": "tsci dev",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "check": "bun run typecheck && bun run test && bun run snapshot:stm32 && bun run build && bun run build:example"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.4",
-    "@tscircuit/common": "^0.0.20",
-    "@types/react": "^19.2.2",
-    "tscircuit": "^0.0.883"
-  }
+    "@tscircuit/checks": "0.0.151",
+    "@tscircuit/common": "0.0.56",
+    "@types/bun": "^1.3.14",
+    "@types/react": "19.2.18",
+    "react": "19.2.0",
+    "tscircuit": "0.0.2256",
+    "typescript": "5.9.3"
+  },
+  "dependencies": {
+    "@tscircuit/biscuit-board-autorouter": "github:tscircuit/biscuit-board-autorouter#3d3e1163a45f0c1e39d56d5b3fb26ea6ec9bcdf2",
+    "@tscircuit/core": "0.0.1621",
+    "@tscircuit/props": "0.0.617"
+  },
+  "peerDependencies": {
+    "react": "^19.2.0"
+  },
+  "trustedDependencies": ["sharp"]
 }
