@@ -1,0 +1,62 @@
+diff --git a/dist/index.js b/dist/index.js
+index 80503f843a54846f1ad34a3a86b191ac926c6ef0..e88351e3867f99541f07ac20c88b8f34df6b4449 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -31602,6 +31602,39 @@ function addPortIdsToTracesAtJumperPads(segments, db) {
+   return result;
+ }
+ 
++// lib/components/primitive-components/Group/claim-srj-assignable-pcb-vias-traversed-by-route.ts
++var POINT_TOLERANCE = 1e-6;
++var isPointInsideObstacle = (point6, obstacle) => {
++  if (obstacle.shape === "circle") {
++    return Math.hypot(point6.x - obstacle.center.x, point6.y - obstacle.center.y) <= Math.min(obstacle.width, obstacle.height) / 2 + POINT_TOLERANCE;
++  }
++  return Math.abs(point6.x - obstacle.center.x) <= obstacle.width / 2 + POINT_TOLERANCE && Math.abs(point6.y - obstacle.center.y) <= obstacle.height / 2 + POINT_TOLERANCE;
++};
++var claimSrjAssignablePcbViasTraversedByRoute = ({
++  db,
++  inputSimpleRouteJson,
++  pcbTrace
++}) => {
++  if (!inputSimpleRouteJson) return;
++  const traversedPads = pcbTrace.route.filter(
++    (routePoint) => routePoint.route_type === "through_pad"
++  );
++  for (const traversedPad of traversedPads) {
++    const assignableObstacle = inputSimpleRouteJson.obstacles.find(
++      (obstacle) => obstacle.netIsAssignable && obstacle.layers.includes(traversedPad.start_layer) && obstacle.layers.includes(traversedPad.end_layer) && isPointInsideObstacle(traversedPad.start, obstacle) && isPointInsideObstacle(traversedPad.end, obstacle)
++    );
++    if (!assignableObstacle) continue;
++    const assignablePcbVia = assignableObstacle.connectedTo.map((connectedId) => db.pcb_via.get(connectedId)).find(
++      (pcbVia) => pcbVia?.net_is_assignable && (!pcbVia.net_assigned || pcbVia.pcb_trace_id === pcbTrace.pcb_trace_id)
++    );
++    if (!assignablePcbVia) continue;
++    db.pcb_via.update(assignablePcbVia.pcb_via_id, {
++      pcb_trace_id: pcbTrace.pcb_trace_id,
++      net_assigned: true
++    });
++  }
++};
++
+ // lib/components/primitive-components/Group/get-source-trace-id-for-routed-trace.ts
+ import { distance as distance11, pointToSegmentDistance } from "@tscircuit/math-utils";
+ import { ConnectivityMap as ConnectivityMap4 } from "circuit-json-to-connectivity-map";
+@@ -33294,11 +33327,16 @@ var Group4 = class extends NormalComponent3 {
+             },
+             subcircuit_id: this.subcircuit_id
+           });
+-          db.pcb_trace.insert({
++          const insertedPcbTrace = db.pcb_trace.insert({
+             ...pcb_trace,
+             source_trace_id: sourceTraceId,
+             route: segment2
+           });
++          claimSrjAssignablePcbViasTraversedByRoute({
++            db,
++            inputSimpleRouteJson: input_simple_route_json,
++            pcbTrace: insertedPcbTrace
++          });
+         }
+       }
+     }

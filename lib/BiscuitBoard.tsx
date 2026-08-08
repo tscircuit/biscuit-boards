@@ -15,7 +15,7 @@ export interface BiscuitBoardViaPosition {
 
 const range = (start: number, end: number, increment: number): number[] =>
   Array.from(
-    { length: Math.max(0, Math.ceil((end - start) / increment)) },
+    { length: Math.max(0, Math.floor((end - start) / increment)) },
     (_, index) => start + index * increment,
   )
 
@@ -86,8 +86,8 @@ export const BiscuitBoard = ({
     borderRadius="2mm"
     layers={2}
     minTraceWidth="0.15mm"
-    minViaHoleDiameter="0.2mm"
-    minViaPadDiameter="0.4mm"
+    minViaHoleDiameter="0.8mm"
+    minViaPadDiameter="2mm"
     autorouter={autorouter ?? createBiscuitBoardAutorouter(autorouterOptions)}
     routingDisabled={routingDisabled}
   >
@@ -128,8 +128,8 @@ export const BiscuitBoard = ({
           pcbY={via.y}
           fromLayer="top"
           toLayer="bottom"
-          holeDiameter="0.2mm"
-          outerDiameter="0.4mm"
+          holeDiameter="0.8mm"
+          outerDiameter="2mm"
         />
       </Fragment>
     ))}

@@ -2,7 +2,7 @@ import type { ChipProps, ConnectorProps } from "@tscircuit/props"
 import { Fragment } from "react"
 
 const stm32Pins = {
-  pin1: ["PB7"],
+  pin1: ["PB3", "PB4", "PB5", "PB6"],
   pin2: ["PC14", "OSCX_IN"],
   pin3: ["PC15", "OSCX_OUT"],
   pin4: ["VDD", "VDDA", "VDD_VDDA"],
@@ -21,7 +21,7 @@ const stm32Pins = {
   pin17: ["PA12", "PA10", "USB_DP"],
   pin18: ["PA13", "SWDIO"],
   pin19: ["PA14", "BOOT0", "SWCLK"],
-  pin20: ["PB3", "PB4", "PB5", "PB6"],
+  pin20: ["PB7", "PB8"],
 } as const
 
 const Tssop20Footprint = () => {

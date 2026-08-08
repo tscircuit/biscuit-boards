@@ -18,12 +18,16 @@ assignable prefabricated vias. Copper pours are intentionally disabled. Its
 `<board>` uses a local
 `autorouter.algorithmFn` backed by the standalone
 [`@tscircuit/biscuit-board-autorouter`](https://github.com/tscircuit/biscuit-board-autorouter)
-package. Its graph generator creates cross-layer hyperedges only at
-`netIsAssignable` multi-layer obstacles, and its output validator rejects any
-other layer transition. The router uses negotiated rip-and-replace with
-history costs and precomputed trace-edge conflict lists. Its final
-post-processing stage enforces 0.2 mm copper clearance and simplifies whole
-stair-step runs into clearance-safe Manhattan/45° paths.
+package. The standalone router runs Pipeline7, then attracts its vias to unused
+compatible `netIsAssignable` holes. A collision-aware post-processing stage
+reroutes and pushes trace legs away from pads and foreign copper while the vias
+move. Its output validator rejects any remaining non-prefabricated layer
+transition and emits selected holes as existing-copper transitions rather than
+new manufactured vias.
+
+The checked-in `@tscircuit/core` dependency patch is the buildable bridge for
+[`tscircuit/core#3067`](https://github.com/tscircuit/core/pull/3067). It can be
+removed once that assignable-via handoff is released by core.
 
 The complete STM32C071FBP6 + SWD + status LED circuit is in
 [`examples/stm32c071.tsx`](./examples/stm32c071.tsx). Its checked-in
