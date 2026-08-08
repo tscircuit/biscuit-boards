@@ -13,8 +13,9 @@ export default () => (
 )
 ```
 
-`BiscuitBoard` owns the fixed 75 mm x 55 mm outline, copper pours, mounting
-holes, and assignable prefabricated vias. Its `<board>` uses a local
+`BiscuitBoard` owns the fixed 75 mm x 55 mm outline, mounting holes, and
+assignable prefabricated vias. Copper pours are intentionally disabled. Its
+`<board>` uses a local
 `autorouter.algorithmFn` backed by the standalone
 [`@tscircuit/biscuit-board-autorouter`](https://github.com/tscircuit/biscuit-board-autorouter)
 package. Its graph generator creates cross-layer hyperedges only at

@@ -19,12 +19,16 @@ test("wraps ordinary TSX in the prefabricated board", async () => {
   const circuitJson = circuit.getCircuitJson()
   const board = circuitJson.find((element) => element.type === "pcb_board")
   const vias = circuitJson.filter((element) => element.type === "pcb_via")
+  const copperPours = circuitJson.filter(
+    (element) => element.type === "pcb_copper_pour",
+  )
 
   expect(board).toMatchObject({
     width: BISCUIT_BOARD_WIDTH,
     height: BISCUIT_BOARD_HEIGHT,
     num_layers: 2,
   })
+  expect(copperPours).toEqual([])
   expect(vias).toHaveLength(BISCUIT_BOARD_VIA_POSITIONS.length)
   expect(
     vias.every(

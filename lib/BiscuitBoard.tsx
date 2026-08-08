@@ -92,18 +92,6 @@ export const BiscuitBoard = ({
     routingDisabled={routingDisabled}
   >
     <net name="GND" isGroundNet />
-    <copperpour
-      name="PREFAB_COPPER_TOP"
-      connectsTo="net.GND"
-      layer="top"
-      coveredWithSolderMask={false}
-    />
-    <copperpour
-      name="PREFAB_COPPER_BOTTOM"
-      connectsTo="net.GND"
-      layer="bottom"
-      coveredWithSolderMask={false}
-    />
 
     <silkscreentext
       text="UP"
