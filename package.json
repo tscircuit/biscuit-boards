@@ -15,12 +15,14 @@
     "snapshot:update": "tsci snapshot --update",
     "snapshot:stm32": "tsci snapshot examples/stm32c071.tsx --disable-parts-engine --ci",
     "snapshot:stm32:update": "tsci snapshot examples/stm32c071.tsx --disable-parts-engine --update",
+    "snapshot:rp2040": "tsci snapshot examples/rp2040.tsx --disable-parts-engine --ci",
+    "snapshot:rp2040:update": "tsci snapshot examples/rp2040.tsx --disable-parts-engine --update",
     "snapshot:lightburn": "bun test tests/lightburn-export.test.tsx",
     "snapshot:lightburn:update": "BUN_UPDATE_SNAPSHOTS=1 bun test tests/lightburn-export.test.tsx",
     "start": "tsci dev",
     "test": "bun test",
     "typecheck": "tsc --noEmit",
-    "check": "bun run typecheck && bun run test && bun run snapshot:stm32 && bun run build && bun run build:example && bun run export:lightburn"
+    "check": "bun run typecheck && bun run test && bun run snapshot:stm32 && bun run snapshot:rp2040 && bun run build && bun run build:example && bun run export:lightburn"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.4",
