@@ -36,7 +36,7 @@
     "typescript": "5.9.3"
   },
   "dependencies": {
-    "@tscircuit/biscuit-board-autorouter": "github:tscircuit/biscuit-board-autorouter#3d3e1163a45f0c1e39d56d5b3fb26ea6ec9bcdf2",
+    "@tscircuit/biscuit-board-autorouter": "github:tscircuit/biscuit-board-autorouter#963e24b39edaad92aab6f93b48cfb547a1067b82",
     "@tscircuit/core": "0.0.1621",
     "@tscircuit/props": "0.0.617",
     "circuit-json": "0.0.464",
@@ -46,5 +46,11 @@
   "peerDependencies": {
     "react": "^19.2.0"
   },
-  "trustedDependencies": ["sharp"]
+  "trustedDependencies": ["sharp"],
+  "patchedDependencies": {
+    "@tscircuit/core@0.0.1621": "patches/@tscircuit%2Fcore@0.0.1621.patch"
+  },
+  "overrides": {
+    "@tscircuit/core": "0.0.1621"
+  }
 }

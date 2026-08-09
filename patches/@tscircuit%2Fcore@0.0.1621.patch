@@ -1,0 +1,133 @@
+diff --git a/dist/index.js b/dist/index.js
+index 89118d58d00385ce4b1996a1586d90276356302b..d6f0820d017405b1ca555d6e31e4ba99424439e0 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -15903,6 +15903,18 @@ var getDescendantSubcircuitIds = (db, root_subcircuit_id) => {
+   findDescendants(root_subcircuit_id);
+   return result;
+ };
++var getAncestorSubcircuitIds = (db, subcircuitId) => {
++  const sourceGroupBySubcircuitId = new Map(
++    db.source_group.list().filter((sourceGroup) => sourceGroup.subcircuit_id).map((sourceGroup) => [sourceGroup.subcircuit_id, sourceGroup])
++  );
++  const ancestorSubcircuitIds = [];
++  let parentSubcircuitId = sourceGroupBySubcircuitId.get(subcircuitId)?.parent_subcircuit_id;
++  while (parentSubcircuitId) {
++    ancestorSubcircuitIds.push(parentSubcircuitId);
++    parentSubcircuitId = sourceGroupBySubcircuitId.get(parentSubcircuitId)?.parent_subcircuit_id;
++  }
++  return ancestorSubcircuitIds;
++};
+ 
+ // lib/utils/boards/get-board-center-from-anchor.ts
+ var getBoardCenterFromAnchor = ({
+@@ -23139,6 +23151,7 @@ var getSimpleRouteJsonFromCircuitJson = ({
+   nominalTraceWidth,
+   subcircuitComponent,
+   fanoutPourNetMap,
++  includeParentNetAssignableVias = false,
+   ignoreExistingTopLevelPcbRouteState = false
+ }) => {
+   if (!db && circuitJson) {
+@@ -23147,6 +23160,14 @@ var getSimpleRouteJsonFromCircuitJson = ({
+   if (!db) {
+     throw new Error("db or circuitJson is required");
+   }
++  const parentNetAssignableVias = includeParentNetAssignableVias && subcircuit_id ? (() => {
++    const ancestorSubcircuitIds = new Set(
++      getAncestorSubcircuitIds(db, subcircuit_id)
++    );
++    return db.pcb_via.list().filter(
++      (pcbVia) => pcbVia.net_is_assignable === true && pcbVia.subcircuit_id != null && ancestorSubcircuitIds.has(pcbVia.subcircuit_id)
++    );
++  })() : [];
+   const traceHints = db.pcb_trace_hint.list();
+   const relevantSubcircuitIds = subcircuit_id ? /* @__PURE__ */ new Set([subcircuit_id]) : null;
+   if (subcircuit_id) {
+@@ -23211,6 +23232,9 @@ var getSimpleRouteJsonFromCircuitJson = ({
+     ),
+     sharedConnMap
+   );
++  obstacles.push(
++    ...getObstaclesFromCircuitJson(parentNetAssignableVias, sharedConnMap)
++  );
+   obstacles.push(
+     ...getUnbrokenCopperPourObstacles({
+       connMap: sharedConnMap,
+@@ -23287,7 +23311,7 @@ var getSimpleRouteJsonFromCircuitJson = ({
+     }
+   ]).concat(board?.outline ?? []);
+   let bounds;
+-  const useGroupBoundsAsSrjBounds = !!(pcbGroup?.width && pcbGroup.height && subcircuit_id && !subcircuitIsBoard);
++  const useGroupBoundsAsSrjBounds = !!(pcbGroup?.width && pcbGroup.height && subcircuit_id && !subcircuitIsBoard && !includeParentNetAssignableVias);
+   if (useGroupBoundsAsSrjBounds) {
+     bounds = {
+       minX: pcbGroup.center.x - pcbGroup.width / 2,
+@@ -31591,6 +31615,39 @@ function addPortIdsToTracesAtJumperPads(segments, db) {
+   return result;
+ }
+ 
++// lib/components/primitive-components/Group/claim-srj-assignable-pcb-vias-traversed-by-route.ts
++var POINT_TOLERANCE = 1e-6;
++var isPointInsideObstacle = (point6, obstacle) => {
++  if (obstacle.shape === "circle") {
++    return Math.hypot(point6.x - obstacle.center.x, point6.y - obstacle.center.y) <= Math.min(obstacle.width, obstacle.height) / 2 + POINT_TOLERANCE;
++  }
++  return Math.abs(point6.x - obstacle.center.x) <= obstacle.width / 2 + POINT_TOLERANCE && Math.abs(point6.y - obstacle.center.y) <= obstacle.height / 2 + POINT_TOLERANCE;
++};
++var claimSrjAssignablePcbViasTraversedByRoute = ({
++  db,
++  inputSimpleRouteJson,
++  pcbTrace
++}) => {
++  if (!inputSimpleRouteJson) return;
++  const traversedPads = pcbTrace.route.filter(
++    (routePoint) => routePoint.route_type === "through_pad"
++  );
++  for (const traversedPad of traversedPads) {
++    const assignableObstacle = inputSimpleRouteJson.obstacles.find(
++      (obstacle) => obstacle.netIsAssignable && obstacle.layers.includes(traversedPad.start_layer) && obstacle.layers.includes(traversedPad.end_layer) && isPointInsideObstacle(traversedPad.start, obstacle) && isPointInsideObstacle(traversedPad.end, obstacle)
++    );
++    if (!assignableObstacle) continue;
++    const assignablePcbVia = assignableObstacle.connectedTo.map((connectedId) => db.pcb_via.get(connectedId)).find(
++      (pcbVia) => pcbVia?.net_is_assignable && (!pcbVia.net_assigned || pcbVia.pcb_trace_id === pcbTrace.pcb_trace_id)
++    );
++    if (!assignablePcbVia) continue;
++    db.pcb_via.update(assignablePcbVia.pcb_via_id, {
++      pcb_trace_id: pcbTrace.pcb_trace_id,
++      net_assigned: true
++    });
++  }
++};
++
+ // lib/components/primitive-components/Group/get-source-trace-id-for-routed-trace.ts
+ import { distance as distance11, pointToSegmentDistance } from "@tscircuit/math-utils";
+ import { ConnectivityMap as ConnectivityMap4 } from "circuit-json-to-connectivity-map";
+@@ -32717,7 +32774,8 @@ var Group4 = class extends NormalComponent3 {
+       nominalTraceWidth,
+       subcircuit_id: this.subcircuit_id,
+       subcircuitComponent: this,
+-      fanoutPourNetMap
++      fanoutPourNetMap,
++      includeParentNetAssignableVias: isLaserPrefabPreset
+     });
+     const outputTraces = [];
+     const outputJumpers = [];
+@@ -33283,11 +33341,16 @@ var Group4 = class extends NormalComponent3 {
+             },
+             subcircuit_id: this.subcircuit_id
+           });
+-          db.pcb_trace.insert({
++          const insertedPcbTrace = db.pcb_trace.insert({
+             ...pcb_trace,
+             source_trace_id: sourceTraceId,
+             route: segment2
+           });
++          claimSrjAssignablePcbViasTraversedByRoute({
++            db,
++            inputSimpleRouteJson: input_simple_route_json,
++            pcbTrace: insertedPcbTrace
++          });
+         }
+       }
+     }

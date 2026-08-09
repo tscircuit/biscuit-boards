@@ -7,7 +7,17 @@ export const Rp2040BiscuitBoard = (
     "autorouter" | "autorouterOptions" | "routingDisabled"
   > = {},
 ) => (
-  <BiscuitBoard {...props} routingDisabled={props.routingDisabled ?? true}>
+  <BiscuitBoard
+    {...props}
+    autorouterOptions={{
+      gridClearance: 0.1,
+      maxRipsPerRoute: 1_000,
+      maxTotalRips: 10_000,
+      routeOrder: "signal_longest_first",
+      ...props.autorouterOptions,
+    }}
+    routingDisabled={props.routingDisabled ?? false}
+  >
     <Microcontroller_RP2040
       name="MCU"
       pcbX={5.5}

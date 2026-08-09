@@ -1,25 +1,38 @@
 import { expect, test } from "bun:test"
+import {
+  checkEachPcbTraceNonOverlapping,
+  checkPadTraceClearance,
+  checkViaTraceClearance,
+} from "@tscircuit/checks"
 import { Circuit } from "@tscircuit/core"
 import { Rp2040BiscuitBoard } from "../examples/rp2040"
 import { BISCUIT_BOARD_VIA_POSITIONS } from "../lib/BiscuitBoard"
 
-test("places the common RP2040 design on the prefabricated BiscuitBoard", async () => {
+const pointKey = (point: { x: number; y: number }) =>
+  `${point.x.toFixed(3)},${point.y.toFixed(3)}`
+
+test("routes the common RP2040 design on the prefabricated BiscuitBoard", async () => {
   const circuit = new Circuit()
   circuit.add(<Rp2040BiscuitBoard />)
   await circuit.renderUntilSettled()
 
   const circuitJson = circuit.getCircuitJson()
+  const errors = circuitJson.filter((element) => element.type.endsWith("error"))
+  const traces = circuitJson.filter((element) => element.type === "pcb_trace")
   const vias = circuitJson.filter((element) => element.type === "pcb_via")
   const pcbComponents = circuitJson.filter(
     (element) => element.type === "pcb_component",
   )
-  const placementOrRoutingErrors = circuitJson.filter(
-    (element) =>
-      element.type === "pcb_placement_error" ||
-      element.type === "pcb_autorouting_error",
-  )
+  const allowedViaPositions = new Set(BISCUIT_BOARD_VIA_POSITIONS.map(pointKey))
+  const clearanceErrors = [
+    ...checkEachPcbTraceNonOverlapping(circuitJson, { minClearance: 0.1 }),
+    ...checkPadTraceClearance(circuitJson, { minClearance: 0.1 }),
+    ...checkViaTraceClearance(circuitJson, { minClearance: 0.1 }),
+  ]
 
-  expect(placementOrRoutingErrors).toEqual([])
+  expect(errors).toEqual([])
+  expect(clearanceErrors).toEqual([])
+  expect(traces).toHaveLength(97)
   expect(pcbComponents.length).toBeGreaterThan(20)
   expect(vias).toHaveLength(BISCUIT_BOARD_VIA_POSITIONS.length)
   expect(
@@ -27,7 +40,7 @@ test("places the common RP2040 design on the prefabricated BiscuitBoard", async 
       (via) =>
         via.type === "pcb_via" &&
         via.net_is_assignable === true &&
-        via.pcb_trace_id === undefined,
+        allowedViaPositions.has(pointKey(via)),
     ),
   ).toBe(true)
-})
+}, 360_000)
