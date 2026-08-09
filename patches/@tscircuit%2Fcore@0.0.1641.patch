@@ -1,8 +1,8 @@
 diff --git a/dist/index.js b/dist/index.js
-index 89118d58d00385ce4b1996a1586d90276356302b..bf3f43ee2104972d99cc23192165654e9d2c184f 100644
+index a182e36dd0a57cc90fe2484a96e9d5f8d41bdeaf..b1318c93ca321cab6dcb0eb2e34f7bd3634981f1 100644
 --- a/dist/index.js
 +++ b/dist/index.js
-@@ -15903,6 +15903,18 @@ var getDescendantSubcircuitIds = (db, root_subcircuit_id) => {
+@@ -15968,6 +15968,18 @@ var getDescendantSubcircuitIds = (db, root_subcircuit_id) => {
    findDescendants(root_subcircuit_id);
    return result;
  };
@@ -21,7 +21,7 @@ index 89118d58d00385ce4b1996a1586d90276356302b..bf3f43ee2104972d99cc23192165654e
  
  // lib/utils/boards/get-board-center-from-anchor.ts
  var getBoardCenterFromAnchor = ({
-@@ -23139,6 +23151,7 @@ var getSimpleRouteJsonFromCircuitJson = ({
+@@ -23417,6 +23429,7 @@ var getSimpleRouteJsonFromCircuitJson = ({
    nominalTraceWidth,
    subcircuitComponent,
    fanoutPourNetMap,
@@ -29,7 +29,7 @@ index 89118d58d00385ce4b1996a1586d90276356302b..bf3f43ee2104972d99cc23192165654e
    ignoreExistingTopLevelPcbRouteState = false
  }) => {
    if (!db && circuitJson) {
-@@ -23147,6 +23160,14 @@ var getSimpleRouteJsonFromCircuitJson = ({
+@@ -23425,6 +23438,14 @@ var getSimpleRouteJsonFromCircuitJson = ({
    if (!db) {
      throw new Error("db or circuitJson is required");
    }
@@ -44,7 +44,7 @@ index 89118d58d00385ce4b1996a1586d90276356302b..bf3f43ee2104972d99cc23192165654e
    const traceHints = db.pcb_trace_hint.list();
    const relevantSubcircuitIds = subcircuit_id ? /* @__PURE__ */ new Set([subcircuit_id]) : null;
    if (subcircuit_id) {
-@@ -23211,6 +23232,9 @@ var getSimpleRouteJsonFromCircuitJson = ({
+@@ -23492,6 +23513,9 @@ var getSimpleRouteJsonFromCircuitJson = ({
      ),
      sharedConnMap
    );
@@ -54,7 +54,7 @@ index 89118d58d00385ce4b1996a1586d90276356302b..bf3f43ee2104972d99cc23192165654e
    obstacles.push(
      ...getUnbrokenCopperPourObstacles({
        connMap: sharedConnMap,
-@@ -23287,7 +23311,7 @@ var getSimpleRouteJsonFromCircuitJson = ({
+@@ -23568,7 +23592,7 @@ var getSimpleRouteJsonFromCircuitJson = ({
      }
    ]).concat(board?.outline ?? []);
    let bounds;
@@ -63,7 +63,7 @@ index 89118d58d00385ce4b1996a1586d90276356302b..bf3f43ee2104972d99cc23192165654e
    if (useGroupBoundsAsSrjBounds) {
      bounds = {
        minX: pcbGroup.center.x - pcbGroup.width / 2,
-@@ -31591,6 +31615,91 @@ function addPortIdsToTracesAtJumperPads(segments, db) {
+@@ -31976,6 +32000,91 @@ function addPortIdsToTracesAtJumperPads(segments, db) {
    return result;
  }
  
@@ -152,10 +152,10 @@ index 89118d58d00385ce4b1996a1586d90276356302b..bf3f43ee2104972d99cc23192165654e
 +  }
 +};
 +
- // lib/components/primitive-components/Group/get-source-trace-id-for-routed-trace.ts
- import { distance as distance11, pointToSegmentDistance } from "@tscircuit/math-utils";
- import { ConnectivityMap as ConnectivityMap4 } from "circuit-json-to-connectivity-map";
-@@ -32717,7 +32826,8 @@ var Group4 = class extends NormalComponent3 {
+ // lib/components/primitive-components/Group/get-accumulated-pcb-traces-with-stage-output-replacements.ts
+ function getAccumulatedPcbTracesWithStageOutputReplacements({
+   accumulatedPcbTraces,
+@@ -33118,7 +33227,8 @@ var Group5 = class extends NormalComponent3 {
        nominalTraceWidth,
        subcircuit_id: this.subcircuit_id,
        subcircuitComponent: this,
@@ -165,7 +165,7 @@ index 89118d58d00385ce4b1996a1586d90276356302b..bf3f43ee2104972d99cc23192165654e
      });
      const outputTraces = [];
      const outputJumpers = [];
-@@ -33198,14 +33308,11 @@ var Group4 = class extends NormalComponent3 {
+@@ -33610,14 +33720,11 @@ var Group5 = class extends NormalComponent3 {
      for (const routedTrace of routedTraces) {
        const cjRoute = routedTrace.route.map((point6) => {
          if (point6.route_type !== "through_obstacle") return point6;
@@ -185,7 +185,7 @@ index 89118d58d00385ce4b1996a1586d90276356302b..bf3f43ee2104972d99cc23192165654e
        });
        const pcb_trace = db.pcb_trace.insert({
          subcircuit_id: this.subcircuit_id,
-@@ -33245,14 +33352,11 @@ var Group4 = class extends NormalComponent3 {
+@@ -33657,14 +33764,11 @@ var Group5 = class extends NormalComponent3 {
        pcb_trace.subcircuit_id ??= this.subcircuit_id;
        let cjRoute = pcb_trace.route.map((point6) => {
          if (point6.route_type !== "through_obstacle") return point6;
@@ -205,7 +205,7 @@ index 89118d58d00385ce4b1996a1586d90276356302b..bf3f43ee2104972d99cc23192165654e
        });
        const routeSourceTraceId = getSourceTraceIdForRoutedTrace({
          db,
-@@ -33283,11 +33387,16 @@ var Group4 = class extends NormalComponent3 {
+@@ -33695,11 +33799,16 @@ var Group5 = class extends NormalComponent3 {
              },
              subcircuit_id: this.subcircuit_id
            });
@@ -223,7 +223,7 @@ index 89118d58d00385ce4b1996a1586d90276356302b..bf3f43ee2104972d99cc23192165654e
          }
        }
      }
-@@ -33314,6 +33423,15 @@ var Group4 = class extends NormalComponent3 {
+@@ -33726,6 +33835,15 @@ var Group5 = class extends NormalComponent3 {
          }
          for (const point6 of pcb_trace.route) {
            if (point6.route_type === "via") {
