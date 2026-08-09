@@ -1,3 +1,5 @@
 {
-  "mainEntrypoint": "index.tsx"
+  "mainEntrypoint": "index.tsx",
+  "includeBoardFiles": ["examples/stm32c071.tsx", "examples/rp2040.tsx"],
+  "siteDefaultComponentPath": "examples/stm32c071.tsx"
 }
