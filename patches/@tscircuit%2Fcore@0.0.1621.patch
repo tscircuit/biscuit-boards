@@ -1,5 +1,5 @@
 diff --git a/dist/index.js b/dist/index.js
-index 89118d58d00385ce4b1996a1586d90276356302b..d6f0820d017405b1ca555d6e31e4ba99424439e0 100644
+index 89118d58d00385ce4b1996a1586d90276356302b..bf3f43ee2104972d99cc23192165654e9d2c184f 100644
 --- a/dist/index.js
 +++ b/dist/index.js
 @@ -15903,6 +15903,18 @@ var getDescendantSubcircuitIds = (db, root_subcircuit_id) => {
@@ -63,7 +63,7 @@ index 89118d58d00385ce4b1996a1586d90276356302b..d6f0820d017405b1ca555d6e31e4ba99
    if (useGroupBoundsAsSrjBounds) {
      bounds = {
        minX: pcbGroup.center.x - pcbGroup.width / 2,
-@@ -31591,6 +31615,39 @@ function addPortIdsToTracesAtJumperPads(segments, db) {
+@@ -31591,6 +31615,91 @@ function addPortIdsToTracesAtJumperPads(segments, db) {
    return result;
  }
  
@@ -75,24 +75,76 @@ index 89118d58d00385ce4b1996a1586d90276356302b..d6f0820d017405b1ca555d6e31e4ba99
 +  }
 +  return Math.abs(point6.x - obstacle.center.x) <= obstacle.width / 2 + POINT_TOLERANCE && Math.abs(point6.y - obstacle.center.y) <= obstacle.height / 2 + POINT_TOLERANCE;
 +};
++var findSrjAssignablePcbViaForTransition = ({
++  db,
++  inputSimpleRouteJson,
++  start,
++  end,
++  startLayer,
++  endLayer
++}) => {
++  if (!inputSimpleRouteJson) return;
++  for (const obstacle of inputSimpleRouteJson.obstacles) {
++    if (!obstacle.netIsAssignable || !obstacle.layers.includes(startLayer) || !obstacle.layers.includes(endLayer) || !isPointInsideObstacle(start, obstacle) || !isPointInsideObstacle(end, obstacle)) {
++      continue;
++    }
++    const assignablePcbVia = obstacle.connectedTo.map((connectedId) => db.pcb_via.get(connectedId)).find((pcbVia) => pcbVia?.net_is_assignable);
++    if (assignablePcbVia) return assignablePcbVia;
++  }
++};
++var convertSrjThroughObstacleToCircuitJsonRoutePoint = ({
++  db,
++  inputSimpleRouteJson,
++  routePoint
++}) => {
++  const assignablePcbVia = findSrjAssignablePcbViaForTransition({
++    db,
++    inputSimpleRouteJson,
++    start: routePoint.start,
++    end: routePoint.end,
++    startLayer: routePoint.from_layer,
++    endLayer: routePoint.to_layer
++  });
++  if (assignablePcbVia) {
++    return {
++      route_type: "via",
++      x: routePoint.start.x,
++      y: routePoint.start.y,
++      from_layer: routePoint.from_layer,
++      to_layer: routePoint.to_layer,
++      hole_diameter: assignablePcbVia.hole_diameter,
++      outer_diameter: assignablePcbVia.outer_diameter
++    };
++  }
++  return {
++    route_type: "through_pad",
++    start: routePoint.start,
++    end: routePoint.end,
++    start_layer: routePoint.from_layer,
++    end_layer: routePoint.to_layer,
++    width: routePoint.width
++  };
++};
 +var claimSrjAssignablePcbViasTraversedByRoute = ({
 +  db,
 +  inputSimpleRouteJson,
 +  pcbTrace
 +}) => {
 +  if (!inputSimpleRouteJson) return;
-+  const traversedPads = pcbTrace.route.filter(
-+    (routePoint) => routePoint.route_type === "through_pad"
++  const layerTransitions = pcbTrace.route.filter(
++    (routePoint) => routePoint.route_type === "through_pad" || routePoint.route_type === "via"
 +  );
-+  for (const traversedPad of traversedPads) {
-+    const assignableObstacle = inputSimpleRouteJson.obstacles.find(
-+      (obstacle) => obstacle.netIsAssignable && obstacle.layers.includes(traversedPad.start_layer) && obstacle.layers.includes(traversedPad.end_layer) && isPointInsideObstacle(traversedPad.start, obstacle) && isPointInsideObstacle(traversedPad.end, obstacle)
-+    );
-+    if (!assignableObstacle) continue;
-+    const assignablePcbVia = assignableObstacle.connectedTo.map((connectedId) => db.pcb_via.get(connectedId)).find(
-+      (pcbVia) => pcbVia?.net_is_assignable && (!pcbVia.net_assigned || pcbVia.pcb_trace_id === pcbTrace.pcb_trace_id)
-+    );
-+    if (!assignablePcbVia) continue;
++  for (const layerTransition of layerTransitions) {
++    const isVia = layerTransition.route_type === "via";
++    const assignablePcbVia = findSrjAssignablePcbViaForTransition({
++      db,
++      inputSimpleRouteJson,
++      start: isVia ? layerTransition : layerTransition.start,
++      end: isVia ? layerTransition : layerTransition.end,
++      startLayer: isVia ? layerTransition.from_layer : layerTransition.start_layer,
++      endLayer: isVia ? layerTransition.to_layer : layerTransition.end_layer
++    });
++    if (!assignablePcbVia || assignablePcbVia.net_assigned && assignablePcbVia.pcb_trace_id !== pcbTrace.pcb_trace_id) continue;
 +    db.pcb_via.update(assignablePcbVia.pcb_via_id, {
 +      pcb_trace_id: pcbTrace.pcb_trace_id,
 +      net_assigned: true
@@ -103,7 +155,7 @@ index 89118d58d00385ce4b1996a1586d90276356302b..d6f0820d017405b1ca555d6e31e4ba99
  // lib/components/primitive-components/Group/get-source-trace-id-for-routed-trace.ts
  import { distance as distance11, pointToSegmentDistance } from "@tscircuit/math-utils";
  import { ConnectivityMap as ConnectivityMap4 } from "circuit-json-to-connectivity-map";
-@@ -32717,7 +32774,8 @@ var Group4 = class extends NormalComponent3 {
+@@ -32717,7 +32826,8 @@ var Group4 = class extends NormalComponent3 {
        nominalTraceWidth,
        subcircuit_id: this.subcircuit_id,
        subcircuitComponent: this,
@@ -113,7 +165,47 @@ index 89118d58d00385ce4b1996a1586d90276356302b..d6f0820d017405b1ca555d6e31e4ba99
      });
      const outputTraces = [];
      const outputJumpers = [];
-@@ -33283,11 +33341,16 @@ var Group4 = class extends NormalComponent3 {
+@@ -33198,14 +33308,11 @@ var Group4 = class extends NormalComponent3 {
+     for (const routedTrace of routedTraces) {
+       const cjRoute = routedTrace.route.map((point6) => {
+         if (point6.route_type !== "through_obstacle") return point6;
+-        return {
+-          route_type: "through_pad",
+-          start: point6.start,
+-          end: point6.end,
+-          start_layer: point6.from_layer,
+-          end_layer: point6.to_layer,
+-          width: point6.width
+-        };
++        return convertSrjThroughObstacleToCircuitJsonRoutePoint({
++          db,
++          inputSimpleRouteJson: this._asyncAutoroutingResult.output_simple_route_json,
++          routePoint: point6
++        });
+       });
+       const pcb_trace = db.pcb_trace.insert({
+         subcircuit_id: this.subcircuit_id,
+@@ -33245,14 +33352,11 @@ var Group4 = class extends NormalComponent3 {
+       pcb_trace.subcircuit_id ??= this.subcircuit_id;
+       let cjRoute = pcb_trace.route.map((point6) => {
+         if (point6.route_type !== "through_obstacle") return point6;
+-        return {
+-          route_type: "through_pad",
+-          start: point6.start,
+-          end: point6.end,
+-          start_layer: point6.from_layer,
+-          end_layer: point6.to_layer,
+-          width: point6.width
+-        };
++        return convertSrjThroughObstacleToCircuitJsonRoutePoint({
++          db,
++          inputSimpleRouteJson: input_simple_route_json,
++          routePoint: point6
++        });
+       });
+       const routeSourceTraceId = getSourceTraceIdForRoutedTrace({
+         db,
+@@ -33283,11 +33387,16 @@ var Group4 = class extends NormalComponent3 {
              },
              subcircuit_id: this.subcircuit_id
            });
@@ -131,3 +223,19 @@ index 89118d58d00385ce4b1996a1586d90276356302b..d6f0820d017405b1ca555d6e31e4ba99
          }
        }
      }
+@@ -33314,6 +33423,15 @@ var Group4 = class extends NormalComponent3 {
+         }
+         for (const point6 of pcb_trace.route) {
+           if (point6.route_type === "via") {
++            const existingAssignablePcbVia = findSrjAssignablePcbViaForTransition({
++              db,
++              inputSimpleRouteJson: input_simple_route_json,
++              start: point6,
++              end: point6,
++              startLayer: point6.from_layer,
++              endLayer: point6.to_layer
++            });
++            if (existingAssignablePcbVia) continue;
+             const routedViaPoint = point6;
+             const fromLayer = point6.from_layer;
+             const toLayer = point6.to_layer;

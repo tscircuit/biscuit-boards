@@ -20,8 +20,11 @@ assignable prefabricated vias. Copper pours are intentionally disabled. Its
 [`@tscircuit/biscuit-board-autorouter`](https://github.com/tscircuit/biscuit-board-autorouter)
 package. Its graph generator creates cross-layer hyperedges only at
 `netIsAssignable` multi-layer obstacles, and its output validator rejects any
-other layer transition. The router uses negotiated rip-and-replace with
-history costs and precomputed trace-edge conflict lists. Its final
+other layer transition. Each prefabricated-via crossing stays in one
+`pcb_trace.route` as a `via` point between its top and bottom wire segments;
+the existing board via is claimed instead of manufacturing a duplicate. The
+router uses negotiated rip-and-replace with history costs and precomputed
+trace-edge conflict lists. Its final
 post-processing stage enforces the configured copper clearance and simplifies
 whole stair-step runs into clearance-safe Manhattan/45° paths.
 
