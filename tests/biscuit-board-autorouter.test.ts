@@ -61,9 +61,15 @@ test("routes a layer change only through a prefabricated assignable via", () => 
   }
 
   const traces = new BiscuitBoardAutorouter(input).solveSync()
-  const routedVias = traces.flatMap((trace) =>
+  const manufacturedVias = traces.flatMap((trace) =>
     trace.route.filter((segment) => segment.route_type === "via"),
   )
+  const routedPrefabVias = traces.flatMap((trace) =>
+    trace.route.filter((segment) => segment.route_type === "through_obstacle"),
+  )
 
-  expect(routedVias.map(pointKey)).toEqual([pointKey({ x: 0, y: 4 })])
+  expect(manufacturedVias).toEqual([])
+  expect(routedPrefabVias.map((segment) => pointKey(segment.start))).toEqual([
+    pointKey({ x: 0, y: 4 }),
+  ])
 })

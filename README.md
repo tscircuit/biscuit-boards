@@ -20,14 +20,20 @@ assignable prefabricated vias. Copper pours are intentionally disabled. Its
 [`@tscircuit/biscuit-board-autorouter`](https://github.com/tscircuit/biscuit-board-autorouter)
 package. Its graph generator creates cross-layer hyperedges only at
 `netIsAssignable` multi-layer obstacles, and its output validator rejects any
-other layer transition. The router uses negotiated rip-and-replace with
-history costs and precomputed trace-edge conflict lists. Its final
-post-processing stage enforces 0.2 mm copper clearance and simplifies whole
-stair-step runs into clearance-safe Manhattan/45° paths.
+other layer transition. Each prefabricated-via crossing stays in one
+`pcb_trace.route` as a `via` point between its top and bottom wire segments;
+the existing board via is claimed instead of manufacturing a duplicate. The
+router uses negotiated rip-and-replace with history costs and precomputed
+trace-edge conflict lists. Its final
+post-processing stage enforces the configured copper clearance and simplifies
+whole stair-step runs into clearance-safe Manhattan/45° paths.
 
 The complete STM32C071FBP6 + SWD + status LED circuit is in
 [`examples/stm32c071.tsx`](./examples/stm32c071.tsx). Its checked-in
-`tsci snapshot` artifacts cover both the routed PCB and schematic views.
+`tsci snapshot` artifacts cover both the routed PCB and schematic views. The
+denser [`examples/rp2040.tsx`](./examples/rp2040.tsx) example uses the RP2040
+module from `@tsci/seveibar.common` and is also checked in with solved PCB and
+schematic snapshots.
 
 ## LightBurn export
 
@@ -55,6 +61,7 @@ bun install
 bun run typecheck
 bun test
 bun run snapshot:stm32
+bun run snapshot:rp2040
 bun run build
 bun run build:example
 bun run export:lightburn

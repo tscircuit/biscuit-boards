@@ -32,12 +32,12 @@
     "@types/react": "19.2.18",
     "bun-match-svg": "0.0.15",
     "react": "19.2.0",
-    "tscircuit": "0.0.2256",
+    "tscircuit": "0.0.2277",
     "typescript": "5.9.3"
   },
   "dependencies": {
-    "@tscircuit/biscuit-board-autorouter": "github:tscircuit/biscuit-board-autorouter#3d3e1163a45f0c1e39d56d5b3fb26ea6ec9bcdf2",
-    "@tscircuit/core": "0.0.1621",
+    "@tscircuit/biscuit-board-autorouter": "github:tscircuit/biscuit-board-autorouter#d3b602dce74c4b5bfae5f0cc80e614fa566cebbe",
+    "@tscircuit/core": "0.0.1641",
     "@tscircuit/props": "0.0.617",
     "circuit-json": "0.0.464",
     "circuit-json-to-lbrn": "0.0.87",
@@ -46,5 +46,11 @@
   "peerDependencies": {
     "react": "^19.2.0"
   },
-  "trustedDependencies": ["sharp"]
+  "trustedDependencies": ["sharp"],
+  "overrides": {
+    "@tscircuit/core": "0.0.1641"
+  },
+  "patchedDependencies": {
+    "@tscircuit/core@0.0.1641": "patches/@tscircuit%2Fcore@0.0.1641.patch"
+  }
 }
