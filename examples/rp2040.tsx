@@ -37,16 +37,19 @@ const MicrocontrollerRp2040WithEdgeUsb = (
 export const Rp2040BiscuitBoard = (
   props: Pick<
     BiscuitBoardProps,
-    "autorouter" | "autorouterOptions" | "routingDisabled"
+    "autorouter" | "autorouterOptions" | "minTraceWidth" | "routingDisabled"
   > = {},
 ) => (
   <BiscuitBoard
     {...props}
+    minTraceWidth={props.minTraceWidth ?? 0.2}
     autorouterOptions={{
       gridClearance: 0.1,
       maxRipsPerRoute: 1_000,
       maxTotalRips: 10_000,
-      routeOrder: "signal_longest_first",
+      // The lower USB shield hole leaves no room for a post-route detour.
+      rotatedObstacleIndexesInGraph: [158],
+      routeOrder: "shortest_first",
       ...props.autorouterOptions,
     }}
     routingDisabled={props.routingDisabled ?? false}

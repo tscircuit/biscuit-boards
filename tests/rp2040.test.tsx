@@ -27,6 +27,11 @@ test("routes the common RP2040 design on the prefabricated BiscuitBoard", async 
   const circuitJson = circuit.getCircuitJson()
   const errors = circuitJson.filter((element) => element.type.endsWith("error"))
   const traces = circuitJson.filter((element) => element.type === "pcb_trace")
+  const wireWidths = traces.flatMap((trace) =>
+    trace.route
+      .filter((point) => point.route_type === "wire")
+      .map((point) => point.width),
+  )
   const routedPrefabVias = traces.flatMap((trace) =>
     trace.route.filter((point) => point.route_type === "via"),
   )
@@ -65,6 +70,7 @@ test("routes the common RP2040 design on the prefabricated BiscuitBoard", async 
   expect(errors).toEqual([])
   expect(clearanceErrors).toEqual([])
   expect(traces).toHaveLength(97)
+  expect(Math.min(...wireWidths)).toBeGreaterThanOrEqual(0.2)
   expect(routedPrefabVias.length).toBeGreaterThan(0)
   expect(
     routedPrefabVias.every((via) => allowedViaPositions.has(pointKey(via))),

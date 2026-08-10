@@ -16,12 +16,31 @@ const BISCUIT_BOARD_EDGE_CLEARANCE_VALIDATION_TOLERANCE = 0.001
 
 const createBoardBoundedAutorouter = (
   options: BiscuitBoardAutorouterOptions | undefined,
+  minimumTraceWidth: number | undefined,
 ): AutorouterConfig => ({
   ...createBiscuitBoardAutorouter(options),
   algorithmFn: async (input: SimpleRouteJson) =>
     new BiscuitBoardAutorouter(
       {
         ...input,
+        ...(minimumTraceWidth === undefined
+          ? {}
+          : {
+              minTraceWidth: Math.max(input.minTraceWidth, minimumTraceWidth),
+              connections: input.connections.map((connection) => {
+                const width = Math.max(
+                  connection.width ??
+                    connection.nominalTraceWidth ??
+                    minimumTraceWidth,
+                  minimumTraceWidth,
+                )
+                return {
+                  ...connection,
+                  width,
+                  nominalTraceWidth: width,
+                }
+              }),
+            }),
         minBoardEdgeClearance: BISCUIT_BOARD_EDGE_CLEARANCE,
         bounds: {
           minX: -BISCUIT_BOARD_WIDTH / 2,
@@ -90,6 +109,8 @@ export interface BiscuitBoardProps {
   children?: ReactNode
   autorouter?: AutorouterProp
   autorouterOptions?: BiscuitBoardAutorouterOptions
+  /** Enforced minimum trace width in millimeters. */
+  minTraceWidth?: number
   routingDisabled?: boolean
 }
 
@@ -102,6 +123,7 @@ export const BiscuitBoard = ({
   children,
   autorouter,
   autorouterOptions,
+  minTraceWidth,
   routingDisabled = false,
 }: BiscuitBoardProps) => (
   <board
@@ -111,11 +133,14 @@ export const BiscuitBoard = ({
     height={`${BISCUIT_BOARD_HEIGHT}mm`}
     borderRadius="2mm"
     layers={2}
-    minTraceWidth="0.15mm"
+    minTraceWidth={`${minTraceWidth ?? 0.15}mm`}
     minBoardEdgeClearance={`${BISCUIT_BOARD_EDGE_CLEARANCE - BISCUIT_BOARD_EDGE_CLEARANCE_VALIDATION_TOLERANCE}mm`}
     minViaHoleDiameter="0.2mm"
     minViaPadDiameter="0.4mm"
-    autorouter={autorouter ?? createBoardBoundedAutorouter(autorouterOptions)}
+    autorouter={
+      autorouter ??
+      createBoardBoundedAutorouter(autorouterOptions, minTraceWidth)
+    }
     routingDisabled={routingDisabled}
   >
     <net name="GND" isGroundNet />
