@@ -5,7 +5,11 @@ import {
   checkViaTraceClearance,
 } from "@tscircuit/checks"
 import { Circuit } from "@tscircuit/core"
-import type { AnySourceComponent, PcbComponent } from "circuit-json"
+import type {
+  AnySourceComponent,
+  PcbComponent,
+  PcbCourtyardRect,
+} from "circuit-json"
 import { Rp2040BiscuitBoard } from "../examples/rp2040"
 import {
   BISCUIT_BOARD_VIA_POSITIONS,
@@ -46,6 +50,11 @@ test("routes the common RP2040 design on the prefabricated BiscuitBoard", async 
       element.type === "pcb_component" &&
       element.source_component_id === usbSourceComponentId,
   ) as PcbComponent | undefined
+  const usbCourtyard = circuitJson.find(
+    (element) =>
+      element.type === "pcb_courtyard_rect" &&
+      element.pcb_component_id === usbPcbComponent?.pcb_component_id,
+  ) as PcbCourtyardRect | undefined
   const allowedViaPositions = new Set(BISCUIT_BOARD_VIA_POSITIONS.map(pointKey))
   const clearanceErrors = [
     ...checkEachPcbTraceNonOverlapping(circuitJson, { minClearance: 0.1 }),
@@ -76,13 +85,15 @@ test("routes the common RP2040 design on the prefabricated BiscuitBoard", async 
     ),
   ).toBe(true)
   expect(pcbComponents.length).toBeGreaterThan(20)
-  expect(usbPcbComponent?.cable_insertion_center).toBeDefined()
-  expect(
-    usbPcbComponent!.cable_insertion_center!.x + BISCUIT_BOARD_WIDTH / 2,
-  ).toBeGreaterThan(0)
-  expect(
-    usbPcbComponent!.cable_insertion_center!.x + BISCUIT_BOARD_WIDTH / 2,
-  ).toBeLessThan(6)
+  expect(usbCourtyard).toBeDefined()
+  const courtyardRotation = ((usbCourtyard!.ccw_rotation ?? 0) * Math.PI) / 180
+  const courtyardHalfWidth =
+    (Math.abs(Math.cos(courtyardRotation)) * usbCourtyard!.width) / 2 +
+    (Math.abs(Math.sin(courtyardRotation)) * usbCourtyard!.height) / 2
+  const courtyardLeftEdge = usbCourtyard!.center.x - courtyardHalfWidth
+  expect(courtyardLeftEdge).toBeLessThan(-BISCUIT_BOARD_WIDTH / 2)
+  expect(courtyardLeftEdge).toBeGreaterThan(-BISCUIT_BOARD_WIDTH / 2 - 0.5)
+  expect(courtyardLeftEdge).toBeCloseTo(-BISCUIT_BOARD_WIDTH / 2 - 0.2, 3)
   expect(vias).toHaveLength(BISCUIT_BOARD_VIA_POSITIONS.length)
   expect(
     vias.every(

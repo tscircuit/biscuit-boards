@@ -1,13 +1,15 @@
 import { Microcontroller_RP2040 } from "@tscircuit/common"
 import {
   Children,
+  type ComponentProps,
   cloneElement,
   isValidElement,
-  type ComponentProps,
   type ReactElement,
   type ReactNode,
 } from "react"
 import { BiscuitBoard, type BiscuitBoardProps } from "../lib/BiscuitBoard"
+
+const USB_PCB_Y = 37.725
 
 const MicrocontrollerRp2040WithEdgeUsb = (
   props: ComponentProps<typeof Microcontroller_RP2040>,
@@ -27,7 +29,7 @@ const MicrocontrollerRp2040WithEdgeUsb = (
         return child
       }
 
-      return cloneElement(child, { pcbY: 31.5 })
+      return cloneElement(child, { pcbY: USB_PCB_Y })
     }),
   )
 }
@@ -44,7 +46,7 @@ export const Rp2040BiscuitBoard = (
       gridClearance: 0.1,
       maxRipsPerRoute: 1_000,
       maxTotalRips: 10_000,
-      routeOrder: "shortest_first",
+      routeOrder: "signal_longest_first",
       ...props.autorouterOptions,
     }}
     routingDisabled={props.routingDisabled ?? false}
