@@ -5,8 +5,16 @@ import {
   checkViaTraceClearance,
 } from "@tscircuit/checks"
 import { Circuit } from "@tscircuit/core"
+import type {
+  AnySourceComponent,
+  PcbComponent,
+  PcbCourtyardRect,
+} from "circuit-json"
 import { Rp2040BiscuitBoard } from "../examples/rp2040"
-import { BISCUIT_BOARD_VIA_POSITIONS } from "../lib/BiscuitBoard"
+import {
+  BISCUIT_BOARD_VIA_POSITIONS,
+  BISCUIT_BOARD_WIDTH,
+} from "../lib/BiscuitBoard"
 
 const pointKey = (point: { x: number; y: number }) =>
   `${point.x.toFixed(3)},${point.y.toFixed(3)}`
@@ -29,6 +37,24 @@ test("routes the common RP2040 design on the prefabricated BiscuitBoard", async 
   const pcbComponents = circuitJson.filter(
     (element) => element.type === "pcb_component",
   )
+  const usbSourceComponent = circuitJson.find(
+    (element) =>
+      element.type === "source_component" && element.name === "J_USB",
+  ) as AnySourceComponent | undefined
+  const usbSourceComponentId =
+    usbSourceComponent && "source_component_id" in usbSourceComponent
+      ? usbSourceComponent.source_component_id
+      : undefined
+  const usbPcbComponent = circuitJson.find(
+    (element) =>
+      element.type === "pcb_component" &&
+      element.source_component_id === usbSourceComponentId,
+  ) as PcbComponent | undefined
+  const usbCourtyard = circuitJson.find(
+    (element) =>
+      element.type === "pcb_courtyard_rect" &&
+      element.pcb_component_id === usbPcbComponent?.pcb_component_id,
+  ) as PcbCourtyardRect | undefined
   const allowedViaPositions = new Set(BISCUIT_BOARD_VIA_POSITIONS.map(pointKey))
   const clearanceErrors = [
     ...checkEachPcbTraceNonOverlapping(circuitJson, { minClearance: 0.1 }),
@@ -59,6 +85,15 @@ test("routes the common RP2040 design on the prefabricated BiscuitBoard", async 
     ),
   ).toBe(true)
   expect(pcbComponents.length).toBeGreaterThan(20)
+  expect(usbCourtyard).toBeDefined()
+  const courtyardRotation = ((usbCourtyard!.ccw_rotation ?? 0) * Math.PI) / 180
+  const courtyardHalfWidth =
+    (Math.abs(Math.cos(courtyardRotation)) * usbCourtyard!.width) / 2 +
+    (Math.abs(Math.sin(courtyardRotation)) * usbCourtyard!.height) / 2
+  const courtyardLeftEdge = usbCourtyard!.center.x - courtyardHalfWidth
+  const courtyardOverhang = -BISCUIT_BOARD_WIDTH / 2 - courtyardLeftEdge
+  expect(courtyardOverhang).toBeGreaterThan(0)
+  expect(courtyardOverhang).toBeCloseTo(1.2, 3)
   expect(vias).toHaveLength(BISCUIT_BOARD_VIA_POSITIONS.length)
   expect(
     vias.every(

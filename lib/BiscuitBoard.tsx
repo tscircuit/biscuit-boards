@@ -1,12 +1,38 @@
-import type { AutorouterProp } from "@tscircuit/props"
+import type { SimpleRouteJson } from "@tscircuit/core"
+import type { AutorouterConfig, AutorouterProp } from "@tscircuit/props"
 import { Fragment, type ReactNode } from "react"
 import {
+  BiscuitBoardAutorouter,
   type BiscuitBoardAutorouterOptions,
   createBiscuitBoardAutorouter,
 } from "./biscuit-board-autorouter"
 
 export const BISCUIT_BOARD_WIDTH = 75
 export const BISCUIT_BOARD_HEIGHT = 55
+const BISCUIT_BOARD_EDGE_CLEARANCE = 0.2
+// Core's DRC currently treats an exactly-equal floating-point distance as a
+// violation. Route at the full clearance, but leave a 1 µm comparison epsilon.
+const BISCUIT_BOARD_EDGE_CLEARANCE_VALIDATION_TOLERANCE = 0.001
+
+const createBoardBoundedAutorouter = (
+  options: BiscuitBoardAutorouterOptions | undefined,
+): AutorouterConfig => ({
+  ...createBiscuitBoardAutorouter(options),
+  algorithmFn: async (input: SimpleRouteJson) =>
+    new BiscuitBoardAutorouter(
+      {
+        ...input,
+        minBoardEdgeClearance: BISCUIT_BOARD_EDGE_CLEARANCE,
+        bounds: {
+          minX: -BISCUIT_BOARD_WIDTH / 2,
+          maxX: BISCUIT_BOARD_WIDTH / 2,
+          minY: -BISCUIT_BOARD_HEIGHT / 2,
+          maxY: BISCUIT_BOARD_HEIGHT / 2,
+        },
+      },
+      options,
+    ),
+})
 
 export interface BiscuitBoardViaPosition {
   x: number
@@ -86,9 +112,10 @@ export const BiscuitBoard = ({
     borderRadius="2mm"
     layers={2}
     minTraceWidth="0.15mm"
+    minBoardEdgeClearance={`${BISCUIT_BOARD_EDGE_CLEARANCE - BISCUIT_BOARD_EDGE_CLEARANCE_VALIDATION_TOLERANCE}mm`}
     minViaHoleDiameter="0.2mm"
     minViaPadDiameter="0.4mm"
-    autorouter={autorouter ?? createBiscuitBoardAutorouter(autorouterOptions)}
+    autorouter={autorouter ?? createBoardBoundedAutorouter(autorouterOptions)}
     routingDisabled={routingDisabled}
   >
     <net name="GND" isGroundNet />
