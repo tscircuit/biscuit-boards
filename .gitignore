@@ -1,6 +1,10 @@
 # Dependencies
 node_modules/
 
+.tscircuit/
+
+*.diff.png
+
 # Build output
 dist/
 build/
