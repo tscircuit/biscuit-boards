@@ -17,30 +17,34 @@ const BISCUIT_BOARD_EDGE_CLEARANCE_VALIDATION_TOLERANCE = 0.001
 const createBoardBoundedAutorouter = (
   options: BiscuitBoardAutorouterOptions | undefined,
   minimumTraceWidth: number | undefined,
+  nominalTraceWidth: number,
 ): AutorouterConfig => ({
   ...createBiscuitBoardAutorouter(options),
   algorithmFn: async (input: SimpleRouteJson) =>
     new BiscuitBoardAutorouter(
       {
         ...input,
-        ...(minimumTraceWidth === undefined
-          ? {}
-          : {
-              minTraceWidth: Math.max(input.minTraceWidth, minimumTraceWidth),
-              connections: input.connections.map((connection) => {
-                const width = Math.max(
-                  connection.width ??
-                    connection.nominalTraceWidth ??
-                    minimumTraceWidth,
-                  minimumTraceWidth,
-                )
-                return {
-                  ...connection,
-                  width,
-                  nominalTraceWidth: width,
-                }
-              }),
-            }),
+        minTraceWidth: Math.max(input.minTraceWidth, minimumTraceWidth ?? 0),
+        nominalTraceWidth: Math.max(
+          input.nominalTraceWidth ?? 0,
+          nominalTraceWidth,
+          minimumTraceWidth ?? 0,
+        ),
+        connections: input.connections.map((connection) => {
+          const width = Math.max(
+            connection.width ?? input.minTraceWidth,
+            minimumTraceWidth ?? 0,
+          )
+          return {
+            ...connection,
+            width,
+            nominalTraceWidth: Math.max(
+              connection.nominalTraceWidth ?? 0,
+              nominalTraceWidth,
+              width,
+            ),
+          }
+        }),
         minBoardEdgeClearance: BISCUIT_BOARD_EDGE_CLEARANCE,
         bounds: {
           minX: -BISCUIT_BOARD_WIDTH / 2,
@@ -111,6 +115,8 @@ export interface BiscuitBoardProps {
   autorouterOptions?: BiscuitBoardAutorouterOptions
   /** Enforced minimum trace width in millimeters. */
   minTraceWidth?: number
+  /** Preferred post-route trace width in millimeters. Defaults to 0.3 mm. */
+  nominalTraceWidth?: number
   routingDisabled?: boolean
 }
 
@@ -124,6 +130,7 @@ export const BiscuitBoard = ({
   autorouter,
   autorouterOptions,
   minTraceWidth,
+  nominalTraceWidth = 0.3,
   routingDisabled = false,
 }: BiscuitBoardProps) => (
   <board
@@ -139,7 +146,11 @@ export const BiscuitBoard = ({
     minViaPadDiameter="0.4mm"
     autorouter={
       autorouter ??
-      createBoardBoundedAutorouter(autorouterOptions, minTraceWidth)
+      createBoardBoundedAutorouter(
+        autorouterOptions,
+        minTraceWidth,
+        nominalTraceWidth,
+      )
     }
     routingDisabled={routingDisabled}
   >
