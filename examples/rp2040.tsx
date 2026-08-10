@@ -48,7 +48,6 @@ export const Rp2040BiscuitBoard = (
       maxRipsPerRoute: 1_000,
       maxTotalRips: 10_000,
       // The lower USB shield hole leaves no room for a post-route detour.
-      rotatedObstacleIndexesInGraph: [158],
       routeOrder: "shortest_first",
       ...props.autorouterOptions,
     }}
