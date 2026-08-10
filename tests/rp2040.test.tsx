@@ -15,6 +15,7 @@ import {
   BISCUIT_BOARD_VIA_POSITIONS,
   BISCUIT_BOARD_WIDTH,
 } from "../lib/BiscuitBoard"
+import { getTraceWidthMetrics } from "./helpers/get-trace-width-metrics"
 
 const pointKey = (point: { x: number; y: number }) =>
   `${point.x.toFixed(3)},${point.y.toFixed(3)}`
@@ -66,11 +67,14 @@ test("routes the common RP2040 design on the prefabricated BiscuitBoard", async 
     ...checkPadTraceClearance(circuitJson, { minClearance: 0.1 }),
     ...checkViaTraceClearance(circuitJson, { minClearance: 0.1 }),
   ]
+  const traceWidthMetrics = getTraceWidthMetrics(traces, 0.3)
 
   expect(errors).toEqual([])
   expect(clearanceErrors).toEqual([])
   expect(traces).toHaveLength(97)
-  expect(Math.min(...wireWidths)).toBeGreaterThanOrEqual(0.2)
+  expect(Math.min(...wireWidths)).toBeGreaterThanOrEqual(0.2 - 1e-9)
+  expect(traceWidthMetrics.nominalCoverage).toBeGreaterThan(0.8)
+  expect(traceWidthMetrics.averageWidth).toBeGreaterThan(0.27)
   expect(routedPrefabVias.length).toBeGreaterThan(0)
   expect(
     routedPrefabVias.every((via) => allowedViaPositions.has(pointKey(via))),

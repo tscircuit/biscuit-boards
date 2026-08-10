@@ -37,7 +37,11 @@ const MicrocontrollerRp2040WithEdgeUsb = (
 export const Rp2040BiscuitBoard = (
   props: Pick<
     BiscuitBoardProps,
-    "autorouter" | "autorouterOptions" | "minTraceWidth" | "routingDisabled"
+    | "autorouter"
+    | "autorouterOptions"
+    | "minTraceWidth"
+    | "nominalTraceWidth"
+    | "routingDisabled"
   > = {},
 ) => (
   <BiscuitBoard

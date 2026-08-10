@@ -26,7 +26,12 @@ the existing board via is claimed instead of manufacturing a duplicate. The
 router uses negotiated rip-and-replace with history costs and precomputed
 trace-edge conflict lists. Its final
 post-processing stage enforces the configured copper clearance and simplifies
-whole stair-step runs into clearance-safe Manhattan/45° paths.
+whole stair-step runs into clearance-safe Manhattan/45° paths. A final
+obstacle-aware expansion stage then targets 0.3 mm copper by default, widening
+in place or moving traces around neighboring copper and pads where needed. It
+may retain a narrower neck where the board cannot safely accommodate 0.3 mm,
+and it never introduces a non-prefabricated via. Override the target with the
+`nominalTraceWidth` prop; `minTraceWidth` remains the hard routing minimum.
 
 The complete STM32C071FBP6 + SWD + status LED circuit is in
 [`examples/stm32c071.tsx`](./examples/stm32c071.tsx). Its checked-in

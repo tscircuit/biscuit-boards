@@ -1,7 +1,4 @@
-import {
-  BiscuitBoard,
-  type BiscuitBoardProps,
-} from "../lib/BiscuitBoard"
+import { BiscuitBoard, type BiscuitBoardProps } from "../lib/BiscuitBoard"
 import { S5B_PH_SM4_TB, STM32C071FBP6 } from "./stm32c071-parts"
 
 const gnd = { displayName: "GND", schDisplayLabel: "GND" } as const
@@ -79,7 +76,7 @@ export const Stm32c071BiscuitBoard = (
       footprint="0603"
       manufacturerPartNumber="GENERIC-0603-1K"
       pcbX={5}
-      pcbY={7.5}
+      pcbY={15}
     />
     <led
       name="D_PWR"
@@ -88,7 +85,7 @@ export const Stm32c071BiscuitBoard = (
       footprint="0603"
       manufacturerPartNumber="GENERIC-0603-GREEN-LED"
       pcbX={8.5}
-      pcbY={7.5}
+      pcbY={15}
     />
     <resistor
       name="R_USER_LED"
@@ -109,7 +106,7 @@ export const Stm32c071BiscuitBoard = (
       pcbY={8}
     />
 
-    <silkscreentext text="POWER" pcbX={6.75} pcbY={9.2} fontSize="0.8mm" />
+    <silkscreentext text="POWER" pcbX={6.75} pcbY={16.7} fontSize="0.8mm" />
     <silkscreentext text="PA8 USER" pcbX={24.75} pcbY={9.7} fontSize="0.8mm" />
     <silkscreentext text="SWD" pcbX={22} pcbY={-16.7} fontSize="0.8mm" />
 
