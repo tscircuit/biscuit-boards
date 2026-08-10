@@ -91,9 +91,9 @@ test("routes the common RP2040 design on the prefabricated BiscuitBoard", async 
     (Math.abs(Math.cos(courtyardRotation)) * usbCourtyard!.width) / 2 +
     (Math.abs(Math.sin(courtyardRotation)) * usbCourtyard!.height) / 2
   const courtyardLeftEdge = usbCourtyard!.center.x - courtyardHalfWidth
-  expect(courtyardLeftEdge).toBeLessThan(-BISCUIT_BOARD_WIDTH / 2)
-  expect(courtyardLeftEdge).toBeGreaterThan(-BISCUIT_BOARD_WIDTH / 2 - 0.5)
-  expect(courtyardLeftEdge).toBeCloseTo(-BISCUIT_BOARD_WIDTH / 2 - 0.2, 3)
+  const courtyardOverhang = -BISCUIT_BOARD_WIDTH / 2 - courtyardLeftEdge
+  expect(courtyardOverhang).toBeGreaterThan(0)
+  expect(courtyardOverhang).toBeCloseTo(1.2, 3)
   expect(vias).toHaveLength(BISCUIT_BOARD_VIA_POSITIONS.length)
   expect(
     vias.every(

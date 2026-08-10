@@ -9,7 +9,7 @@ import {
 } from "react"
 import { BiscuitBoard, type BiscuitBoardProps } from "../lib/BiscuitBoard"
 
-const USB_PCB_Y = 37.725
+const USB_PCB_Y = 38.725
 
 const MicrocontrollerRp2040WithEdgeUsb = (
   props: ComponentProps<typeof Microcontroller_RP2040>,
