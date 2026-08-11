@@ -55,16 +55,17 @@ a forward-calibrated `*-lensdistortion.lbrn2` companion, an SVG preview, a
 manifest, and separate `.lbrn2` files for each operation.
 
 The lens-distortion companion converts top-left LightBurn coordinates to the
-board-centered design frame, then applies a regularized thin-plate spline
-(TPS), a standard smooth 2D registration transform. Its output includes the
-fitted translation and represents the predicted measured/projected positions.
+board-centered design frame, then applies a Delaunay-triangulated piecewise
+affine transform with barycentric interpolation. Each measured coordinate is
+matched exactly, and interpolation stays continuous between neighboring
+triangles.
 
-The TPS control points and coefficients are generated from
+The control points and triangle mesh are generated from
 [`lib/coordinate_map/via-coordinate-map.csv`](./lib/coordinate_map/via-coordinate-map.csv)
-with `bun run generate:lens-calibration`. The fit uses deterministic 3-sigma
-outlier rejection and a smoothing regularization of 1. The current CSV fit uses
-all 15 points with an RMS error of approximately 0.67 projected-coordinate
-units, compared with 1.14 for the previous bilinear model.
+with `bun run generate:lens-calibration`. The current CSV fit uses all 15 points
+and has zero residual at those calibration coordinates. Beyond the measured
+convex hull, the nearest hull edge is extended with the global affine slope to
+avoid unstable or discontinuous nearest-triangle extrapolation.
 
 The fabrication preparation is deliberately top-side and drill-free. It
 removes board holes, cutouts, unused prefabricated vias, and all through-board

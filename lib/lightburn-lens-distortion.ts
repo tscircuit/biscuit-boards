@@ -12,9 +12,9 @@ import {
   BISCUIT_BOARD_LENS_CALIBRATION_MODEL,
 } from "./coordinate_map/lens-calibration-generated"
 import {
-  evaluateThinPlateSpline,
-  evaluateThinPlateSplineWithJacobian,
-} from "./coordinate_map/thin-plate-spline"
+  evaluatePiecewiseLinear,
+  evaluatePiecewiseLinearWithJacobian,
+} from "./coordinate_map/piecewise-linear"
 
 export type Point = {
   x: number
@@ -45,13 +45,11 @@ const IDENTITY_MATRIX: Mat = [1, 0, 0, 1, 0, 0]
 
 /** Convert a commanded design coordinate to its measured laser coordinate. */
 export const designToProjected = (point: Point): Point =>
-  evaluateThinPlateSpline(BISCUIT_BOARD_LENS_CALIBRATION_MODEL, point)
+  evaluatePiecewiseLinear(BISCUIT_BOARD_LENS_CALIBRATION_MODEL, point)
 
 /**
- * Invert the calibrated laser projection with Newton iteration.
- *
- * The TPS affine part provides the initial estimate, then the full analytic
- * TPS Jacobian is included in each update.
+ * Invert the calibrated laser projection with Newton iteration over the
+ * active piecewise-affine triangle.
  */
 export const projectedToDesign = (
   projected: Point,
@@ -62,25 +60,20 @@ export const projectedToDesign = (
 ): Point => {
   const maxIterations = options.maxIterations ?? 20
   const tolerance = options.tolerance ?? 1e-10
-  const { normalization, xAffine, yAffine } =
-    BISCUIT_BOARD_LENS_CALIBRATION_MODEL
-  const offsetX = projected.x - xAffine[0]
-  const offsetY = projected.y - yAffine[0]
-  const affineDeterminant = xAffine[1] * yAffine[2] - xAffine[2] * yAffine[1]
+  const { a0, a1, a2, b0, b1, b2 } = BISCUIT_BOARD_LENS_CALIBRATION
+  const offsetX = projected.x - a0
+  const offsetY = projected.y - b0
+  const affineDeterminant = a1 * b2 - a2 * b1
 
   if (Math.abs(affineDeterminant) < 1e-12) {
     throw new Error("Calibration affine matrix is singular")
   }
 
-  const normalizedX =
-    (yAffine[2] * offsetX - xAffine[2] * offsetY) / affineDeterminant
-  const normalizedY =
-    (-yAffine[1] * offsetX + xAffine[1] * offsetY) / affineDeterminant
-  let x = normalization.centerX + normalizedX * normalization.scale
-  let y = normalization.centerY + normalizedY * normalization.scale
+  let x = (b2 * offsetX - a2 * offsetY) / affineDeterminant
+  let y = (-b1 * offsetX + a1 * offsetY) / affineDeterminant
 
   for (let iteration = 0; iteration < maxIterations; iteration++) {
-    const { point: predicted, jacobian } = evaluateThinPlateSplineWithJacobian(
+    const { point: predicted, jacobian } = evaluatePiecewiseLinearWithJacobian(
       BISCUIT_BOARD_LENS_CALIBRATION_MODEL,
       { x, y },
     )
@@ -91,16 +84,12 @@ export const projectedToDesign = (
 
     const [j00, j01, j10, j11] = jacobian
     const determinant = j00 * j11 - j01 * j10
-
     if (Math.abs(determinant) < 1e-12) {
       throw new Error("Calibration inverse is locally singular")
     }
 
-    const deltaX = (j11 * errorX - j01 * errorY) / determinant
-    const deltaY = (-j10 * errorX + j00 * errorY) / determinant
-
-    x -= deltaX
-    y -= deltaY
+    x -= (j11 * errorX - j01 * errorY) / determinant
+    y -= (-j10 * errorX + j00 * errorY) / determinant
   }
 
   const finalPrediction = designToProjected({ x, y })
@@ -108,7 +97,6 @@ export const projectedToDesign = (
     finalPrediction.x - projected.x,
     finalPrediction.y - projected.y,
   )
-
   if (finalError > tolerance) {
     throw new Error(
       `Calibration inverse did not converge; residual=${finalError}`,
