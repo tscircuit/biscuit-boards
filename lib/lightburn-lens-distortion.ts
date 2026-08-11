@@ -1,5 +1,4 @@
 import {
-  LightBurnBaseElement,
   LightBurnProject,
   type Mat,
   ShapeBase,
@@ -207,17 +206,47 @@ const correctShape = (
   )
 }
 
+const cloneShape = (shape: ShapeBase): ShapeBase => {
+  if (shape instanceof ShapePath) {
+    return new ShapePath({
+      verts: shape.verts.map((vert) => ({ ...vert })),
+      prims: shape.prims.map((prim) => ({ ...prim })),
+      isClosed: shape.isClosed,
+      cutIndex: shape.cutIndex,
+      locked: shape.locked,
+      xform: [...shape.xform],
+    })
+  }
+
+  if (shape instanceof ShapeGroup) {
+    const cloned = new ShapeGroup()
+    cloned.cutIndex = shape.cutIndex
+    cloned.locked = shape.locked
+    cloned.xform = [...shape.xform]
+    cloned.children = shape.children.map((child) =>
+      child instanceof ShapeBase ? cloneShape(child) : child,
+    )
+    return cloned
+  }
+
+  throw new Error(`Unsupported LightBurn shape for cloning: ${shape.token}`)
+}
+
 /** Clone a LightBurn project and apply inverse lens correction to every path. */
 export const createLensDistortionCorrectedLightBurnProject = (
   project: LightBurnProject,
   boardOrigin: Point,
 ): LightBurnProject => {
-  const cloned = LightBurnBaseElement.parse(project.getString())
-  if (!(cloned instanceof LightBurnProject)) {
-    throw new Error(
-      "Expected a LightBurn project while applying lens correction",
-    )
-  }
+  const cloned = new LightBurnProject({
+    appVersion: project.appVersion,
+    formatVersion: project.formatVersion,
+    materialHeight: project.materialHeight,
+    mirrorX: project.mirrorX,
+    mirrorY: project.mirrorY,
+    children: project.children.map((child) =>
+      child instanceof ShapeBase ? cloneShape(child) : child,
+    ),
+  })
 
   for (const child of cloned.children) {
     if (child instanceof ShapeBase) {

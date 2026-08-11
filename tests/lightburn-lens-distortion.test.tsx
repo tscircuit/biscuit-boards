@@ -38,6 +38,7 @@ test("snapshots the lens-corrected STM32C071 LightBurn project", async () => {
 
   const { project, lensDistortionProject } =
     await createBiscuitBoardLightburnArtifacts(circuitJson)
+  const lensDistortionXml = lensDistortionProject.getString()
   const originalVertex = getFirstPath(project).verts[0]
   const correctedVertex = getFirstPath(lensDistortionProject).verts[0]
   const board = circuitJson.find((element) => element.type === "pcb_board")
@@ -46,6 +47,7 @@ test("snapshots the lens-corrected STM32C071 LightBurn project", async () => {
   expect(originalVertex).toBeDefined()
   expect(correctedVertex).toBeDefined()
   expect(correctedVertex).not.toEqual(originalVertex)
+  expect(lensDistortionXml).not.toMatch(/Value="(?:true|false)"/)
 
   const boardOrigin = {
     x: (board?.width ?? 0) / 2 - (board?.center.x ?? 0),
