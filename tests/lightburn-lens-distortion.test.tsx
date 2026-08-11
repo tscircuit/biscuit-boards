@@ -5,14 +5,16 @@ import type { CircuitJson } from "circuit-json"
 import {
   generateLightBurnSvg,
   type LightBurnBaseElement,
-  type LightBurnProject,
+  LightBurnProject,
   ShapePath,
 } from "lbrnts"
 import { Stm32c071BiscuitBoard } from "../examples/stm32c071"
 import { createBiscuitBoardLightburnArtifacts } from "../lib/biscuit-board-lightburn"
 import {
   applyLightBurnLensDistortion,
+  createLensDistortedLightBurnProject,
   designToProjected,
+  LENS_DISTORTION_MAX_SEGMENT_LENGTH_MM,
 } from "../lib/lightburn-lens-distortion"
 
 const getFirstPath = (project: LightBurnProject): ShapePath => {
@@ -26,6 +28,66 @@ const getFirstPath = (project: LightBurnProject): ShapePath => {
 
   throw new Error("Expected the LightBurn project to contain a path")
 }
+
+test("subdivides lines before applying nonlinear lens distortion", () => {
+  const project = new LightBurnProject({
+    children: [
+      new ShapePath({
+        verts: [
+          { x: 0, y: 0 },
+          { x: 10, y: 0 },
+        ],
+        prims: [{ type: 0 }],
+        isClosed: false,
+      }),
+    ],
+  })
+  const distorted = createLensDistortedLightBurnProject(project, { x: 0, y: 0 })
+  const path = getFirstPath(distorted)
+  const expectedSegmentCount = 10 / LENS_DISTORTION_MAX_SEGMENT_LENGTH_MM
+
+  expect(path.verts).toHaveLength(expectedSegmentCount + 1)
+  expect(path.prims).toHaveLength(expectedSegmentCount)
+  expect(path.prims.every((prim) => prim.type === 0)).toBe(true)
+
+  for (let index = 0; index < path.verts.length; index++) {
+    const expected = designToProjected({
+      x: index * LENS_DISTORTION_MAX_SEGMENT_LENGTH_MM,
+      y: 0,
+    })
+    expect(path.verts[index].x).toBeCloseTo(expected.x, 10)
+    expect(path.verts[index].y).toBeCloseTo(expected.y, 10)
+  }
+})
+
+test("flattens Bezier curves before applying nonlinear lens distortion", () => {
+  const project = new LightBurnProject({
+    children: [
+      new ShapePath({
+        verts: [
+          { x: 0, y: 0, c0x: 0, c0y: 5 },
+          { x: 10, y: 0, c1x: 10, c1y: 5 },
+        ],
+        prims: [{ type: 1 }],
+        isClosed: false,
+      }),
+    ],
+  })
+  const path = getFirstPath(
+    createLensDistortedLightBurnProject(project, { x: 0, y: 0 }),
+  )
+
+  expect(path.verts.length).toBeGreaterThan(2)
+  expect(path.prims).toHaveLength(path.verts.length - 1)
+  expect(path.prims.every((prim) => prim.type === 0)).toBe(true)
+  expect(path.verts.every((vert) => vert.c0x === undefined)).toBe(true)
+  expect(path.verts.every((vert) => vert.c1x === undefined)).toBe(true)
+  expect(path.verts[0].x).toBeCloseTo(designToProjected({ x: 0, y: 0 }).x, 10)
+  expect(path.verts.at(-1)?.x).toBeCloseTo(
+    designToProjected({ x: 10, y: 0 }).x,
+    10,
+  )
+})
 
 test("snapshots the lens-distorted STM32C071 LightBurn project", async () => {
   const circuit = new Circuit()

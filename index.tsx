@@ -27,6 +27,7 @@ export {
   BISCUIT_BOARD_LENS_CALIBRATION_MODEL,
   createLensDistortedLightBurnProject,
   designToProjected,
+  LENS_DISTORTION_MAX_SEGMENT_LENGTH_MM,
   type Point as LensDistortionPoint,
   projectedToDesign,
 } from "./lib/lightburn-lens-distortion"
