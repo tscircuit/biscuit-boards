@@ -12,7 +12,6 @@ import { Stm32c071BiscuitBoard } from "../examples/stm32c071"
 import { createBiscuitBoardLightburnArtifacts } from "../lib/biscuit-board-lightburn"
 import {
   applyLightBurnLensDistortion,
-  BISCUIT_BOARD_LENS_CALIBRATION,
   designToProjected,
 } from "../lib/lightburn-lens-distortion"
 
@@ -63,14 +62,9 @@ test("snapshots the lens-distorted STM32C071 LightBurn project", async () => {
     y: originalVertex.y - boardOrigin.y,
   })
 
-  expect(distortedBoardOrigin.x).toBeCloseTo(
-    BISCUIT_BOARD_LENS_CALIBRATION.a0,
-    9,
-  )
-  expect(distortedBoardOrigin.y).toBeCloseTo(
-    BISCUIT_BOARD_LENS_CALIBRATION.b0,
-    9,
-  )
+  const expectedDistortedBoardOrigin = designToProjected({ x: 0, y: 0 })
+  expect(distortedBoardOrigin.x).toBeCloseTo(expectedDistortedBoardOrigin.x, 9)
+  expect(distortedBoardOrigin.y).toBeCloseTo(expectedDistortedBoardOrigin.y, 9)
   expect(distortedVertex.x).toBeCloseTo(expectedDistortedVertex.x, 9)
   expect(distortedVertex.y).toBeCloseTo(expectedDistortedVertex.y, 9)
 

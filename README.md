@@ -55,15 +55,16 @@ a forward-calibrated `*-lensdistortion.lbrn2` companion, an SVG preview, a
 manifest, and separate `.lbrn2` files for each operation.
 
 The lens-distortion companion converts top-left LightBurn coordinates to the
-board-centered design frame, then applies the forward bilinear calibration.
-Its output includes the fitted translation and represents the predicted
-measured/projected positions.
+board-centered design frame, then applies a regularized thin-plate spline
+(TPS), a standard smooth 2D registration transform. Its output includes the
+fitted translation and represents the predicted measured/projected positions.
 
-The 2 x 4 calibration matrix is generated from
+The TPS control points and coefficients are generated from
 [`lib/coordinate_map/via-coordinate-map.csv`](./lib/coordinate_map/via-coordinate-map.csv)
 with `bun run generate:lens-calibration`. The fit uses deterministic 3-sigma
-outlier rejection. The current CSV fit uses 14 of 15 points (excluding via 10),
-with an RMS error of approximately 1.17 projected-coordinate units.
+outlier rejection and a smoothing regularization of 1. The current CSV fit uses
+all 15 points with an RMS error of approximately 0.67 projected-coordinate
+units, compared with 1.14 for the previous bilinear model.
 
 The fabrication preparation is deliberately top-side and drill-free. It
 removes board holes, cutouts, unused prefabricated vias, and all through-board
