@@ -1,6 +1,7 @@
 import {
   LightBurnProject,
   type Mat,
+  type Prim,
   ShapeBase,
   ShapeGroup,
   ShapePath,
@@ -42,6 +43,8 @@ export {
 }
 
 const IDENTITY_MATRIX: Mat = [1, 0, 0, 1, 0, 0]
+export const LENS_DISTORTION_MAX_SEGMENT_LENGTH_MM = 0.5
+const POINT_EQUALITY_EPSILON_MM = 1e-9
 
 /** Convert a commanded design coordinate to its measured laser coordinate. */
 export const designToProjected = (point: Point): Point =>
@@ -147,52 +150,188 @@ export const applyLightBurnLensDistortion = (
   return designToProjected(centeredPoint)
 }
 
-const distortVert = (vert: Vert, matrix: Mat, boardOrigin: Point): Vert => {
-  const distorted = applyLightBurnLensDistortion(
-    applyMatrix(matrix, vert),
-    boardOrigin,
+const getDistance = (first: Point, second: Point) =>
+  Math.hypot(second.x - first.x, second.y - first.y)
+
+const pointsAreEqual = (first: Point, second: Point) =>
+  getDistance(first, second) <= POINT_EQUALITY_EPSILON_MM
+
+const getMidpoint = (first: Point, second: Point): Point => ({
+  x: (first.x + second.x) / 2,
+  y: (first.y + second.y) / 2,
+})
+
+const appendPoint = (points: Point[], point: Point) => {
+  if (
+    points.length === 0 ||
+    !pointsAreEqual(points[points.length - 1], point)
+  ) {
+    points.push(point)
+  }
+}
+
+const appendTessellatedLine = (
+  points: Point[],
+  start: Point,
+  end: Point,
+  maxSegmentLength: number,
+) => {
+  const segmentCount = Math.max(
+    1,
+    Math.ceil(getDistance(start, end) / maxSegmentLength),
   )
-  const output: Vert = { ...vert, ...distorted }
+  for (let step = 1; step <= segmentCount; step++) {
+    const progress = step / segmentCount
+    appendPoint(points, {
+      x: start.x + (end.x - start.x) * progress,
+      y: start.y + (end.y - start.y) * progress,
+    })
+  }
+}
 
-  if (vert.c0x !== undefined && vert.c0y !== undefined) {
-    const controlPoint = applyLightBurnLensDistortion(
-      applyMatrix(matrix, { x: vert.c0x, y: vert.c0y }),
-      boardOrigin,
-    )
-    output.c0x = controlPoint.x
-    output.c0y = controlPoint.y
+const appendTessellatedCubic = (
+  points: Point[],
+  start: Point,
+  control0: Point,
+  control1: Point,
+  end: Point,
+  maxSegmentLength: number,
+  depth = 0,
+) => {
+  const controlPolygonLength =
+    getDistance(start, control0) +
+    getDistance(control0, control1) +
+    getDistance(control1, end)
+
+  if (controlPolygonLength <= maxSegmentLength || depth >= 20) {
+    appendPoint(points, end)
+    return
   }
 
-  if (vert.c1x !== undefined && vert.c1y !== undefined) {
-    const controlPoint = applyLightBurnLensDistortion(
-      applyMatrix(matrix, { x: vert.c1x, y: vert.c1y }),
-      boardOrigin,
-    )
-    output.c1x = controlPoint.x
-    output.c1y = controlPoint.y
+  const startToControl0 = getMidpoint(start, control0)
+  const control0ToControl1 = getMidpoint(control0, control1)
+  const control1ToEnd = getMidpoint(control1, end)
+  const leftControl = getMidpoint(startToControl0, control0ToControl1)
+  const rightControl = getMidpoint(control0ToControl1, control1ToEnd)
+  const midpoint = getMidpoint(leftControl, rightControl)
+
+  appendTessellatedCubic(
+    points,
+    start,
+    startToControl0,
+    leftControl,
+    midpoint,
+    maxSegmentLength,
+    depth + 1,
+  )
+  appendTessellatedCubic(
+    points,
+    midpoint,
+    rightControl,
+    control1ToEnd,
+    end,
+    maxSegmentLength,
+    depth + 1,
+  )
+}
+
+const tessellateAndDistortPath = (
+  shape: ShapePath,
+  matrix: Mat,
+  boardOrigin: Point,
+  maxSegmentLength: number,
+): { verts: Vert[]; prims: Prim[] } => {
+  if (shape.verts.length === 0) return { verts: [], prims: [] }
+
+  const worldPoints: Point[] = []
+  appendPoint(worldPoints, applyMatrix(matrix, shape.verts[0]))
+
+  for (let index = 0; index < shape.prims.length; index++) {
+    const startVert = shape.verts[index]
+    const endVert = shape.verts[(index + 1) % shape.verts.length]
+    if (!startVert || !endVert) {
+      throw new Error(
+        "LightBurn path primitive does not have matching vertices",
+      )
+    }
+
+    const start = applyMatrix(matrix, startVert)
+    const end = applyMatrix(matrix, endVert)
+    if (shape.prims[index].type === 1) {
+      const control0 = applyMatrix(matrix, {
+        x: startVert.c0x ?? startVert.x,
+        y: startVert.c0y ?? startVert.y,
+      })
+      const control1 = applyMatrix(matrix, {
+        x: endVert.c1x ?? endVert.x,
+        y: endVert.c1y ?? endVert.y,
+      })
+      appendTessellatedCubic(
+        worldPoints,
+        start,
+        control0,
+        control1,
+        end,
+        maxSegmentLength,
+      )
+    } else {
+      appendTessellatedLine(worldPoints, start, end, maxSegmentLength)
+    }
   }
 
-  return output
+  if (shape.isClosed && worldPoints.length > 1) {
+    if (!pointsAreEqual(worldPoints[0], worldPoints[worldPoints.length - 1])) {
+      appendTessellatedLine(
+        worldPoints,
+        worldPoints[worldPoints.length - 1],
+        worldPoints[0],
+        maxSegmentLength,
+      )
+    }
+    if (pointsAreEqual(worldPoints[0], worldPoints[worldPoints.length - 1])) {
+      worldPoints.pop()
+    }
+  }
+
+  const verts = worldPoints.map((point) =>
+    applyLightBurnLensDistortion(point, boardOrigin),
+  )
+  const primitiveCount = shape.isClosed
+    ? verts.length
+    : Math.max(0, verts.length - 1)
+
+  return {
+    verts,
+    prims: Array.from({ length: primitiveCount }, () => ({ type: 0 })),
+  }
 }
 
 const distortShape = (
   shape: ShapeBase,
   parentMatrix: Mat,
   boardOrigin: Point,
+  maxSegmentLength: number,
 ) => {
   const matrix = composeMatrices(parentMatrix, shape.xform)
   shape.xform = [...IDENTITY_MATRIX]
 
   if (shape instanceof ShapePath) {
-    shape.verts = shape.verts.map((vert) =>
-      distortVert(vert, matrix, boardOrigin),
+    const tessellated = tessellateAndDistortPath(
+      shape,
+      matrix,
+      boardOrigin,
+      maxSegmentLength,
     )
+    shape.verts = tessellated.verts
+    shape.prims = tessellated.prims
     return
   }
 
   if (shape instanceof ShapeGroup) {
     for (const child of shape.children) {
-      if (child instanceof ShapeBase) distortShape(child, matrix, boardOrigin)
+      if (child instanceof ShapeBase) {
+        distortShape(child, matrix, boardOrigin, maxSegmentLength)
+      }
     }
     return
   }
@@ -232,7 +371,15 @@ const cloneShape = (shape: ShapeBase): ShapeBase => {
 export const createLensDistortedLightBurnProject = (
   project: LightBurnProject,
   boardOrigin: Point,
+  options: { maxSegmentLength?: number } = {},
 ): LightBurnProject => {
+  const maxSegmentLength =
+    options.maxSegmentLength ?? LENS_DISTORTION_MAX_SEGMENT_LENGTH_MM
+  if (!Number.isFinite(maxSegmentLength) || maxSegmentLength <= 0) {
+    throw new Error(
+      "Lens distortion maxSegmentLength must be a finite number greater than 0",
+    )
+  }
   const cloned = new LightBurnProject({
     appVersion: project.appVersion,
     formatVersion: project.formatVersion,
@@ -246,7 +393,7 @@ export const createLensDistortedLightBurnProject = (
 
   for (const child of cloned.children) {
     if (child instanceof ShapeBase) {
-      distortShape(child, IDENTITY_MATRIX, boardOrigin)
+      distortShape(child, IDENTITY_MATRIX, boardOrigin, maxSegmentLength)
     }
   }
 
