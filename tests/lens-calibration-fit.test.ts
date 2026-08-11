@@ -50,11 +50,17 @@ test("derives the checked-in lens calibration from the coordinate CSV", async ()
   )
   expect(fit.includedViaNumbers).toHaveLength(15)
   expect(fit.excludedViaNumbers).toEqual([])
-  expect(fit.rmsError).toBeLessThan(0.7)
-  expect(fit.rmsError).toBeLessThan(fit.baselineBilinearRmsError * 0.6)
+  expect(fit.model.triangles).toHaveLength(
+    BISCUIT_BOARD_LENS_CALIBRATION_FIT.triangleCount,
+  )
+  expect(fit.model.hullEdges).toHaveLength(
+    BISCUIT_BOARD_LENS_CALIBRATION_FIT.hullEdgeCount,
+  )
+  expect(fit.rmsError).toBe(0)
+  expect(fit.baselineBilinearRmsError).toBeGreaterThan(1)
 })
 
-test("round-trips the calibrated design region through the TPS inverse", async () => {
+test("exactly interpolates every measured calibration point", async () => {
   const csvPath = resolve(
     import.meta.dir,
     "../lib/coordinate_map/via-coordinate-map.csv",
@@ -66,7 +72,26 @@ test("round-trips the calibrated design region through the TPS inverse", async (
     const projectedPoint = designToProjected(designPoint)
     const recoveredPoint = projectedToDesign(projectedPoint)
 
+    expect(projectedPoint.x).toBe(point.projectedX)
+    expect(projectedPoint.y).toBe(point.projectedY)
     expect(recoveredPoint.x).toBeCloseTo(designPoint.x, 8)
     expect(recoveredPoint.y).toBeCloseTo(designPoint.y, 8)
   }
+})
+
+test("round-trips the full board region including affine extrapolation", () => {
+  let maxRoundTripError = 0
+
+  for (let x = -37.5; x <= 37.5; x += 2.5) {
+    for (let y = -22.5; y <= 22.5; y += 2.5) {
+      const projected = designToProjected({ x, y })
+      const recovered = projectedToDesign(projected)
+      maxRoundTripError = Math.max(
+        maxRoundTripError,
+        Math.hypot(recovered.x - x, recovered.y - y),
+      )
+    }
+  }
+
+  expect(maxRoundTripError).toBeLessThan(1e-10)
 })
