@@ -67,6 +67,11 @@ and has zero residual at those calibration coordinates. Beyond the measured
 convex hull, the nearest hull edge is extended with the global affine slope to
 avoid unstable or discontinuous nearest-triangle extrapolation.
 
+Before applying the nonlinear transform, straight lines and Bezier curves are
+flattened to line segments no longer than 0.5 mm. This ensures the calibration
+is sampled along the complete path instead of transforming only its endpoints
+and curve handles.
+
 The fabrication preparation is deliberately top-side and drill-free. It
 removes board holes, cutouts, unused prefabricated vias, and all through-board
 LightBurn operations. A prefabricated via is included only when a routed trace
