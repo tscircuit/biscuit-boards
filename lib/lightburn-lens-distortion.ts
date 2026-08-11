@@ -125,12 +125,12 @@ const composeMatrices = (parent: Mat, child: Mat): Mat => {
 }
 
 /**
- * Convert an ideal LightBurn coordinate to the corrected command coordinate.
+ * Convert a board-local LightBurn position to its corrected command coordinate.
  *
- * LightBurn coordinates are board-local with a top-left origin, while the
- * calibration was measured from the board center. The calibration translation
- * establishes the desired projected center; the inverse solves the command
- * coordinate that lands at the requested board-local point.
+ * The generated project uses a top-left origin, while the calibration command
+ * frame is centered on the board. The desired projected frame is centered at
+ * the fitted translation (a0, b0); the inverse returns the centered command
+ * coordinate directly.
  */
 export const correctLightBurnPointForLensDistortion = (
   point: Point,
@@ -140,15 +140,11 @@ export const correctLightBurnPointForLensDistortion = (
     x: point.x - boardOrigin.x,
     y: point.y - boardOrigin.y,
   }
-  const command = projectedToDesign({
+
+  return projectedToDesign({
     x: BISCUIT_BOARD_LENS_CALIBRATION.a0 + centeredPoint.x,
     y: BISCUIT_BOARD_LENS_CALIBRATION.b0 + centeredPoint.y,
   })
-
-  return {
-    x: command.x + boardOrigin.x,
-    y: command.y + boardOrigin.y,
-  }
 }
 
 const correctVert = (vert: Vert, matrix: Mat, boardOrigin: Point): Vert => {
