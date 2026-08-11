@@ -1,5 +1,4 @@
 import {
-  LightBurnBaseElement,
   LightBurnProject,
   type Mat,
   ShapeBase,
@@ -7,22 +6,33 @@ import {
   ShapePath,
   type Vert,
 } from "lbrnts"
+import {
+  BISCUIT_BOARD_LENS_CALIBRATION_FIT,
+  BISCUIT_BOARD_LENS_CALIBRATION_MATRIX,
+} from "./coordinate_map/lens-calibration-generated"
 
 export type Point = {
   x: number
   y: number
 }
 
+const [xCoefficients, yCoefficients] = BISCUIT_BOARD_LENS_CALIBRATION_MATRIX
+
 export const BISCUIT_BOARD_LENS_CALIBRATION = {
-  a0: 83.66565681264,
-  a1: 1.022144660036,
-  a2: 0.01678365109326,
-  a3: -0.0002221269589856,
-  b0: 72.09742260279,
-  b1: -0.003090470993456,
-  b2: 1.012978612848,
-  b3: -0.001311585142779,
+  a0: xCoefficients[0],
+  a1: xCoefficients[1],
+  a2: xCoefficients[2],
+  a3: xCoefficients[3],
+  b0: yCoefficients[0],
+  b1: yCoefficients[1],
+  b2: yCoefficients[2],
+  b3: yCoefficients[3],
 } as const
+
+export {
+  BISCUIT_BOARD_LENS_CALIBRATION_FIT,
+  BISCUIT_BOARD_LENS_CALIBRATION_MATRIX,
+}
 
 const IDENTITY_MATRIX: Mat = [1, 0, 0, 1, 0, 0]
 
@@ -126,14 +136,14 @@ const composeMatrices = (parent: Mat, child: Mat): Mat => {
 }
 
 /**
- * Convert an ideal LightBurn coordinate to the corrected command coordinate.
+ * Convert a board-local LightBurn position to its measured/projected position.
  *
- * LightBurn coordinates are board-local with a top-left origin, while the
- * calibration was measured from the board center. The calibration translation
- * establishes the desired projected center; the inverse solves the command
- * coordinate that lands at the requested board-local point.
+ * The generated project uses a top-left origin, while the calibration design
+ * frame is centered on the board. Removing the LightBurn origin restores the
+ * design coordinate before applying the fitted forward transform, including
+ * its translation.
  */
-export const correctLightBurnPointForLensDistortion = (
+export const applyLightBurnLensDistortion = (
   point: Point,
   boardOrigin: Point,
 ): Point => {
@@ -141,26 +151,18 @@ export const correctLightBurnPointForLensDistortion = (
     x: point.x - boardOrigin.x,
     y: point.y - boardOrigin.y,
   }
-  const command = projectedToDesign({
-    x: BISCUIT_BOARD_LENS_CALIBRATION.a0 + centeredPoint.x,
-    y: BISCUIT_BOARD_LENS_CALIBRATION.b0 + centeredPoint.y,
-  })
-
-  return {
-    x: command.x + boardOrigin.x,
-    y: command.y + boardOrigin.y,
-  }
+  return designToProjected(centeredPoint)
 }
 
-const correctVert = (vert: Vert, matrix: Mat, boardOrigin: Point): Vert => {
-  const corrected = correctLightBurnPointForLensDistortion(
+const distortVert = (vert: Vert, matrix: Mat, boardOrigin: Point): Vert => {
+  const distorted = applyLightBurnLensDistortion(
     applyMatrix(matrix, vert),
     boardOrigin,
   )
-  const output: Vert = { ...vert, ...corrected }
+  const output: Vert = { ...vert, ...distorted }
 
   if (vert.c0x !== undefined && vert.c0y !== undefined) {
-    const controlPoint = correctLightBurnPointForLensDistortion(
+    const controlPoint = applyLightBurnLensDistortion(
       applyMatrix(matrix, { x: vert.c0x, y: vert.c0y }),
       boardOrigin,
     )
@@ -169,7 +171,7 @@ const correctVert = (vert: Vert, matrix: Mat, boardOrigin: Point): Vert => {
   }
 
   if (vert.c1x !== undefined && vert.c1y !== undefined) {
-    const controlPoint = correctLightBurnPointForLensDistortion(
+    const controlPoint = applyLightBurnLensDistortion(
       applyMatrix(matrix, { x: vert.c1x, y: vert.c1y }),
       boardOrigin,
     )
@@ -180,7 +182,7 @@ const correctVert = (vert: Vert, matrix: Mat, boardOrigin: Point): Vert => {
   return output
 }
 
-const correctShape = (
+const distortShape = (
   shape: ShapeBase,
   parentMatrix: Mat,
   boardOrigin: Point,
@@ -190,38 +192,68 @@ const correctShape = (
 
   if (shape instanceof ShapePath) {
     shape.verts = shape.verts.map((vert) =>
-      correctVert(vert, matrix, boardOrigin),
+      distortVert(vert, matrix, boardOrigin),
     )
     return
   }
 
   if (shape instanceof ShapeGroup) {
     for (const child of shape.children) {
-      if (child instanceof ShapeBase) correctShape(child, matrix, boardOrigin)
+      if (child instanceof ShapeBase) distortShape(child, matrix, boardOrigin)
     }
     return
   }
 
   throw new Error(
-    `Unsupported LightBurn shape for lens correction: ${shape.token}`,
+    `Unsupported LightBurn shape for lens distortion: ${shape.token}`,
   )
 }
 
-/** Clone a LightBurn project and apply inverse lens correction to every path. */
-export const createLensDistortionCorrectedLightBurnProject = (
+const cloneShape = (shape: ShapeBase): ShapeBase => {
+  if (shape instanceof ShapePath) {
+    return new ShapePath({
+      verts: shape.verts.map((vert) => ({ ...vert })),
+      prims: shape.prims.map((prim) => ({ ...prim })),
+      isClosed: shape.isClosed,
+      cutIndex: shape.cutIndex,
+      locked: shape.locked,
+      xform: [...shape.xform],
+    })
+  }
+
+  if (shape instanceof ShapeGroup) {
+    const cloned = new ShapeGroup()
+    cloned.cutIndex = shape.cutIndex
+    cloned.locked = shape.locked
+    cloned.xform = [...shape.xform]
+    cloned.children = shape.children.map((child) =>
+      child instanceof ShapeBase ? cloneShape(child) : child,
+    )
+    return cloned
+  }
+
+  throw new Error(`Unsupported LightBurn shape for cloning: ${shape.token}`)
+}
+
+/** Clone a LightBurn project and apply forward lens distortion to every path. */
+export const createLensDistortedLightBurnProject = (
   project: LightBurnProject,
   boardOrigin: Point,
 ): LightBurnProject => {
-  const cloned = LightBurnBaseElement.parse(project.getString())
-  if (!(cloned instanceof LightBurnProject)) {
-    throw new Error(
-      "Expected a LightBurn project while applying lens correction",
-    )
-  }
+  const cloned = new LightBurnProject({
+    appVersion: project.appVersion,
+    formatVersion: project.formatVersion,
+    materialHeight: project.materialHeight,
+    mirrorX: project.mirrorX,
+    mirrorY: project.mirrorY,
+    children: project.children.map((child) =>
+      child instanceof ShapeBase ? cloneShape(child) : child,
+    ),
+  })
 
   for (const child of cloned.children) {
     if (child instanceof ShapeBase) {
-      correctShape(child, IDENTITY_MATRIX, boardOrigin)
+      distortShape(child, IDENTITY_MATRIX, boardOrigin)
     }
   }
 
