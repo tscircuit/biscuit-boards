@@ -10,6 +10,7 @@
     "build": "tsci build index.tsx",
     "build:example": "tsci build examples/stm32c071.tsx --disable-parts-engine --svgs",
     "export:lightburn": "bun run scripts/export-stm32-lightburn.tsx",
+    "generate:lens-calibration": "bun run scripts/generate-lens-calibration.ts",
     "setup:test-deps": "bun run --cwd node_modules/sharp install",
     "snapshot": "tsci snapshot",
     "snapshot:update": "tsci snapshot --update",

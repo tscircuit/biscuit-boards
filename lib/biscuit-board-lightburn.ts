@@ -9,7 +9,7 @@ import {
   type SplitLightBurnProjectFile,
   splitLightBurnProjectByCutSetting,
 } from "lbrnts"
-import { createLensDistortionCorrectedLightBurnProject } from "./lightburn-lens-distortion"
+import { createLensDistortedLightBurnProject } from "./lightburn-lens-distortion"
 
 export const BISCUIT_BOARD_LIGHTBURN_COPPER_MARGIN_MM = 0.5
 
@@ -203,7 +203,7 @@ export const createBiscuitBoardLightburnArtifacts = async (
   stripThroughBoardOperations(project)
   renameFabricationLayers(project)
 
-  const lensDistortionProject = createLensDistortionCorrectedLightBurnProject(
+  const lensDistortionProject = createLensDistortedLightBurnProject(
     project,
     boardOrigin ?? { x: 0, y: 0 },
   )
