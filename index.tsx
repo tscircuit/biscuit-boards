@@ -24,6 +24,7 @@ export {
   BISCUIT_BOARD_LENS_CALIBRATION,
   BISCUIT_BOARD_LENS_CALIBRATION_FIT,
   BISCUIT_BOARD_LENS_CALIBRATION_MATRIX,
+  BISCUIT_BOARD_LENS_CALIBRATION_MODEL,
   createLensDistortedLightBurnProject,
   designToProjected,
   type Point as LensDistortionPoint,

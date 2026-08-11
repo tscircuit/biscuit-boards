@@ -9,7 +9,12 @@ import {
 import {
   BISCUIT_BOARD_LENS_CALIBRATION_FIT,
   BISCUIT_BOARD_LENS_CALIBRATION_MATRIX,
+  BISCUIT_BOARD_LENS_CALIBRATION_MODEL,
 } from "./coordinate_map/lens-calibration-generated"
+import {
+  evaluateThinPlateSpline,
+  evaluateThinPlateSplineWithJacobian,
+} from "./coordinate_map/thin-plate-spline"
 
 export type Point = {
   x: number
@@ -18,6 +23,7 @@ export type Point = {
 
 const [xCoefficients, yCoefficients] = BISCUIT_BOARD_LENS_CALIBRATION_MATRIX
 
+/** @deprecated The LightBurn export now uses BISCUIT_BOARD_LENS_CALIBRATION_MODEL. */
 export const BISCUIT_BOARD_LENS_CALIBRATION = {
   a0: xCoefficients[0],
   a1: xCoefficients[1],
@@ -32,26 +38,20 @@ export const BISCUIT_BOARD_LENS_CALIBRATION = {
 export {
   BISCUIT_BOARD_LENS_CALIBRATION_FIT,
   BISCUIT_BOARD_LENS_CALIBRATION_MATRIX,
+  BISCUIT_BOARD_LENS_CALIBRATION_MODEL,
 }
 
 const IDENTITY_MATRIX: Mat = [1, 0, 0, 1, 0, 0]
 
 /** Convert a commanded design coordinate to its measured laser coordinate. */
-export const designToProjected = (point: Point): Point => {
-  const { x, y } = point
-  const { a0, a1, a2, a3, b0, b1, b2, b3 } = BISCUIT_BOARD_LENS_CALIBRATION
-
-  return {
-    x: a0 + a1 * x + a2 * y + a3 * x * y,
-    y: b0 + b1 * x + b2 * y + b3 * x * y,
-  }
-}
+export const designToProjected = (point: Point): Point =>
+  evaluateThinPlateSpline(BISCUIT_BOARD_LENS_CALIBRATION_MODEL, point)
 
 /**
  * Invert the calibrated laser projection with Newton iteration.
  *
- * The affine part provides the initial estimate, then the bilinear terms are
- * included in each Jacobian update.
+ * The TPS affine part provides the initial estimate, then the full analytic
+ * TPS Jacobian is included in each update.
  */
 export const projectedToDesign = (
   projected: Point,
@@ -60,31 +60,36 @@ export const projectedToDesign = (
     tolerance?: number
   } = {},
 ): Point => {
-  const maxIterations = options.maxIterations ?? 10
+  const maxIterations = options.maxIterations ?? 20
   const tolerance = options.tolerance ?? 1e-10
-  const { a0, a1, a2, a3, b0, b1, b2, b3 } = BISCUIT_BOARD_LENS_CALIBRATION
-  const offsetX = projected.x - a0
-  const offsetY = projected.y - b0
-  const affineDeterminant = a1 * b2 - a2 * b1
+  const { normalization, xAffine, yAffine } =
+    BISCUIT_BOARD_LENS_CALIBRATION_MODEL
+  const offsetX = projected.x - xAffine[0]
+  const offsetY = projected.y - yAffine[0]
+  const affineDeterminant = xAffine[1] * yAffine[2] - xAffine[2] * yAffine[1]
 
   if (Math.abs(affineDeterminant) < 1e-12) {
     throw new Error("Calibration affine matrix is singular")
   }
 
-  let x = (b2 * offsetX - a2 * offsetY) / affineDeterminant
-  let y = (-b1 * offsetX + a1 * offsetY) / affineDeterminant
+  const normalizedX =
+    (yAffine[2] * offsetX - xAffine[2] * offsetY) / affineDeterminant
+  const normalizedY =
+    (-yAffine[1] * offsetX + xAffine[1] * offsetY) / affineDeterminant
+  let x = normalization.centerX + normalizedX * normalization.scale
+  let y = normalization.centerY + normalizedY * normalization.scale
 
   for (let iteration = 0; iteration < maxIterations; iteration++) {
-    const predicted = designToProjected({ x, y })
+    const { point: predicted, jacobian } = evaluateThinPlateSplineWithJacobian(
+      BISCUIT_BOARD_LENS_CALIBRATION_MODEL,
+      { x, y },
+    )
     const errorX = predicted.x - projected.x
     const errorY = predicted.y - projected.y
 
     if (Math.hypot(errorX, errorY) <= tolerance) return { x, y }
 
-    const j00 = a1 + a3 * y
-    const j01 = a2 + a3 * x
-    const j10 = b1 + b3 * y
-    const j11 = b2 + b3 * x
+    const [j00, j01, j10, j11] = jacobian
     const determinant = j00 * j11 - j01 * j10
 
     if (Math.abs(determinant) < 1e-12) {
