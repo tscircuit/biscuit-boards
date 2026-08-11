@@ -9,6 +9,7 @@ import {
   type SplitLightBurnProjectFile,
   splitLightBurnProjectByCutSetting,
 } from "lbrnts"
+import { createLensDistortionCorrectedLightBurnProject } from "./lightburn-lens-distortion"
 
 export const BISCUIT_BOARD_LIGHTBURN_COPPER_MARGIN_MM = 0.5
 
@@ -29,6 +30,7 @@ export interface BiscuitBoardLightburnOptions {
 export interface BiscuitBoardLightburnArtifacts {
   fabricationCircuitJson: CircuitJson
   project: LightBurnProject
+  lensDistortionProject: LightBurnProject
   layerFiles: SplitLightBurnProjectFile[]
 }
 
@@ -181,6 +183,7 @@ export const createBiscuitBoardLightburnArtifacts = async (
 
   const fabricationCircuitJson =
     prepareCircuitJsonForBiscuitBoardLightburn(circuitJson)
+  const boardOrigin = getBoardOrigin(fabricationCircuitJson)
   const project = await convertCircuitJsonToLbrn(fabricationCircuitJson, {
     includeLayers: ["top"],
     includeCopper: true,
@@ -194,15 +197,25 @@ export const createBiscuitBoardLightburnArtifacts = async (
     includeOxidationCleaningLayer: false,
     includeSilkscreen: false,
     traceMargin: 0,
-    origin: getBoardOrigin(fabricationCircuitJson),
+    origin: boardOrigin,
   })
 
   stripThroughBoardOperations(project)
   renameFabricationLayers(project)
 
+  const lensDistortionProject = createLensDistortionCorrectedLightBurnProject(
+    project,
+    boardOrigin ?? { x: 0, y: 0 },
+  )
+
   const layerFiles = splitLightBurnProjectByCutSetting(project).filter(
     (file) => file.shapeCount > 0,
   )
 
-  return { fabricationCircuitJson, project, layerFiles }
+  return {
+    fabricationCircuitJson,
+    project,
+    lensDistortionProject,
+    layerFiles,
+  }
 }

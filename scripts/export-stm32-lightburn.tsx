@@ -26,7 +26,7 @@ if (renderErrors.length > 0) {
   )
 }
 
-const { fabricationCircuitJson, project, layerFiles } =
+const { fabricationCircuitJson, project, lensDistortionProject, layerFiles } =
   await createBiscuitBoardLightburnArtifacts(circuitJson)
 
 // This directory contains generated, gitignored artifacts only. Replacing it
@@ -46,6 +46,10 @@ await Promise.all([
   Bun.write(
     resolve(outputDirectory, "stm32c071.lightburn.lbrn2"),
     project.getString(),
+  ),
+  Bun.write(
+    resolve(outputDirectory, "stm32c071.lightburn-lensdistortion.lbrn2"),
+    lensDistortionProject.getString(),
   ),
   Bun.write(
     resolve(outputDirectory, "stm32c071.lightburn.svg"),
@@ -74,6 +78,7 @@ await Promise.all([
           circuitJson: "stm32c071.circuit.json",
           lightburnCircuitJson: "stm32c071.lightburn.circuit.json",
           combinedLightburn: "stm32c071.lightburn.lbrn2",
+          lensDistortionLightburn: "stm32c071.lightburn-lensdistortion.lbrn2",
           preview: "stm32c071.lightburn.svg",
           operations: layerFiles.map((file) => ({
             path: `layers/${file.fileName}`,
