@@ -11,8 +11,8 @@ import {
 import { Stm32c071BiscuitBoard } from "../examples/stm32c071"
 import { createBiscuitBoardLightburnArtifacts } from "../lib/biscuit-board-lightburn"
 import {
+  applyLightBurnLensDistortion,
   BISCUIT_BOARD_LENS_CALIBRATION,
-  correctLightBurnPointForLensDistortion,
   designToProjected,
 } from "../lib/lightburn-lens-distortion"
 
@@ -28,7 +28,7 @@ const getFirstPath = (project: LightBurnProject): ShapePath => {
   throw new Error("Expected the LightBurn project to contain a path")
 }
 
-test("snapshots the lens-corrected STM32C071 LightBurn project", async () => {
+test("snapshots the lens-distorted STM32C071 LightBurn project", async () => {
   const circuit = new Circuit()
   circuit.add(<Stm32c071BiscuitBoard />)
   await circuit.renderUntilSettled()
@@ -54,22 +54,25 @@ test("snapshots the lens-corrected STM32C071 LightBurn project", async () => {
     x: (board?.width ?? 0) / 2 - (board?.center.x ?? 0),
     y: (board?.height ?? 0) / 2 - (board?.center.y ?? 0),
   }
-  const correctedBoardOrigin = correctLightBurnPointForLensDistortion(
+  const distortedBoardOrigin = applyLightBurnLensDistortion(
     boardOrigin,
     boardOrigin,
   )
-  const projectedCorrectedVertex = designToProjected(correctedVertex)
+  const expectedDistortedVertex = designToProjected({
+    x: originalVertex.x - boardOrigin.x,
+    y: originalVertex.y - boardOrigin.y,
+  })
 
-  expect(correctedBoardOrigin.x).toBeCloseTo(0, 9)
-  expect(correctedBoardOrigin.y).toBeCloseTo(0, 9)
-  expect(projectedCorrectedVertex.x).toBeCloseTo(
-    BISCUIT_BOARD_LENS_CALIBRATION.a0 + originalVertex.x - boardOrigin.x,
+  expect(distortedBoardOrigin.x).toBeCloseTo(
+    BISCUIT_BOARD_LENS_CALIBRATION.a0,
     9,
   )
-  expect(projectedCorrectedVertex.y).toBeCloseTo(
-    BISCUIT_BOARD_LENS_CALIBRATION.b0 + originalVertex.y - boardOrigin.y,
+  expect(distortedBoardOrigin.y).toBeCloseTo(
+    BISCUIT_BOARD_LENS_CALIBRATION.b0,
     9,
   )
+  expect(correctedVertex.x).toBeCloseTo(expectedDistortedVertex.x, 9)
+  expect(correctedVertex.y).toBeCloseTo(expectedDistortedVertex.y, 9)
 
   const lensDistortionSvg = generateLightBurnSvg(lensDistortionProject, {
     margin: 2,

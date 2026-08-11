@@ -125,14 +125,14 @@ const composeMatrices = (parent: Mat, child: Mat): Mat => {
 }
 
 /**
- * Convert a board-local LightBurn position to its corrected command coordinate.
+ * Convert a board-local LightBurn position to its measured/projected position.
  *
- * The generated project uses a top-left origin, while the calibration command
- * frame is centered on the board. The desired projected frame is centered at
- * the fitted translation (a0, b0); the inverse returns the centered command
- * coordinate directly.
+ * The generated project uses a top-left origin, while the calibration design
+ * frame is centered on the board. Removing the LightBurn origin restores the
+ * design coordinate before applying the fitted forward transform, including
+ * its translation.
  */
-export const correctLightBurnPointForLensDistortion = (
+export const applyLightBurnLensDistortion = (
   point: Point,
   boardOrigin: Point,
 ): Point => {
@@ -141,21 +141,18 @@ export const correctLightBurnPointForLensDistortion = (
     y: point.y - boardOrigin.y,
   }
 
-  return projectedToDesign({
-    x: BISCUIT_BOARD_LENS_CALIBRATION.a0 + centeredPoint.x,
-    y: BISCUIT_BOARD_LENS_CALIBRATION.b0 + centeredPoint.y,
-  })
+  return designToProjected(centeredPoint)
 }
 
 const correctVert = (vert: Vert, matrix: Mat, boardOrigin: Point): Vert => {
-  const corrected = correctLightBurnPointForLensDistortion(
+  const corrected = applyLightBurnLensDistortion(
     applyMatrix(matrix, vert),
     boardOrigin,
   )
   const output: Vert = { ...vert, ...corrected }
 
   if (vert.c0x !== undefined && vert.c0y !== undefined) {
-    const controlPoint = correctLightBurnPointForLensDistortion(
+    const controlPoint = applyLightBurnLensDistortion(
       applyMatrix(matrix, { x: vert.c0x, y: vert.c0y }),
       boardOrigin,
     )
@@ -164,7 +161,7 @@ const correctVert = (vert: Vert, matrix: Mat, boardOrigin: Point): Vert => {
   }
 
   if (vert.c1x !== undefined && vert.c1y !== undefined) {
-    const controlPoint = correctLightBurnPointForLensDistortion(
+    const controlPoint = applyLightBurnLensDistortion(
       applyMatrix(matrix, { x: vert.c1x, y: vert.c1y }),
       boardOrigin,
     )
@@ -228,8 +225,8 @@ const cloneShape = (shape: ShapeBase): ShapeBase => {
   throw new Error(`Unsupported LightBurn shape for cloning: ${shape.token}`)
 }
 
-/** Clone a LightBurn project and apply inverse lens correction to every path. */
-export const createLensDistortionCorrectedLightBurnProject = (
+/** Clone a LightBurn project and apply forward lens distortion to every path. */
+export const createLensDistortedLightBurnProject = (
   project: LightBurnProject,
   boardOrigin: Point,
 ): LightBurnProject => {

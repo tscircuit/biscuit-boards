@@ -51,13 +51,13 @@ bun run export:lightburn
 
 The output is written to `dist/lightburn/stm32c071/` and includes the original
 Circuit JSON, a LightBurn-prepared Circuit JSON, a combined `.lbrn2` project,
-an inverse-calibrated `*-lensdistortion.lbrn2` companion, an SVG preview, a
+a forward-calibrated `*-lensdistortion.lbrn2` companion, an SVG preview, a
 manifest, and separate `.lbrn2` files for each operation.
 
 The lens-distortion companion converts top-left LightBurn coordinates to the
-board-centered calibration frame, targets the projected position translated
-by `(a0, b0)`, and applies the inverse bilinear calibration. Its output stays
-in the centered laser-command frame.
+board-centered design frame, then applies the forward bilinear calibration.
+Its output includes the fitted `(a0, b0)` translation and represents the
+predicted measured/projected positions.
 
 The fabrication preparation is deliberately top-side and drill-free. It
 removes board holes, cutouts, unused prefabricated vias, and all through-board

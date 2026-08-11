@@ -20,9 +20,9 @@ export {
   prepareCircuitJsonForBiscuitBoardLightburn,
 } from "./lib/biscuit-board-lightburn"
 export {
+  applyLightBurnLensDistortion,
   BISCUIT_BOARD_LENS_CALIBRATION,
-  correctLightBurnPointForLensDistortion,
-  createLensDistortionCorrectedLightBurnProject,
+  createLensDistortedLightBurnProject,
   designToProjected,
   type Point as LensDistortionPoint,
   projectedToDesign,
