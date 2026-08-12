@@ -64,7 +64,7 @@ export interface BiscuitBoardViaPosition {
 
 const range = (start: number, end: number, increment: number): number[] =>
   Array.from(
-    { length: Math.max(0, Math.ceil((end - start) / increment)) },
+    { length: Math.max(0, Math.floor((end - start) / increment)) },
     (_, index) => start + index * increment,
   )
 
