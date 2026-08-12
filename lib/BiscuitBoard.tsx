@@ -191,8 +191,8 @@ export const BiscuitBoard = ({
           pcbY={via.y}
           fromLayer="top"
           toLayer="bottom"
-          holeDiameter="0.2mm"
-          outerDiameter="0.4mm"
+          holeDiameter="0.8mm"
+          outerDiameter="1.2mm"
         />
       </Fragment>
     ))}
