@@ -1,11 +1,7 @@
-import type { SimpleRouteJson } from "@tscircuit/core"
-import type { AutorouterConfig, AutorouterProp } from "@tscircuit/props"
+import type { AutorouterProp } from "@tscircuit/props"
 import { Fragment, type ReactNode } from "react"
-import {
-  BiscuitBoardAutorouter,
-  type BiscuitBoardAutorouterOptions,
-  createBiscuitBoardAutorouter,
-} from "./biscuit-board-autorouter"
+import type { BiscuitBoardAutorouterOptions } from "./biscuit-board-autorouter"
+import { createPrefabricatedViaAutorouter } from "./create-prefabricated-via-autorouter"
 
 export const BISCUIT_BOARD_WIDTH = 75
 export const BISCUIT_BOARD_HEIGHT = 55
@@ -13,49 +9,6 @@ const BISCUIT_BOARD_EDGE_CLEARANCE = 0.2
 // Core's DRC currently treats an exactly-equal floating-point distance as a
 // violation. Route at the full clearance, but leave a 1 µm comparison epsilon.
 const BISCUIT_BOARD_EDGE_CLEARANCE_VALIDATION_TOLERANCE = 0.001
-
-const createBoardBoundedAutorouter = (
-  options: BiscuitBoardAutorouterOptions | undefined,
-  minimumTraceWidth: number | undefined,
-  nominalTraceWidth: number,
-): AutorouterConfig => ({
-  ...createBiscuitBoardAutorouter(options),
-  algorithmFn: async (input: SimpleRouteJson) =>
-    new BiscuitBoardAutorouter(
-      {
-        ...input,
-        minTraceWidth: Math.max(input.minTraceWidth, minimumTraceWidth ?? 0),
-        nominalTraceWidth: Math.max(
-          input.nominalTraceWidth ?? 0,
-          nominalTraceWidth,
-          minimumTraceWidth ?? 0,
-        ),
-        connections: input.connections.map((connection) => {
-          const width = Math.max(
-            connection.width ?? input.minTraceWidth,
-            minimumTraceWidth ?? 0,
-          )
-          return {
-            ...connection,
-            width,
-            nominalTraceWidth: Math.max(
-              connection.nominalTraceWidth ?? 0,
-              nominalTraceWidth,
-              width,
-            ),
-          }
-        }),
-        minBoardEdgeClearance: BISCUIT_BOARD_EDGE_CLEARANCE,
-        bounds: {
-          minX: -BISCUIT_BOARD_WIDTH / 2,
-          maxX: BISCUIT_BOARD_WIDTH / 2,
-          minY: -BISCUIT_BOARD_HEIGHT / 2,
-          maxY: BISCUIT_BOARD_HEIGHT / 2,
-        },
-      },
-      options,
-    ),
-})
 
 export interface BiscuitBoardViaPosition {
   x: number
@@ -101,7 +54,7 @@ export const BISCUIT_BOARD_VIA_ZONES = [
 export const BISCUIT_BOARD_VIA_POSITIONS =
   BISCUIT_BOARD_VIA_ZONES.flatMap(createViaZone)
 
-const mountingHoles = [
+export const BISCUIT_BOARD_MOUNTING_HOLE_POSITIONS = [
   { x: BISCUIT_BOARD_WIDTH / 2 - 2.5, y: BISCUIT_BOARD_HEIGHT / 2 - 2.5 },
   { x: BISCUIT_BOARD_WIDTH / 2 - 6.5, y: BISCUIT_BOARD_HEIGHT / 2 - 2.5 },
   { x: BISCUIT_BOARD_WIDTH / 2 - 2.5, y: -BISCUIT_BOARD_HEIGHT / 2 + 2.5 },
@@ -146,11 +99,14 @@ export const BiscuitBoard = ({
     minViaPadDiameter="0.4mm"
     autorouter={
       autorouter ??
-      createBoardBoundedAutorouter(
-        autorouterOptions,
-        minTraceWidth,
+      createPrefabricatedViaAutorouter({
+        width: BISCUIT_BOARD_WIDTH,
+        height: BISCUIT_BOARD_HEIGHT,
+        edgeClearance: BISCUIT_BOARD_EDGE_CLEARANCE,
+        options: autorouterOptions,
+        minimumTraceWidth: minTraceWidth,
         nominalTraceWidth,
-      )
+      })
     }
     routingDisabled={routingDisabled}
   >
@@ -164,7 +120,7 @@ export const BiscuitBoard = ({
       fontSize="2mm"
     />
 
-    {mountingHoles.map((hole) => (
+    {BISCUIT_BOARD_MOUNTING_HOLE_POSITIONS.map((hole) => (
       <Fragment key={`mounting-hole-${hole.x}-${hole.y}`}>
         <hole pcbX={hole.x} pcbY={hole.y} diameter="2.2mm" />
       </Fragment>
