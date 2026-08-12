@@ -50,14 +50,10 @@ test("derives the checked-in lens calibration from the coordinate CSV", async ()
   )
   expect(fit.includedViaNumbers).toHaveLength(15)
   expect(fit.excludedViaNumbers).toEqual([])
-  expect(fit.model.triangles).toHaveLength(
-    BISCUIT_BOARD_LENS_CALIBRATION_FIT.triangleCount,
-  )
-  expect(fit.model.hullEdges).toHaveLength(
-    BISCUIT_BOARD_LENS_CALIBRATION_FIT.hullEdgeCount,
-  )
-  expect(fit.rmsError).toBe(0)
+  expect(fit.model.power).toBe(BISCUIT_BOARD_LENS_CALIBRATION_FIT.power)
+  expect(fit.rmsError).toBeLessThan(1e-12)
   expect(fit.baselineBilinearRmsError).toBeGreaterThan(1)
+  expect(fit.leaveOneOutRmsError).toBeLessThan(1.8)
 })
 
 test("exactly interpolates every measured calibration point", async () => {
@@ -79,7 +75,7 @@ test("exactly interpolates every measured calibration point", async () => {
   }
 })
 
-test("round-trips the full board region including affine extrapolation", () => {
+test("round-trips the full board region", () => {
   let maxRoundTripError = 0
 
   for (let x = -37.5; x <= 37.5; x += 2.5) {
@@ -94,4 +90,34 @@ test("round-trips the full board region including affine extrapolation", () => {
   }
 
   expect(maxRoundTripError).toBeLessThan(1e-10)
+})
+
+test("has a smooth, non-folding correction field across the board", () => {
+  let minimumDeterminant = Number.POSITIVE_INFINITY
+  let maximumNeighborStep = 0
+  const step = 0.25
+
+  for (let x = -37.5; x <= 37.5; x += step) {
+    let previous: ReturnType<typeof designToProjected> | undefined
+    for (let y = -22.5; y <= 22.5; y += step) {
+      const projected = designToProjected({ x, y })
+      const projectedX = designToProjected({ x: x + 1e-4, y })
+      const projectedY = designToProjected({ x, y: y + 1e-4 })
+      const j00 = (projectedX.x - projected.x) / 1e-4
+      const j10 = (projectedX.y - projected.y) / 1e-4
+      const j01 = (projectedY.x - projected.x) / 1e-4
+      const j11 = (projectedY.y - projected.y) / 1e-4
+      minimumDeterminant = Math.min(minimumDeterminant, j00 * j11 - j01 * j10)
+      if (previous) {
+        maximumNeighborStep = Math.max(
+          maximumNeighborStep,
+          Math.hypot(projected.x - previous.x, projected.y - previous.y),
+        )
+      }
+      previous = projected
+    }
+  }
+
+  expect(minimumDeterminant).toBeGreaterThan(0.5)
+  expect(maximumNeighborStep).toBeLessThan(0.5)
 })

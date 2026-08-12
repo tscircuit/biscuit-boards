@@ -55,17 +55,18 @@ a forward-calibrated `*-lensdistortion.lbrn2` companion, an SVG preview, a
 manifest, and separate `.lbrn2` files for each operation.
 
 The lens-distortion companion converts top-left LightBurn coordinates to the
-board-centered design frame, then applies a Delaunay-triangulated piecewise
-affine transform with barycentric interpolation. Each measured coordinate is
-matched exactly, and interpolation stays continuous between neighboring
-triangles.
+board-centered design frame, then applies a smooth Shepard-style
+inverse-distance-weighted calibration. A global affine fit preserves the board
+translation, rotation, and scale; measured residual corrections are blended
+using inverse-square distance weights. Each measured coordinate is matched
+exactly without triangle boundaries or nearest-neighbor membership changes.
 
-The control points and triangle mesh are generated from
+The control points and affine baseline are generated from
 [`lib/coordinate_map/via-coordinate-map.csv`](./lib/coordinate_map/via-coordinate-map.csv)
 with `bun run generate:lens-calibration`. The current CSV fit uses all 15 points
-and has zero residual at those calibration coordinates. Beyond the measured
-convex hull, the nearest hull edge is extended with the global affine slope to
-avoid unstable or discontinuous nearest-triangle extrapolation.
+and has effectively zero residual at those calibration coordinates. Every
+control point participates in the weighted blend, so the correction remains
+continuous inside and outside the measured region as more CSV rows are added.
 
 Before applying the nonlinear transform, straight lines and Bezier curves are
 flattened to line segments no longer than 0.5 mm. This ensures the calibration
