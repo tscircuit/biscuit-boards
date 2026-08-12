@@ -8,14 +8,14 @@ import {
   type Vert,
 } from "lbrnts"
 import {
+  evaluateInverseDistanceWeighted,
+  evaluateInverseDistanceWeightedWithJacobian,
+} from "./coordinate_map/inverse-distance-weighted"
+import {
   BISCUIT_BOARD_LENS_CALIBRATION_FIT,
   BISCUIT_BOARD_LENS_CALIBRATION_MATRIX,
   BISCUIT_BOARD_LENS_CALIBRATION_MODEL,
 } from "./coordinate_map/lens-calibration-generated"
-import {
-  evaluatePiecewiseLinear,
-  evaluatePiecewiseLinearWithJacobian,
-} from "./coordinate_map/piecewise-linear"
 
 export type Point = {
   x: number
@@ -48,11 +48,11 @@ const POINT_EQUALITY_EPSILON_MM = 1e-9
 
 /** Convert a commanded design coordinate to its measured laser coordinate. */
 export const designToProjected = (point: Point): Point =>
-  evaluatePiecewiseLinear(BISCUIT_BOARD_LENS_CALIBRATION_MODEL, point)
+  evaluateInverseDistanceWeighted(BISCUIT_BOARD_LENS_CALIBRATION_MODEL, point)
 
 /**
  * Invert the calibrated laser projection with Newton iteration over the
- * active piecewise-affine triangle.
+ * smooth inverse-distance-weighted correction field.
  */
 export const projectedToDesign = (
   projected: Point,
@@ -63,7 +63,9 @@ export const projectedToDesign = (
 ): Point => {
   const maxIterations = options.maxIterations ?? 20
   const tolerance = options.tolerance ?? 1e-10
-  const { a0, a1, a2, b0, b1, b2 } = BISCUIT_BOARD_LENS_CALIBRATION
+  const [affineX, affineY] = BISCUIT_BOARD_LENS_CALIBRATION_MODEL.affine
+  const [a0, a1, a2] = affineX
+  const [b0, b1, b2] = affineY
   const offsetX = projected.x - a0
   const offsetY = projected.y - b0
   const affineDeterminant = a1 * b2 - a2 * b1
@@ -76,10 +78,11 @@ export const projectedToDesign = (
   let y = (-b1 * offsetX + a1 * offsetY) / affineDeterminant
 
   for (let iteration = 0; iteration < maxIterations; iteration++) {
-    const { point: predicted, jacobian } = evaluatePiecewiseLinearWithJacobian(
-      BISCUIT_BOARD_LENS_CALIBRATION_MODEL,
-      { x, y },
-    )
+    const { point: predicted, jacobian } =
+      evaluateInverseDistanceWeightedWithJacobian(
+        BISCUIT_BOARD_LENS_CALIBRATION_MODEL,
+        { x, y },
+      )
     const errorX = predicted.x - projected.x
     const errorY = predicted.y - projected.y
 
