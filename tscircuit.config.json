@@ -1,6 +1,7 @@
 {
   "mainEntrypoint": "index.tsx",
   "includeBoardFiles": [
+    "examples/boosterpack-clad.tsx",
     "examples/stm32c071.tsx",
     "examples/stm32c071-display-boosterpack.tsx",
     "examples/rp2040.tsx"

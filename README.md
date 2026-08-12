@@ -58,6 +58,8 @@ coordinates. The upper-left and six-column bottom bands sit one standard 4 mm
 via pitch from those corner clusters and against the top and bottom edges. The
 upper-right edge is open, the 11-via right-edge rail is retained, and a 2x3
 escape cluster sits immediately to the right of the left LaunchPad header. The
+bare template preview is in
+[`examples/boosterpack-clad.tsx`](./examples/boosterpack-clad.tsx), and the
 routed example is in
 [`examples/stm32c071-display-boosterpack.tsx`](./examples/stm32c071-display-boosterpack.tsx).
 It places the STM32C071, display connector, both buttons, status LEDs, SWD
@@ -88,6 +90,7 @@ reduced routing experiment.
 bun run build:boosterpack
 bun run analyze:boosterpack
 bun run snapshot:boosterpack
+bun run snapshot:boosterpack-clad
 ROUTE_SWD_AND_BULK=0 bun run analyze:boosterpack
 bun test tests/boosterpack-clad.test.tsx
 ```
