@@ -5,7 +5,7 @@
     "": {
       "name": "@tsci/seveibar.biscuit-boards",
       "dependencies": {
-        "@tscircuit/biscuit-board-autorouter": "github:tscircuit/biscuit-board-autorouter#a2d9afff2b131a19a4c58a909b2523e2e48c3f94",
+        "@tscircuit/biscuit-board-autorouter": "github:tscircuit/biscuit-board-autorouter#f4db9cc0915912f9e9fbbbe9304ad4dce32830aa",
         "@tscircuit/core": "0.0.1641",
         "@tscircuit/props": "0.0.617",
         "circuit-json": "0.0.464",
@@ -176,7 +176,7 @@
 
     "@tscircuit/alphabet": ["@tscircuit/alphabet@0.0.25", "", { "peerDependencies": { "typescript": "^5.0.0" } }, "sha512-PWLjptI6AlLEtF/wjN1N8uC+n3G7vtg0j3xKE1fgWHDhahtnlQRqHDrtPSLlkIR9aJjRfjplzLuaUEaCRvJmZA=="],
 
-    "@tscircuit/biscuit-board-autorouter": ["@tscircuit/biscuit-board-autorouter@github:tscircuit/biscuit-board-autorouter#a2d9aff", { "dependencies": { "@tscircuit/core": "^0.0.1621", "@tscircuit/power-trace-expander": "github:tscircuit/power-trace-expander#6fa2ac79cf13129c47432db3a23e61c17067e912", "@tscircuit/props": "^0.0.617", "@tscircuit/solver-utils": "^0.0.17", "graphics-debug": "^0.0.93" }, "peerDependencies": { "typescript": "^5" } }, "tscircuit-biscuit-board-autorouter-a2d9aff"],
+    "@tscircuit/biscuit-board-autorouter": ["@tscircuit/biscuit-board-autorouter@github:tscircuit/biscuit-board-autorouter#f4db9cc", { "dependencies": { "@tscircuit/core": "^0.0.1621", "@tscircuit/power-trace-expander": "github:tscircuit/power-trace-expander#6fa2ac79cf13129c47432db3a23e61c17067e912", "@tscircuit/props": "^0.0.617", "@tscircuit/solver-utils": "^0.0.17", "graphics-debug": "^0.0.93" }, "peerDependencies": { "typescript": "^5" } }, "tscircuit-biscuit-board-autorouter-f4db9cc"],
 
     "@tscircuit/capacity-autorouter": ["@tscircuit/capacity-autorouter@0.0.782", "", { "dependencies": { "fast-json-stable-stringify": "^2.1.0", "object-hash": "^3.0.0", "stack-svgs": "^0.0.1" } }, "sha512-fq+zlqznv97xd10wtGbk2CqTF/Bpc5jDXBDXeFnrnWITAyNyRxkY37INwdmywj4EPhhZS/6ng1+buxlCh2qfoQ=="],
 
