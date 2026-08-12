@@ -7,7 +7,9 @@
   ],
   "scripts": {
     "dev": "tsci dev",
+    "analyze:boosterpack": "bun run scripts/analyze-boosterpack-routing.tsx",
     "build": "tsci build index.tsx",
+    "build:boosterpack": "tsci build examples/stm32c071-display-boosterpack.tsx --disable-parts-engine --svgs",
     "build:example": "tsci build examples/stm32c071.tsx --disable-parts-engine --svgs",
     "export:lightburn": "bun run scripts/export-stm32-lightburn.tsx",
     "generate:lens-calibration": "bun run scripts/generate-lens-calibration.ts",

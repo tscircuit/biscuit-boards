@@ -1,5 +1,6 @@
 export {
   BISCUIT_BOARD_HEIGHT,
+  BISCUIT_BOARD_MOUNTING_HOLE_POSITIONS,
   BISCUIT_BOARD_VIA_POSITIONS,
   BISCUIT_BOARD_VIA_ZONES,
   BISCUIT_BOARD_WIDTH,
@@ -7,6 +8,21 @@ export {
   type BiscuitBoardProps,
   type BiscuitBoardViaPosition,
 } from "./lib/BiscuitBoard"
+export {
+  BOOSTERPACK_CLAD_HEIGHT,
+  BOOSTERPACK_CLAD_VIA_CANDIDATE_ZONES,
+  BOOSTERPACK_CLAD_VIA_EXCLUSION_ZONES,
+  BOOSTERPACK_CLAD_VIA_POSITIONS,
+  BOOSTERPACK_CLAD_WIDTH,
+  BOOSTERPACK_HEADER_CENTER_X,
+  BOOSTERPACK_HEADER_CENTER_Y,
+  BOOSTERPACK_HEADER_PITCH,
+  BoosterPackClad,
+  type BoosterPackCladProps,
+  type BoosterPackCladViaPosition,
+  BoosterPackLeftHeader,
+  BoosterPackRightHeader,
+} from "./lib/BoosterPackClad"
 export {
   BiscuitBoardAutorouter,
   type BiscuitBoardAutorouterOptions,
