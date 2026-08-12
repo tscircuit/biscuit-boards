@@ -52,12 +52,13 @@ downward-facing 2x10 male headers for the target LaunchPad mating arrangement;
 TI's generic stacking recommendation normally describes downward-facing female
 BoosterPack headers.
 
-The via field mirrors the original clad's clustered/open-edge language with 48
+The via field mirrors the original clad's clustered/open-edge language with 51
 candidates. The two closed 3x2 left-corner clusters keep their original
 coordinates. The upper-left and six-column bottom bands sit one standard 4 mm
 via pitch from those corner clusters and against the top and bottom edges. The
-right-edge rail is omitted, while a 2x3 escape cluster sits immediately to the
-right of the left LaunchPad header. The routed example is in
+upper-right edge is open, the 11-via right-edge rail is retained, and a 2x3
+escape cluster sits immediately to the right of the left LaunchPad header. The
+routed example is in
 [`examples/stm32c071-display-boosterpack.tsx`](./examples/stm32c071-display-boosterpack.tsx).
 It places the STM32C071, display connector, both buttons, status LEDs, SWD
 connector, bulk capacitor, and the two LaunchPad headers within the outline.
@@ -66,12 +67,12 @@ The complete example routes all 36 PCB traces, including all five J_SWD pads
 and both bulk-capacitor pads, with no router or clearance errors. SWDIO and
 SWCLK use two deterministic escape traces whose channels are reserved from the
 board autorouter; the other 34 traces are autorouted. The solved route claims
-10 of the 48 prefabricated vias, at these positions in millimeters:
+10 of the 51 prefabricated vias, at these positions in millimeters:
 
 ```text
-(-14,-4) (-14,0) (-14,4)
-(-9.5,-21.5) (-5.5,-21.5) (-1.5,-21.5)
-(-5.5,21.5) (12.75,21.5) (24.75,21.5) (24.75,25.5)
+(-18,-4) (-18,4) (-14,-4) (-14,0) (-14,4)
+(-5.5,-21.5) (-1.5,-21.5) (-5.5,21.5)
+(32.5,3.75) (32.5,11.75)
 ```
 
 Every router-generated layer change uses one of those fixed via locations; no

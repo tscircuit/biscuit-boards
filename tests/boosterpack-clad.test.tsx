@@ -38,6 +38,10 @@ test("uses the BiscuitBoard outline and TI 40-pin header geometry", async () => 
     (via) =>
       via.x >= -21.5 && via.x <= -1.5 && (via.y === -25.5 || via.y === -21.5),
   )
+  const rightEdgeVias = vias.filter((via) => via.x === 32.5)
+  const topRightClusterVias = vias.filter(
+    (via) => via.x >= 12.75 && via.x <= 24.75 && via.y >= 21.5 && via.y <= 25.5,
+  )
   const launchpadSourceComponentIds = new Set(
     circuitJson.flatMap((element) =>
       element.type === "source_component" &&
@@ -75,7 +79,7 @@ test("uses the BiscuitBoard outline and TI 40-pin header geometry", async () => 
   )
   expect(launchpadPorts).toHaveLength(40)
   expect(vias).toHaveLength(BOOSTERPACK_CLAD_VIA_POSITIONS.length)
-  expect(vias).toHaveLength(48)
+  expect(vias).toHaveLength(51)
   expect(topLeftEdgeVias).toHaveLength(10)
   expect(bottomEdgeVias).toHaveLength(12)
   expect(new Set(bottomEdgeVias.map((via) => via.x)).size).toBe(6)
@@ -84,8 +88,8 @@ test("uses the BiscuitBoard outline and TI 40-pin header geometry", async () => 
   expect(Math.min(...topLeftEdgeVias.map((via) => via.x)) - -25.5).toBe(4)
   expect(Math.min(...bottomEdgeVias.map((via) => via.x)) - -25.5).toBe(4)
   expect(vias.some((via) => via.x === -1.5 && via.y === -25.5)).toBe(true)
-  expect(vias.some((via) => via.x === 24.75 && via.y === 25.5)).toBe(true)
-  expect(vias.some((via) => via.x === 32.5)).toBe(false)
+  expect(topRightClusterVias).toHaveLength(0)
+  expect(rightEdgeVias).toHaveLength(11)
   expect(
     vias.some((via) => via.x === -18 && via.y === -4) &&
       vias.some((via) => via.x === -14 && via.y === 4),
