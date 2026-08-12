@@ -43,7 +43,7 @@
     "typescript": "5.9.3"
   },
   "dependencies": {
-    "@tscircuit/biscuit-board-autorouter": "github:tscircuit/biscuit-board-autorouter#199bc1be13f7daa3fb3f8164dd5fb607f69bdf0f",
+    "@tscircuit/biscuit-board-autorouter": "github:tscircuit/biscuit-board-autorouter#d1514f5aa00b52bb849b37f6c8fed11f21c171b2",
     "@tscircuit/core": "0.0.1641",
     "@tscircuit/props": "0.0.617",
     "circuit-json": "0.0.464",
