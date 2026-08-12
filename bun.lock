@@ -9,7 +9,7 @@
         "@tscircuit/core": "0.0.1641",
         "@tscircuit/props": "0.0.617",
         "circuit-json": "0.0.464",
-        "circuit-json-to-lbrn": "0.0.87",
+        "circuit-json-to-lbrn": "0.0.88",
         "lbrnts": "0.0.22",
       },
       "devDependencies": {
@@ -314,7 +314,7 @@
 
     "circuit-json-to-gltf": ["circuit-json-to-gltf@0.0.111", "", { "dependencies": { "@jscad/modeling": "^2.12.6", "earcut": "^3.0.2", "jscad-electronics": "^0.0.135", "jscad-planner": "^0.0.14", "jscad-to-gltf": "^0.0.5", "occt-import-js": "^0.0.23" }, "peerDependencies": { "@resvg/resvg-js": "2", "@resvg/resvg-wasm": "2", "@tscircuit/circuit-json-util": "*", "circuit-json": "*", "circuit-to-svg": "*", "typescript": "^5" }, "optionalPeers": ["@resvg/resvg-js", "@resvg/resvg-wasm"] }, "sha512-EKIw/Bflz9NWmM7dNvFiKMVkNPF5Jbnze/Y2IjkwRGesi/Ep+8tR6q3flDgnHBTdNcPlT33RiYXXfH8mYOb3kg=="],
 
-    "circuit-json-to-lbrn": ["circuit-json-to-lbrn@0.0.87", "", { "dependencies": { "@tscircuit/manifold-2d": "^0.0.6", "lbrnts": "^0.0.22" }, "peerDependencies": { "typescript": "^5" } }, "sha512-48Ygt2YJm+fh4Ep7QJTVKvv6rXOyswCNWgNc2s4ZUwUlG4OQQBRM4T6D4vZjNpjTt1Fzbc5xITpI5bg77z+OBg=="],
+    "circuit-json-to-lbrn": ["circuit-json-to-lbrn@0.0.88", "", { "dependencies": { "@tscircuit/manifold-2d": "^0.0.6", "lbrnts": "^0.0.22" }, "peerDependencies": { "typescript": "^5" } }, "sha512-ooi2UuvK0UIOCdr9Bh8mUFItT9Zr+A1tBwHTvbdgDAK9X0gZEWxdPMytlRxxPojAULV9lmJF7Lkxz9POLgzjyA=="],
 
     "circuit-json-to-pnp-csv": ["circuit-json-to-pnp-csv@0.0.8", "", { "dependencies": { "papaparse": "^5.4.1" }, "peerDependencies": { "@tscircuit/soup-util": "*", "typescript": "^5.0.0" } }, "sha512-m3ycvl5Cx1woE3qNdf457f2r/6WBxBxwbbkYbXbB/a+eEe7Y1Kk9BIq8GBsq7j25MTBeR0mbDMGL6yZGqSAVDA=="],
 

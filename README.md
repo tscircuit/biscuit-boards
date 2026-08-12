@@ -135,7 +135,7 @@ removes board holes, cutouts, unused prefabricated vias, and all through-board
 LightBurn operations. A prefabricated via is included only when a routed trace
 uses it; it is emitted as solid copper so the laser ablates around the via
 without trying to cut its existing hole. Top pads are emitted as a fill/scan
-operation, and routed copper receives a 0.5 mm clipped ablation band by
+operation, and routed copper receives a 0.15 mm clipped ablation band by
 default.
 
 ```sh

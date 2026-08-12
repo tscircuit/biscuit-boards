@@ -4,6 +4,7 @@ import "bun-match-svg"
 import type { CircuitJson, PcbTrace, PcbVia } from "circuit-json"
 import { generateLightBurnSvg } from "lbrnts"
 import { Stm32c071BiscuitBoard } from "../examples/stm32c071"
+import { BISCUIT_BOARD_VIA_POSITIONS } from "../lib/BiscuitBoard"
 import {
   createBiscuitBoardLightburnArtifacts,
   prepareCircuitJsonForBiscuitBoardLightburn,
@@ -25,7 +26,7 @@ test("exports the STM32C071 board as drill-free top-side LightBurn operations", 
 
   expect(
     circuitJson.filter((element) => element.type === "pcb_via"),
-  ).toHaveLength(54)
+  ).toHaveLength(BISCUIT_BOARD_VIA_POSITIONS.length)
   expect(
     circuitJson.filter((element) => element.type === "pcb_hole"),
   ).toHaveLength(5)
