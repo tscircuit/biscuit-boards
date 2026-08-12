@@ -12,7 +12,7 @@
     "build:arduino-shield": "tsci build examples/arduino-shield-clad.tsx --disable-parts-engine --svgs",
     "build:boosterpack": "tsci build examples/stm32c071-display-boosterpack.tsx --disable-parts-engine --svgs",
     "build:example": "tsci build examples/stm32c071.tsx --disable-parts-engine --svgs",
-    "export:lightburn": "bun run scripts/export-stm32-lightburn.tsx",
+    "export:lightburn": "bun run scripts/export-lightburn.tsx",
     "generate:lens-calibration": "bun run scripts/generate-lens-calibration.ts",
     "setup:test-deps": "bun run --cwd node_modules/sharp install",
     "snapshot": "tsci snapshot",
@@ -32,7 +32,7 @@
     "start": "tsci dev",
     "test": "bun test",
     "typecheck": "tsc --noEmit",
-    "check": "bun run typecheck && bun run test && bun run snapshot:stm32 && bun run snapshot:rp2040 && bun run snapshot:boosterpack && bun run snapshot:boosterpack-clad && bun run snapshot:arduino-shield && bun run build && bun run build:example && bun run build:arduino-shield && bun run export:lightburn"
+    "check": "bun run typecheck && bun run test && bun run snapshot:stm32 && bun run snapshot:rp2040 && bun run snapshot:boosterpack && bun run snapshot:boosterpack-clad && bun run snapshot:arduino-shield && bun run build && bun run build:example && bun run build:arduino-shield && bun run export:lightburn examples/stm32c071-display.tsx"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.4",

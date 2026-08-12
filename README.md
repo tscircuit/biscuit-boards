@@ -122,17 +122,20 @@ bun test tests/arduino-shield-clad.test.tsx
 
 ## LightBurn export
 
-Generate the routed Circuit JSON and all laser-ready files for the STM32 board
-with one command:
+Generate routed Circuit JSON and laser-ready files for any circuit entry file
+that has a default component export:
 
 ```sh
-bun run export:lightburn
+bun run export:lightburn examples/stm32c071-display.tsx
 ```
 
-The output is written to `dist/lightburn/stm32c071/` and includes the original
-Circuit JSON, a LightBurn-prepared Circuit JSON, a combined `.lbrn2` project,
-a forward-calibrated `*-lensdistortion.lbrn2` companion, an SVG preview, a
-manifest, and separate `.lbrn2` files for each operation.
+Output is written to `dist/lightburn/<circuit-file-name>/`. For example, the
+command above writes to `dist/lightburn/stm32c071-display/` and includes the
+original Circuit JSON, a LightBurn-prepared Circuit JSON, a combined `.lbrn2`
+project containing every populated board side, a forward-calibrated
+`*-lensdistortion.lbrn2` companion, an SVG preview, a manifest, and separate
+`.lbrn2` files for each operation. Bottom layers are mirrored for flipped-board
+machining and omitted entirely when the circuit has no bottom-side geometry.
 
 The lens-distortion companion converts top-left LightBurn coordinates to the
 board-centered design frame, then applies a smooth Shepard-style
@@ -153,13 +156,13 @@ flattened to line segments no longer than 0.5 mm. This ensures the calibration
 is sampled along the complete path instead of transforming only its endpoints
 and curve handles.
 
-The fabrication preparation is deliberately top-side and drill-free. It
-removes board holes, cutouts, unused prefabricated vias, and all through-board
-LightBurn operations. A prefabricated via is included only when a routed trace
-uses it; it is emitted as solid copper so the laser ablates around the via
-without trying to cut its existing hole. Top pads are emitted as a fill/scan
-operation, and routed copper receives a 0.15 mm clipped ablation band by
-default.
+The fabrication preparation is deliberately drill-free. It removes board
+holes, cutouts, unused prefabricated vias, and all through-board LightBurn
+operations. A prefabricated via is included only when a routed trace uses it;
+it is emitted as solid copper so the laser ablates around the via without
+trying to cut its existing hole. Pads are emitted as a fill/scan operation,
+and routed copper receives a 0.15 mm clipped ablation band by default. Bottom
+geometry is mirrored for machining after the board is flipped.
 
 ```sh
 bun install
@@ -170,5 +173,5 @@ bun run snapshot:stm32
 bun run snapshot:rp2040
 bun run build
 bun run build:example
-bun run export:lightburn
+bun run export:lightburn examples/stm32c071-display.tsx
 ```
