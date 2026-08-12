@@ -3,6 +3,7 @@ import { Circuit } from "@tscircuit/core"
 import "bun-match-svg"
 import type { CircuitJson, PcbTrace, PcbVia } from "circuit-json"
 import { generateLightBurnSvg } from "lbrnts"
+import { Stm32c071DisplayBiscuitBoard } from "../examples/stm32c071-display"
 import { Stm32c071BiscuitBoard } from "../examples/stm32c071"
 import { BISCUIT_BOARD_VIA_POSITIONS } from "../lib/BiscuitBoard"
 import {
@@ -107,4 +108,52 @@ test("exports the STM32C071 board as drill-free top-side LightBurn operations", 
     defaultStrokeWidth: 0.1,
   })
   await expect(lightburnSvg).toMatchSvgSnapshot(import.meta.path)
+}, 30_000)
+
+test("automatically includes populated bottom-side LightBurn operations", async () => {
+  const circuit = new Circuit()
+  circuit.add(<Stm32c071DisplayBiscuitBoard />)
+  await circuit.renderUntilSettled()
+
+  const circuitJson = circuit.getCircuitJson() as CircuitJson
+  const errors = circuitJson.filter((element) => element.type.endsWith("error"))
+  expect(errors).toEqual([])
+
+  const { project, layerFiles } =
+    await createBiscuitBoardLightburnArtifacts(circuitJson)
+  const lightburnXml = project.getString()
+
+  expect(layerFiles.map((file) => file.cutSettingName).toSorted()).toEqual(
+    [
+      "Ablate Around Bottom Copper",
+      "Ablate Around Top Copper",
+      "Ablate Bottom Copper Outline",
+      "Ablate Bottom Pads",
+      "Ablate Top Copper Outline",
+      "Ablate Top Pads",
+    ].toSorted(),
+  )
+  expect(layerFiles.every((file) => file.shapeCount > 0)).toBe(true)
+  expect(lightburnXml).not.toContain("Cut Through Board")
+  expect(lightburnXml).not.toContain("Reflected Bottom Board Cut")
+  expect(lightburnXml).not.toContain("Hole Punch")
+  expect(lightburnXml).toContain("Top")
+  expect(lightburnXml).toContain("Bottom")
+  expect(lightburnXml).not.toMatch(/CutIndex="(?:2|13)"/)
+}, 30_000)
+
+test("omits empty bottom-side LightBurn operations", async () => {
+  const circuit = new Circuit()
+  circuit.add(<Stm32c071BiscuitBoard />)
+  await circuit.renderUntilSettled()
+
+  const circuitJson = circuit.getCircuitJson() as CircuitJson
+  const { project, layerFiles } =
+    await createBiscuitBoardLightburnArtifacts(circuitJson)
+
+  expect(layerFiles.length).toBeGreaterThan(0)
+  expect(
+    layerFiles.some((file) => file.cutSettingName.includes("Bottom")),
+  ).toBe(false)
+  expect(project.getString()).not.toContain("Bottom")
 }, 30_000)

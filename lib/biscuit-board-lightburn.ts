@@ -14,16 +14,26 @@ import { createLensDistortedLightBurnProject } from "./lightburn-lens-distortion
 export const BISCUIT_BOARD_LIGHTBURN_COPPER_MARGIN_MM = 0.15
 
 const LIGHTBURN_LAYER_INDEX = {
-  topCopper: 0,
+  copper: {
+    top: 0,
+    bottom: 1,
+  },
   throughBoard: 2,
-  topPads: 3,
-  topCopperAblation: 6,
+  pads: {
+    top: 3,
+    bottom: 11,
+  },
+  copperAblation: {
+    top: 6,
+    bottom: 7,
+  },
+  reflectedBottomBoardCut: 13,
 } as const
 
 const VIA_POSITION_EPSILON_MM = 0.001
 
 export interface BiscuitBoardLightburnOptions {
-  /** Width of the copper-ablation band outside routed top copper. */
+  /** Width of the copper-ablation band outside routed copper. */
   copperAblationMargin?: number
 }
 
@@ -137,24 +147,31 @@ const removeCutLayerFromChildren = (
   })
 
 const stripThroughBoardOperations = (project: LightBurnProject) => {
-  project.children = removeCutLayerFromChildren(
-    project.children,
+  for (const cutIndex of [
     LIGHTBURN_LAYER_INDEX.throughBoard,
-  )
+    LIGHTBURN_LAYER_INDEX.reflectedBottomBoardCut,
+  ]) {
+    project.children = removeCutLayerFromChildren(project.children, cutIndex)
+  }
 }
 
-const renameFabricationLayers = (project: LightBurnProject) => {
+const renameFabricationLayers = (
+  project: LightBurnProject,
+  side: "top" | "bottom",
+) => {
+  const sideLabel = side === "top" ? "Top" : "Bottom"
+
   for (const child of project.children) {
     if (!(child instanceof CutSetting)) continue
 
-    if (child.index === LIGHTBURN_LAYER_INDEX.topCopper) {
-      child.name = "Ablate Top Copper Outline"
+    if (child.index === LIGHTBURN_LAYER_INDEX.copper[side]) {
+      child.name = `Ablate ${sideLabel} Copper Outline`
     }
-    if (child.index === LIGHTBURN_LAYER_INDEX.topPads) {
-      child.name = "Ablate Top Pads"
+    if (child.index === LIGHTBURN_LAYER_INDEX.pads[side]) {
+      child.name = `Ablate ${sideLabel} Pads`
     }
-    if (child.index === LIGHTBURN_LAYER_INDEX.topCopperAblation) {
-      child.name = "Ablate Around Top Copper"
+    if (child.index === LIGHTBURN_LAYER_INDEX.copperAblation[side]) {
+      child.name = `Ablate Around ${sideLabel} Copper`
     }
   }
 }
@@ -185,7 +202,8 @@ export const createBiscuitBoardLightburnArtifacts = async (
     prepareCircuitJsonForBiscuitBoardLightburn(circuitJson)
   const boardOrigin = getBoardOrigin(fabricationCircuitJson)
   const project = await convertCircuitJsonToLbrn(fabricationCircuitJson, {
-    includeLayers: ["top"],
+    includeLayers: ["top", "bottom"],
+    mirrorBottomLayer: true,
     includeCopper: true,
     includeSoldermask: true,
     includeCopperCutFill: true,
@@ -201,7 +219,20 @@ export const createBiscuitBoardLightburnArtifacts = async (
   })
 
   stripThroughBoardOperations(project)
-  renameFabricationLayers(project)
+  renameFabricationLayers(project, "top")
+  renameFabricationLayers(project, "bottom")
+
+  const populatedCutIndexes = new Set(
+    splitLightBurnProjectByCutSetting(project)
+      .filter((file) => file.shapeCount > 0)
+      .map((file) => file.cutIndex),
+  )
+  project.children = project.children.filter(
+    (child) =>
+      !(child instanceof CutSetting) ||
+      child.index === undefined ||
+      populatedCutIndexes.has(child.index),
+  )
 
   const lensDistortionProject = createLensDistortedLightBurnProject(
     project,
