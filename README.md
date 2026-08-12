@@ -87,6 +87,7 @@ reduced routing experiment.
 ```sh
 bun run build:boosterpack
 bun run analyze:boosterpack
+bun run snapshot:boosterpack
 ROUTE_SWD_AND_BULK=0 bun run analyze:boosterpack
 bun test tests/boosterpack-clad.test.tsx
 ```
