@@ -4,7 +4,9 @@ import {
   ARDUINO_SHIELD_CLAD_HEIGHT,
   ARDUINO_SHIELD_CLAD_VIA_POSITIONS,
   ARDUINO_SHIELD_CLAD_WIDTH,
+  ARDUINO_SHIELD_CONNECTOR_OFFSET_X,
   ARDUINO_SHIELD_HEADER_PLACEMENTS,
+  ARDUINO_SHIELD_MOUNTING_HOLE_DIAMETER,
   ARDUINO_SHIELD_MOUNTING_HOLE_POSITIONS,
   ArduinoShieldClad,
 } from "../lib/ArduinoShieldClad"
@@ -13,24 +15,24 @@ const pointKey = (point: { x: number; y: number }) =>
   `${point.x.toFixed(3)},${point.y.toFixed(3)}`
 
 const EXPECTED_UNO_HEADER_PAD_POSITIONS = [
-  ...[-6.35, -3.81, -1.27, 1.27, 3.81, 6.35, 8.89, 11.43].map((x) => ({
+  ...[-8.89, -6.35, -3.81, -1.27, 1.27, 3.81, 6.35, 8.89].map((x) => ({
     x,
     y: -24.13,
   })),
-  ...[16.51, 19.05, 21.59, 24.13, 26.67, 29.21].map((x) => ({
+  ...[13.97, 16.51, 19.05, 21.59, 24.13, 26.67].map((x) => ({
     x,
     y: -24.13,
   })),
   ...[
-    -15.494, -12.954, -10.414, -7.874, -5.334, -2.794, -0.254, 2.286, 4.826,
-    7.366, 11.43, 13.97, 16.51, 19.05, 21.59, 24.13, 26.67, 29.21,
+    -18.034, -15.494, -12.954, -10.414, -7.874, -5.334, -2.794, -0.254, 2.286,
+    4.826, 8.89, 11.43, 13.97, 16.51, 19.05, 21.59, 24.13, 26.67,
   ].map((x) => ({ x, y: 24.13 })),
   ...[-1.27, 1.27, 3.81].flatMap((y) =>
-    [29.337, 31.877].map((x) => ({ x, y })),
+    [26.797, 29.337].map((x) => ({ x, y })),
   ),
 ]
 
-test("uses the UNO R3 connector and mounting-hole geometry", async () => {
+test("uses the UNO R3 connector and BiscuitBoard mounting-hole geometry", async () => {
   const circuit = new Circuit()
   circuit.add(<ArduinoShieldClad routingDisabled markHeadersNoConnect />)
   await circuit.renderUntilSettled()
@@ -83,13 +85,15 @@ test("uses the UNO R3 connector and mounting-hole geometry", async () => {
     height: ARDUINO_SHIELD_CLAD_HEIGHT,
     num_layers: 2,
   })
-  expect(mountingHoles).toHaveLength(4)
+  expect(mountingHoles).toHaveLength(5)
   expect(new Set(mountingHoles.map(pointKey))).toEqual(
     new Set(ARDUINO_SHIELD_MOUNTING_HOLE_POSITIONS.map(pointKey)),
   )
   expect(
     mountingHoles.every(
-      (hole) => hole.hole_shape === "circle" && hole.hole_diameter === 3.2,
+      (hole) =>
+        hole.hole_shape === "circle" &&
+        hole.hole_diameter === ARDUINO_SHIELD_MOUNTING_HOLE_DIAMETER,
     ),
   ).toBe(true)
   expect(platedHoles).toHaveLength(38)
@@ -135,6 +139,18 @@ test("preserves the non-grid UNO digital-header gap and clustered via field", as
 
   expect(nonPitchGaps).toHaveLength(1)
   expect(nonPitchGaps[0]).toBeCloseTo(4.064, 3)
+  expect(ARDUINO_SHIELD_CONNECTOR_OFFSET_X).toBe(-2.54)
+  expect(
+    Math.min(
+      ...ARDUINO_SHIELD_MOUNTING_HOLE_POSITIONS.filter(
+        (hole) => hole.x > 0 && hole.y > 0,
+      ).flatMap((hole) =>
+        platedHoles
+          .filter((pad) => pad.y === 24.13)
+          .map((pad) => Math.hypot(hole.x - pad.x, hole.y - pad.y)),
+      ),
+    ),
+  ).toBeGreaterThan(4)
   expect(leftEdgeVias).toHaveLength(12)
   expect(rightEdgeVias).toHaveLength(8)
   expect(rightEdgeVias.some((via) => via.y === -3.5)).toBe(false)

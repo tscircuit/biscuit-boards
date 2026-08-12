@@ -1,6 +1,10 @@
 import type { AutorouterProp, ConnectorProps } from "@tscircuit/props"
 import { Fragment, type ReactNode } from "react"
-import { BISCUIT_BOARD_HEIGHT, BISCUIT_BOARD_WIDTH } from "./BiscuitBoard"
+import {
+  BISCUIT_BOARD_HEIGHT,
+  BISCUIT_BOARD_MOUNTING_HOLE_POSITIONS,
+  BISCUIT_BOARD_WIDTH,
+} from "./BiscuitBoard"
 import type { BiscuitBoardAutorouterOptions } from "./biscuit-board-autorouter"
 import { createPrefabricatedViaAutorouter } from "./create-prefabricated-via-autorouter"
 
@@ -8,22 +12,40 @@ export const ARDUINO_SHIELD_CLAD_WIDTH = BISCUIT_BOARD_WIDTH
 export const ARDUINO_SHIELD_CLAD_HEIGHT = BISCUIT_BOARD_HEIGHT
 export const ARDUINO_SHIELD_HEADER_PITCH = 2.54
 export const ARDUINO_SHIELD_HEADER_ROW_Y = 24.13
+export const ARDUINO_SHIELD_CONNECTOR_OFFSET_X = -ARDUINO_SHIELD_HEADER_PITCH
 
 export const ARDUINO_SHIELD_HEADER_PLACEMENTS = {
-  power: { x: 2.54, y: -24.13, rotation: 0 },
-  analog: { x: 22.86, y: -24.13, rotation: 0 },
-  digital0To7: { x: 20.32, y: 24.13, rotation: 180 },
-  digital8To13: { x: -4.064, y: 24.13, rotation: 180 },
-  icsp: { x: 30.607, y: 1.27, rotation: 270 },
+  power: {
+    x: 2.54 + ARDUINO_SHIELD_CONNECTOR_OFFSET_X,
+    y: -24.13,
+    rotation: 0,
+  },
+  analog: {
+    x: 22.86 + ARDUINO_SHIELD_CONNECTOR_OFFSET_X,
+    y: -24.13,
+    rotation: 0,
+  },
+  digital0To7: {
+    x: 20.32 + ARDUINO_SHIELD_CONNECTOR_OFFSET_X,
+    y: 24.13,
+    rotation: 180,
+  },
+  digital8To13: {
+    x: -4.064 + ARDUINO_SHIELD_CONNECTOR_OFFSET_X,
+    y: 24.13,
+    rotation: 180,
+  },
+  icsp: {
+    x: 30.607 + ARDUINO_SHIELD_CONNECTOR_OFFSET_X,
+    y: 1.27,
+    rotation: 270,
+  },
 } as const
 
-/** Official UNO R3 hole centers translated to the clad's centered origin. */
-export const ARDUINO_SHIELD_MOUNTING_HOLE_POSITIONS = [
-  { x: 31.75, y: 8.89 },
-  { x: 31.75, y: -19.05 },
-  { x: -19.05, y: 24.13 },
-  { x: -20.32, y: -24.13 },
-] as const
+/** The original five BiscuitBoard mounting-hole centers. */
+export const ARDUINO_SHIELD_MOUNTING_HOLE_POSITIONS =
+  BISCUIT_BOARD_MOUNTING_HOLE_POSITIONS
+export const ARDUINO_SHIELD_MOUNTING_HOLE_DIAMETER = 2.2
 
 const ARDUINO_SHIELD_EDGE_CLEARANCE = 0.2
 const ARDUINO_SHIELD_EDGE_CLEARANCE_VALIDATION_TOLERANCE = 0.001
@@ -306,7 +328,11 @@ export const ArduinoShieldClad = ({
 
     {ARDUINO_SHIELD_MOUNTING_HOLE_POSITIONS.map((hole) => (
       <Fragment key={`arduino-mounting-hole-${hole.x}-${hole.y}`}>
-        <hole pcbX={hole.x} pcbY={hole.y} diameter="3.2mm" />
+        <hole
+          pcbX={hole.x}
+          pcbY={hole.y}
+          diameter={`${ARDUINO_SHIELD_MOUNTING_HOLE_DIAMETER}mm`}
+        />
       </Fragment>
     ))}
 
@@ -350,11 +376,36 @@ export const ArduinoShieldClad = ({
       pcbY={-10.5}
       fontSize="0.8mm"
     />
-    <silkscreentext text="POWER" pcbX={2.54} pcbY={-21.5} fontSize="0.65mm" />
-    <silkscreentext text="ANALOG" pcbX={22.86} pcbY={-21.5} fontSize="0.65mm" />
-    <silkscreentext text="D8-13" pcbX={-4.064} pcbY={21.5} fontSize="0.65mm" />
-    <silkscreentext text="D0-7" pcbX={20.32} pcbY={21.5} fontSize="0.65mm" />
-    <silkscreentext text="ICSP" pcbX={27.3} pcbY={1.27} fontSize="0.6mm" />
+    <silkscreentext
+      text="POWER"
+      pcbX={ARDUINO_SHIELD_HEADER_PLACEMENTS.power.x}
+      pcbY={-21.5}
+      fontSize="0.65mm"
+    />
+    <silkscreentext
+      text="ANALOG"
+      pcbX={ARDUINO_SHIELD_HEADER_PLACEMENTS.analog.x}
+      pcbY={-21.5}
+      fontSize="0.65mm"
+    />
+    <silkscreentext
+      text="D8-13"
+      pcbX={ARDUINO_SHIELD_HEADER_PLACEMENTS.digital8To13.x}
+      pcbY={21.5}
+      fontSize="0.65mm"
+    />
+    <silkscreentext
+      text="D0-7"
+      pcbX={ARDUINO_SHIELD_HEADER_PLACEMENTS.digital0To7.x}
+      pcbY={21.5}
+      fontSize="0.65mm"
+    />
+    <silkscreentext
+      text="ICSP"
+      pcbX={ARDUINO_SHIELD_HEADER_PLACEMENTS.icsp.x - 3.307}
+      pcbY={ARDUINO_SHIELD_HEADER_PLACEMENTS.icsp.y}
+      fontSize="0.6mm"
+    />
 
     {ARDUINO_SHIELD_CLAD_VIA_CANDIDATE_ZONES.map((zone) => (
       <Fragment key={`arduino-via-zone-${zone.minX}-${zone.minY}`}>
