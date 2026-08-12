@@ -24,6 +24,26 @@ export {
   BoosterPackRightHeader,
 } from "./lib/BoosterPackClad"
 export {
+  ARDUINO_SHIELD_CLAD_HEIGHT,
+  ARDUINO_SHIELD_CLAD_VIA_CANDIDATE_ZONES,
+  ARDUINO_SHIELD_CLAD_VIA_POSITIONS,
+  ARDUINO_SHIELD_CLAD_WIDTH,
+  ARDUINO_SHIELD_CONNECTOR_OFFSET_X,
+  ARDUINO_SHIELD_HEADER_PITCH,
+  ARDUINO_SHIELD_HEADER_PLACEMENTS,
+  ARDUINO_SHIELD_HEADER_ROW_Y,
+  ARDUINO_SHIELD_MOUNTING_HOLE_DIAMETER,
+  ARDUINO_SHIELD_MOUNTING_HOLE_POSITIONS,
+  ArduinoShieldAnalogHeader,
+  ArduinoShieldClad,
+  type ArduinoShieldCladProps,
+  type ArduinoShieldCladViaPosition,
+  ArduinoShieldDigital0To7Header,
+  ArduinoShieldDigital8To13Header,
+  ArduinoShieldIcspSocket,
+  ArduinoShieldPowerHeader,
+} from "./lib/ArduinoShieldClad"
+export {
   BiscuitBoardAutorouter,
   type BiscuitBoardAutorouterOptions,
   createBiscuitBoardAutorouter,

@@ -97,6 +97,29 @@ ROUTE_SWD_AND_BULK=0 bun run analyze:boosterpack
 bun test tests/boosterpack-clad.test.tsx
 ```
 
+## Arduino UNO R3 shield clad
+
+[`ArduinoShieldClad`](./lib/ArduinoShieldClad.tsx) is a 75 mm x 55 mm
+prefabricated-via clad for Arduino UNO R3-compatible shields. It retains the
+existing clad outline and all five original 2.2 mm mounting holes. The complete
+UNO R3 mating pattern is shifted left by one 2.54 mm header pitch so the
+upper-right clad hole clears the D0-D7 header. Relative placement remains
+official UNO R3 geometry for the 1x8 power header, 1x6 analog header, 1x8
+D0-D7 header, 1x10 R3 digital/AREF/I2C header, and 2x3 ICSP socket.
+
+The 58 assignable fixed vias use 4 mm pitch in the established clustered clad
+style: closed upper- and lower-left edge clusters, two inset left clusters, a
+central routing field, an ICSP escape cluster, and split right-edge rails. The
+header rows and original clad mounting holes remain open. The bare template and
+its checked-in PCB snapshot are in
+[`examples/arduino-shield-clad.tsx`](./examples/arduino-shield-clad.tsx).
+
+```sh
+bun run build:arduino-shield
+bun run snapshot:arduino-shield
+bun test tests/arduino-shield-clad.test.tsx
+```
+
 ## LightBurn export
 
 Generate the routed Circuit JSON and all laser-ready files for the STM32 board
