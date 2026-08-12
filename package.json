@@ -47,7 +47,7 @@
     "@tscircuit/core": "0.0.1641",
     "@tscircuit/props": "0.0.617",
     "circuit-json": "0.0.464",
-    "circuit-json-to-lbrn": "0.0.87",
+    "circuit-json-to-lbrn": "0.0.88",
     "lbrnts": "0.0.22"
   },
   "peerDependencies": {

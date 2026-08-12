@@ -11,7 +11,7 @@ import {
 } from "lbrnts"
 import { createLensDistortedLightBurnProject } from "./lightburn-lens-distortion"
 
-export const BISCUIT_BOARD_LIGHTBURN_COPPER_MARGIN_MM = 0.5
+export const BISCUIT_BOARD_LIGHTBURN_COPPER_MARGIN_MM = 0.15
 
 const LIGHTBURN_LAYER_INDEX = {
   topCopper: 0,
