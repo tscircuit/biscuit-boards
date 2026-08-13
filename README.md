@@ -13,6 +13,17 @@ export default () => (
 );
 ```
 
+For a plain square board, `Clad40x40` provides a bare two-layer 40 mm x 40 mm
+clad without mounting holes, connectors, or prefabricated vias. Its preview and
+checked-in PCB snapshot are in
+[`examples/clad-40x40.tsx`](./examples/clad-40x40.tsx).
+
+```tsx
+import { Clad40x40 } from "@tsci/tscircuit.biscuit-boards";
+
+export default () => <Clad40x40 />;
+```
+
 `BiscuitBoard` owns the fixed 75 mm x 55 mm outline, mounting holes, and
 assignable prefabricated vias. Copper pours are intentionally disabled. Its
 `<board>` uses a local

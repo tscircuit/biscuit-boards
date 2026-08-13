@@ -27,12 +27,14 @@
     "snapshot:boosterpack-clad:update": "tsci snapshot examples/boosterpack-clad.tsx --disable-parts-engine --pcb-only --update",
     "snapshot:arduino-shield": "tsci snapshot examples/arduino-shield-clad.tsx --disable-parts-engine --pcb-only --ci",
     "snapshot:arduino-shield:update": "tsci snapshot examples/arduino-shield-clad.tsx --disable-parts-engine --pcb-only --update",
+    "snapshot:clad-40x40": "tsci snapshot examples/clad-40x40.tsx --disable-parts-engine --pcb-only --ci",
+    "snapshot:clad-40x40:update": "tsci snapshot examples/clad-40x40.tsx --disable-parts-engine --pcb-only --update",
     "snapshot:lightburn": "bun test tests/lightburn-export.test.tsx tests/lightburn-lens-distortion.test.tsx",
     "snapshot:lightburn:update": "BUN_UPDATE_SNAPSHOTS=1 bun test tests/lightburn-export.test.tsx tests/lightburn-lens-distortion.test.tsx",
     "start": "tsci dev",
     "test": "bun test",
     "typecheck": "tsc --noEmit",
-    "check": "bun run typecheck && bun run test && bun run snapshot:stm32 && bun run snapshot:rp2040 && bun run snapshot:boosterpack && bun run snapshot:boosterpack-clad && bun run snapshot:arduino-shield && bun run build && bun run build:example && bun run build:arduino-shield && bun run export:lightburn examples/stm32c071-display.tsx"
+    "check": "bun run typecheck && bun run test && bun run snapshot:stm32 && bun run snapshot:rp2040 && bun run snapshot:boosterpack && bun run snapshot:boosterpack-clad && bun run snapshot:arduino-shield && bun run snapshot:clad-40x40 && bun run build && bun run build:example && bun run build:arduino-shield && bun run export:lightburn examples/stm32c071-display.tsx"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.4",

@@ -56,6 +56,12 @@ export {
   prepareCircuitJsonForBiscuitBoardLightburn,
 } from "./lib/biscuit-board-lightburn"
 export {
+  CLAD_40X40_HEIGHT,
+  CLAD_40X40_WIDTH,
+  Clad40x40,
+  type Clad40x40Props,
+} from "./lib/Clad40x40"
+export {
   applyLightBurnLensDistortion,
   BISCUIT_BOARD_LENS_CALIBRATION,
   BISCUIT_BOARD_LENS_CALIBRATION_FIT,
