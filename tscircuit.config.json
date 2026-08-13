@@ -1,8 +1,8 @@
 {
-  "mainEntrypoint": "index.tsx",
+  "mainEntrypoint": "examples/biscuit-board.circuit.tsx",
   "includeBoardFiles": [
-    "examples/arduino-shield-clad.tsx",
-    "examples/boosterpack-clad.tsx",
+    "examples/arduino-shield-clad.circuit.tsx",
+    "examples/boosterpack-clad.circuit.tsx",
     "examples/stm32c071.tsx",
     "examples/stm32c071-display-boosterpack.tsx",
     "examples/rp2040.tsx"

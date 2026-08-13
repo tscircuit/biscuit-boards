@@ -13,6 +13,11 @@ export default () => (
 );
 ```
 
+Standalone bare-clad circuits use tscircuit's `.circuit.tsx` convention:
+[`BiscuitBoard`](./examples/biscuit-board.circuit.tsx),
+[`BoosterPackClad`](./examples/boosterpack-clad.circuit.tsx), and
+[`ArduinoShieldClad`](./examples/arduino-shield-clad.circuit.tsx).
+
 `BiscuitBoard` owns the fixed 75 mm x 55 mm outline, mounting holes, and
 assignable prefabricated vias. Copper pours are intentionally disabled. Its
 `<board>` uses a local
@@ -61,7 +66,7 @@ via pitch from those corner clusters and against the top and bottom edges. The
 upper-right edge is open, the 11-via right-edge rail is retained, and a 2x3
 escape cluster sits immediately to the right of the left LaunchPad header. The
 bare template preview is in
-[`examples/boosterpack-clad.tsx`](./examples/boosterpack-clad.tsx), and the
+[`examples/boosterpack-clad.circuit.tsx`](./examples/boosterpack-clad.circuit.tsx), and the
 routed example is in
 [`examples/stm32c071-display-boosterpack.tsx`](./examples/stm32c071-display-boosterpack.tsx).
 It places the STM32C071, display connector, both buttons, status LEDs, SWD
@@ -112,7 +117,7 @@ style: closed upper- and lower-left edge clusters, two inset left clusters, a
 central routing field, an ICSP escape cluster, and split right-edge rails. The
 header rows and original clad mounting holes remain open. The bare template and
 its checked-in PCB snapshot are in
-[`examples/arduino-shield-clad.tsx`](./examples/arduino-shield-clad.tsx).
+[`examples/arduino-shield-clad.circuit.tsx`](./examples/arduino-shield-clad.circuit.tsx).
 
 ```sh
 bun run build:arduino-shield
