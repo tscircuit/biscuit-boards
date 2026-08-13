@@ -5,7 +5,7 @@
     "": {
       "name": "@tsci/seveibar.biscuit-boards",
       "dependencies": {
-        "@tscircuit/biscuit-board-autorouter": "github:tscircuit/biscuit-board-autorouter#199bc1be13f7daa3fb3f8164dd5fb607f69bdf0f",
+        "@tscircuit/biscuit-board-autorouter": "github:tscircuit/biscuit-board-autorouter#a704ab5d6f9693924fe716710c57a7787fe943f4",
         "@tscircuit/core": "0.0.1641",
         "@tscircuit/props": "0.0.617",
         "circuit-json": "0.0.464",
@@ -176,7 +176,7 @@
 
     "@tscircuit/alphabet": ["@tscircuit/alphabet@0.0.25", "", { "peerDependencies": { "typescript": "^5.0.0" } }, "sha512-PWLjptI6AlLEtF/wjN1N8uC+n3G7vtg0j3xKE1fgWHDhahtnlQRqHDrtPSLlkIR9aJjRfjplzLuaUEaCRvJmZA=="],
 
-    "@tscircuit/biscuit-board-autorouter": ["@tscircuit/biscuit-board-autorouter@github:tscircuit/biscuit-board-autorouter#199bc1b", { "dependencies": { "@tscircuit/core": "^0.0.1621", "@tscircuit/power-trace-expander": "github:tscircuit/power-trace-expander#6fa2ac79cf13129c47432db3a23e61c17067e912", "@tscircuit/props": "^0.0.617", "@tscircuit/solver-utils": "^0.0.17", "graphics-debug": "^0.0.93" }, "peerDependencies": { "typescript": "^5" } }, "tscircuit-biscuit-board-autorouter-199bc1b", "sha512-Vo4xWIRtEFBdOibOImXLsKw8CP0hCA7tr1UYQf+UvBYT3O2lB/jJPHrx+jqKeKbHNFmPLx/d/LzpdjgHedETbQ=="],
+    "@tscircuit/biscuit-board-autorouter": ["@tscircuit/biscuit-board-autorouter@github:tscircuit/biscuit-board-autorouter#a704ab5", { "dependencies": { "@tscircuit/core": "^0.0.1621", "@tscircuit/power-trace-expander": "github:tscircuit/power-trace-expander#6fa2ac79cf13129c47432db3a23e61c17067e912", "@tscircuit/props": "^0.0.617", "@tscircuit/solver-utils": "^0.0.17", "graphics-debug": "^0.0.93" }, "peerDependencies": { "typescript": "^5" } }, "tscircuit-biscuit-board-autorouter-a704ab5", "sha512-aI82NTJh424jwB2SmR4JdspVxcJ0+Q8f8QS9sD1GkAhEpsFrWmg7JxG/MnyMXwASk1kGw+uWIlzDAL2pop38Yw=="],
 
     "@tscircuit/capacity-autorouter": ["@tscircuit/capacity-autorouter@0.0.782", "", { "dependencies": { "fast-json-stable-stringify": "^2.1.0", "object-hash": "^3.0.0", "stack-svgs": "^0.0.1" } }, "sha512-fq+zlqznv97xd10wtGbk2CqTF/Bpc5jDXBDXeFnrnWITAyNyRxkY37INwdmywj4EPhhZS/6ng1+buxlCh2qfoQ=="],
 
