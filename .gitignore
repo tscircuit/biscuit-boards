@@ -5,6 +5,10 @@ node_modules/
 dist/
 build/
 
+# tscircuit and Vercel local state
+.tscircuit/
+.vercel/
+
 # Environment variables
 .env
 .env.local
