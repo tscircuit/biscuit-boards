@@ -191,10 +191,10 @@ export const Stm32c071DisplayBiscuitBoard = (
     <silkscreentext text="PA8 USER" pcbX={24.75} pcbY={13.7} fontSize="0.8mm" />
     <silkscreentext text="SWD POWER" pcbX={22} pcbY={-16.7} fontSize="0.8mm" />
     <silkscreentext text="DISPLAY" pcbX={5.86} pcbY={6.52} fontSize="0.8mm" />
-    <silkscreentext text="GND" pcbX={3.06} pcbY={-3.49} fontSize="0.6mm" />
-    <silkscreentext text="3V3" pcbX={3.06} pcbY={-0.95} fontSize="0.6mm" />
-    <silkscreentext text="SCL" pcbX={3.06} pcbY={1.59} fontSize="0.6mm" />
-    <silkscreentext text="SDA" pcbX={3.06} pcbY={4.13} fontSize="0.6mm" />
+    <silkscreentext text="SDA" pcbX={3.06} pcbY={-3.49} fontSize="0.6mm" />
+    <silkscreentext text="SCL" pcbX={3.06} pcbY={-0.95} fontSize="0.6mm" />
+    <silkscreentext text="3V3" pcbX={3.06} pcbY={1.59} fontSize="0.6mm" />
+    <silkscreentext text="GND" pcbX={3.06} pcbY={4.13} fontSize="0.6mm" />
     <silkscreentext text="BTN1" pcbX={-30} pcbY={12} fontSize="0.8mm" />
     <silkscreentext text="BTN2" pcbX={-30} pcbY={-12} fontSize="0.8mm" />
 

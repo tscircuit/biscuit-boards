@@ -5,7 +5,7 @@ import { createPrefabricatedViaAutorouter } from "./create-prefabricated-via-aut
 
 export const BISCUIT_BOARD_WIDTH = 75
 export const BISCUIT_BOARD_HEIGHT = 55
-const BISCUIT_BOARD_EDGE_CLEARANCE = 0.2
+const BISCUIT_BOARD_EDGE_CLEARANCE = 0.5
 // Core's DRC currently treats an exactly-equal floating-point distance as a
 // violation. Route at the full clearance, but leave a 1 µm comparison epsilon.
 const BISCUIT_BOARD_EDGE_CLEARANCE_VALIDATION_TOLERANCE = 0.001
@@ -147,8 +147,8 @@ export const BiscuitBoard = ({
           pcbY={via.y}
           fromLayer="top"
           toLayer="bottom"
-          holeDiameter="0.8mm"
-          outerDiameter="1.2mm"
+          holeDiameter="2.1mm"
+          outerDiameter="2.3mm"
         />
       </Fragment>
     ))}
