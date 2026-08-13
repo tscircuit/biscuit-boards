@@ -35,7 +35,9 @@ test("wraps ordinary TSX in the prefabricated board", async () => {
       (via) =>
         via.type === "pcb_via" &&
         "net_is_assignable" in via &&
-        via.net_is_assignable === true,
+        via.net_is_assignable === true &&
+        via.hole_diameter === 2.1 &&
+        via.outer_diameter === 2.3,
     ),
   ).toBe(true)
   expect(

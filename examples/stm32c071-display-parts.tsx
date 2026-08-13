@@ -4,10 +4,10 @@ import { Fragment } from "react"
 // Additional component models used by the display-board example.
 
 const displayPins = {
-  pin1: ["GND"],
-  pin2: ["V3V3", "3V3"],
-  pin3: ["SCL"],
-  pin4: ["SDA"],
+  pin1: ["SDA"],
+  pin2: ["SCL"],
+  pin3: ["V3V3", "3V3"],
+  pin4: ["GND"],
 } as const
 
 const FemaleHeader2x4Footprint = () => {

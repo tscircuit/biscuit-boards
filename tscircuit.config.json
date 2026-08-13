@@ -1,11 +1,4 @@
 {
   "mainEntrypoint": "index.tsx",
-  "includeBoardFiles": [
-    "examples/arduino-shield-clad.tsx",
-    "examples/boosterpack-clad.tsx",
-    "examples/stm32c071.tsx",
-    "examples/stm32c071-display-boosterpack.tsx",
-    "examples/rp2040.tsx"
-  ],
   "siteDefaultComponentPath": "examples/stm32c071.tsx"
 }
