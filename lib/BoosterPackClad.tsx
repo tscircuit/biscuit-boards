@@ -20,12 +20,9 @@ export const BOOSTERPACK_HEADER_CENTER_Y = 1.27
 
 const BOOSTERPACK_CLAD_EDGE_CLEARANCE = 0.2
 const BOOSTERPACK_CLAD_EDGE_CLEARANCE_VALIDATION_TOLERANCE = 0.001
-const BOOSTERPACK_LEFT_ROUTING_RAIL_CENTER_X =
-  (-BOOSTERPACK_CLAD_WIDTH / 2 - BOOSTERPACK_HEADER_CENTER_X) / 2
 const BOOSTERPACK_INNER_ESCAPE_GRID_OFFSET_X = BOOSTERPACK_HEADER_CENTER_X / 2
-const BOOSTERPACK_EDGE_HEADER_CENTER_X = Math.abs(
-  BOOSTERPACK_LEFT_ROUTING_RAIL_CENTER_X,
-)
+const BOOSTERPACK_EDGE_HEADER_CENTER_X =
+  BOOSTERPACK_CLAD_WIDTH / 2 - BOOSTERPACK_HEADER_PITCH / 2
 
 export interface BoosterPackCladViaPosition {
   x: number
@@ -104,16 +101,16 @@ export const BOOSTERPACK_CLAD_PLACEMENT_ZONES = [
   {
     name: "left-edge-pin-header",
     purpose: "connector",
-    minX: -33,
-    maxX: -26,
+    minX: -BOOSTERPACK_CLAD_WIDTH / 2,
+    maxX: -BOOSTERPACK_CLAD_WIDTH / 2 + BOOSTERPACK_HEADER_PITCH,
     minY: -12,
     maxY: 14.5,
   },
   {
     name: "right-edge-pin-header",
     purpose: "connector",
-    minX: 26,
-    maxX: 33,
+    minX: BOOSTERPACK_CLAD_WIDTH / 2 - BOOSTERPACK_HEADER_PITCH,
+    maxX: BOOSTERPACK_CLAD_WIDTH / 2,
     minY: -12,
     maxY: 14.5,
   },
@@ -319,6 +316,39 @@ const DualMaleHeaderFootprint = ({
   </footprint>
 )
 
+const SingleMaleHeaderFootprint = () => (
+  <footprint insertionDirection="from_above">
+    {Array.from({ length: 10 }, (_, row) => {
+      const pin = row + 1
+      const y = (4.5 - row) * BOOSTERPACK_HEADER_PITCH
+      return (
+        <Fragment key={`pin-${pin}`}>
+          {pin === 1 ? (
+            <platedhole
+              portHints={[`pin${pin}`]}
+              shape="circular_hole_with_rect_pad"
+              holeDiameter="1.02mm"
+              rectPadWidth="1.7mm"
+              rectPadHeight="1.7mm"
+              pcbY={y}
+            />
+          ) : (
+            <platedhole
+              portHints={[`pin${pin}`]}
+              shape="circle"
+              holeDiameter="1.02mm"
+              outerDiameter="1.7mm"
+              pcbY={y}
+            />
+          )}
+        </Fragment>
+      )
+    })}
+    <silkscreenrect width="2.54mm" height="25.4mm" />
+    <silkscreencircle pcbY={4.5 * BOOSTERPACK_HEADER_PITCH} radius="0.3mm" />
+  </footprint>
+)
+
 export const BoosterPackLeftHeader = (props: ConnectorProps) => (
   <connector
     pinLabels={leftHeaderPins}
@@ -342,21 +372,21 @@ export const BoosterPackRightHeader = (props: ConnectorProps) => (
 )
 
 const edgeHeaderPins = Object.fromEntries(
-  Array.from({ length: 20 }, (_, index) => [
+  Array.from({ length: 10 }, (_, index) => [
     `pin${index + 1}`,
     [`EDGE_${index + 1}`],
   ]),
 )
 const edgeHeaderNoConnect = Array.from(
-  { length: 20 },
+  { length: 10 },
   (_, index) => `pin${index + 1}`,
 )
 
 export const BoosterPackEdgePinHeader = (props: ConnectorProps) => (
   <connector
     pinLabels={edgeHeaderPins}
-    manufacturerPartNumber="GENERIC-2X10-MALE-2.54MM-UP"
-    footprint={<DualMaleHeaderFootprint insertionDirection="from_above" />}
+    manufacturerPartNumber="GENERIC-1X10-MALE-2.54MM-UP"
+    footprint={<SingleMaleHeaderFootprint />}
     noConnect={edgeHeaderNoConnect}
     noSchematicRepresentation
     {...props}
@@ -447,13 +477,13 @@ export const BoosterPackClad = ({
     <silkscreentext text="J4/J2" pcbX={21.59} pcbY={14.9} fontSize="0.7mm" />
     <silkscreentext
       text="EDGE LEFT"
-      pcbX={-BOOSTERPACK_EDGE_HEADER_CENTER_X}
+      pcbX={-BOOSTERPACK_EDGE_HEADER_CENTER_X + 3.5}
       pcbY={14.9}
       fontSize="0.65mm"
     />
     <silkscreentext
       text="EDGE RIGHT"
-      pcbX={BOOSTERPACK_EDGE_HEADER_CENTER_X}
+      pcbX={BOOSTERPACK_EDGE_HEADER_CENTER_X - 3.5}
       pcbY={14.9}
       fontSize="0.65mm"
     />

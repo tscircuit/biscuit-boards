@@ -57,10 +57,10 @@ BoosterPack headers.
 The via field uses 26 candidates in two routing corridors. A 2x3 escape grid
 sits between J1/J3 and the board center, and one 10x2 grid spans the upper edge
 through x=14.5 mm. The former center-right grid and both outer via rails are
-removed. The lower edge has no via zone. Standard upward-facing 2x10 pin
-headers now sit between each LaunchPad header and its nearest board edge.
-Their 40 breakout pins are explicitly marked unconnected until a signal map is
-chosen.
+removed. The lower edge has no via zone. Standard upward-facing 1x10 pin
+headers sit flush with the left and right board edges, with their rows centered
+at x=+/-36.23 mm. Their 20 breakout pins are explicitly marked unconnected
+until a signal map is chosen.
 The central chips/sensors bay and the upper and lower connector/interface bays
 remain free of prefabricated via pads. Dedicated upper-right and lower-right
 edge bays also remain open for connectors that need outside-board access.

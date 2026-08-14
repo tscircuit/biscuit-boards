@@ -14,6 +14,7 @@ import {
   BOOSTERPACK_CLAD_WIDTH,
   BOOSTERPACK_HEADER_CENTER_X,
   BOOSTERPACK_HEADER_CENTER_Y,
+  BOOSTERPACK_HEADER_PITCH,
 } from "../lib/BoosterPackClad"
 
 const pointKey = (point: { x: number; y: number }) =>
@@ -152,14 +153,14 @@ test("uses the BiscuitBoard outline and TI 40-pin header geometry", async () => 
       : [],
   )
   const edgeHeaderCenterX =
-    (BOOSTERPACK_CLAD_WIDTH / 2 + BOOSTERPACK_HEADER_CENTER_X) / 2
+    BOOSTERPACK_CLAD_WIDTH / 2 - BOOSTERPACK_HEADER_PITCH / 2
 
   expect(board).toMatchObject({
     width: BOOSTERPACK_CLAD_WIDTH,
     height: BOOSTERPACK_CLAD_HEIGHT,
     num_layers: 2,
   })
-  expect(platedHoles).toHaveLength(80)
+  expect(platedHoles).toHaveLength(60)
   expect(mountingHoles).toHaveLength(
     BISCUIT_BOARD_MOUNTING_HOLE_POSITIONS.length,
   )
@@ -168,7 +169,7 @@ test("uses the BiscuitBoard outline and TI 40-pin header geometry", async () => 
   )
   expect(launchpadPorts).toHaveLength(40)
   expect(edgeHeaderSourceComponents).toHaveLength(2)
-  expect(edgeHeaderPorts).toHaveLength(40)
+  expect(edgeHeaderPorts).toHaveLength(20)
   expect(edgeHeaderPorts.every((port) => port.do_not_connect)).toBe(true)
   expect(edgeHeaderPcbComponents).toHaveLength(2)
   expect(
