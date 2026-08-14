@@ -12,6 +12,7 @@ import {
   BOOSTERPACK_CLAD_PLACEMENT_ZONES,
   BOOSTERPACK_CLAD_VIA_POSITIONS,
   BOOSTERPACK_CLAD_WIDTH,
+  BOOSTERPACK_HEADER_CENTER_X,
 } from "../lib/BoosterPackClad"
 
 const pointKey = (point: { x: number; y: number }) =>
@@ -40,9 +41,22 @@ test("uses the BiscuitBoard outline and TI 40-pin header geometry", async () => 
       via.x >= -21.5 && via.x <= 14.5 && (via.y === -25.5 || via.y === -21.5),
   )
   const rightEdgeVias = vias.filter((via) => via.x === 32.5)
+  const leftRoutingRailCenterX =
+    (-BOOSTERPACK_CLAD_WIDTH / 2 - BOOSTERPACK_HEADER_CENTER_X) / 2
   const leftRoutingRailVias = vias.filter(
     (via) =>
-      (via.x === -29.5 || via.x === -25.5) && via.y >= -16 && via.y <= 16,
+      (via.x === leftRoutingRailCenterX - 2 ||
+        via.x === leftRoutingRailCenterX + 2) &&
+      via.y >= -16 &&
+      via.y <= 16,
+  )
+  const innerEscapeGridCenterX = -BOOSTERPACK_HEADER_CENTER_X / 2
+  const innerEscapeGridVias = vias.filter(
+    (via) =>
+      (via.x === innerEscapeGridCenterX - 2 ||
+        via.x === innerEscapeGridCenterX + 2) &&
+      via.y >= -4 &&
+      via.y <= 4,
   )
   const viaPadRadius = 0.6
   const placementZoneIntrusions = vias.flatMap((via) =>
@@ -114,7 +128,7 @@ test("uses the BiscuitBoard outline and TI 40-pin header geometry", async () => 
   )
   expect(launchpadPorts).toHaveLength(40)
   expect(vias).toHaveLength(BOOSTERPACK_CLAD_VIA_POSITIONS.length)
-  expect(vias).toHaveLength(67)
+  expect(vias).toHaveLength(73)
   expect(topLeftEdgeVias).toHaveLength(20)
   expect(bottomEdgeVias).toHaveLength(20)
   expect(new Set(bottomEdgeVias.map((via) => via.x)).size).toBe(10)
@@ -125,6 +139,17 @@ test("uses the BiscuitBoard outline and TI 40-pin header geometry", async () => 
   expect(topRightClusterVias).toHaveLength(2)
   expect(rightEdgeVias).toHaveLength(9)
   expect(leftRoutingRailVias).toHaveLength(18)
+  expect(innerEscapeGridVias).toHaveLength(6)
+  expect(
+    (Math.min(...leftRoutingRailVias.map((via) => via.x)) +
+      Math.max(...leftRoutingRailVias.map((via) => via.x))) /
+      2,
+  ).toBe(leftRoutingRailCenterX)
+  expect(
+    (Math.min(...innerEscapeGridVias.map((via) => via.x)) +
+      Math.max(...innerEscapeGridVias.map((via) => via.x))) /
+      2,
+  ).toBe(innerEscapeGridCenterX)
   expect(placementZoneIntrusions).toEqual([])
   expect(componentsOutsidePlacementZones).toEqual([])
   expect(

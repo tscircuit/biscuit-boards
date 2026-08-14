@@ -19,7 +19,7 @@ const routeOrder = (process.env.ROUTE_ORDER ?? "signal_longest_first") as
 const routeSwdAndBulk = process.env.ROUTE_SWD_AND_BULK !== "0"
 
 const options = {
-  gridClearance: Number(process.env.GRID_CLEARANCE ?? 0.125),
+  gridClearance: Number(process.env.GRID_CLEARANCE ?? 0.16),
   gridPitch: Number(process.env.GRID_PITCH ?? 1),
   maxBlockersPerSearch: Number(process.env.MAX_BLOCKERS ?? 128),
   maxRipsPerRoute: Number(process.env.MAX_RIPS_PER_ROUTE ?? 1_000),

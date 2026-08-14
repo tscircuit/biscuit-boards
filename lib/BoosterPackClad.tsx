@@ -20,6 +20,9 @@ export const BOOSTERPACK_HEADER_CENTER_Y = 1.27
 
 const BOOSTERPACK_CLAD_EDGE_CLEARANCE = 0.2
 const BOOSTERPACK_CLAD_EDGE_CLEARANCE_VALIDATION_TOLERANCE = 0.001
+const BOOSTERPACK_LEFT_ROUTING_RAIL_CENTER_X =
+  (-BOOSTERPACK_CLAD_WIDTH / 2 - BOOSTERPACK_HEADER_CENTER_X) / 2
+const BOOSTERPACK_INNER_ESCAPE_GRID_CENTER_X = -BOOSTERPACK_HEADER_CENTER_X / 2
 
 export interface BoosterPackCladViaPosition {
   x: number
@@ -55,14 +58,28 @@ const createViaZone = (zone: ViaCandidateZone): BoosterPackCladViaPosition[] =>
   )
 
 /**
- * Four routing corridors surround the reusable placement bays: a dual-column
- * rail outside the left LaunchPad header, dual-row upper and lower bands, and
- * a right-edge rail. A compact strip at the upper-right and lower-right
- * remains open for connectors.
+ * Five routing corridors surround the reusable placement bays: a dual-column
+ * rail outside the left LaunchPad header, a compact inner escape grid,
+ * dual-row upper and lower bands, and a right-edge rail. A compact strip at
+ * the upper-right and lower-right remains open for connectors.
  */
 export const BOOSTERPACK_CLAD_VIA_CANDIDATE_ZONES = [
   // Continuous escape rail in the narrow corridor outside J1/J3.
-  { minX: -29.5, maxX: -25.5, minY: -16, maxY: 16, spacing: 4 },
+  {
+    minX: BOOSTERPACK_LEFT_ROUTING_RAIL_CENTER_X - 2,
+    maxX: BOOSTERPACK_LEFT_ROUTING_RAIL_CENTER_X + 2,
+    minY: -16,
+    maxY: 16,
+    spacing: 4,
+  },
+  // Compact grid halfway between J1/J3 and the board center.
+  {
+    minX: BOOSTERPACK_INNER_ESCAPE_GRID_CENTER_X - 2,
+    maxX: BOOSTERPACK_INNER_ESCAPE_GRID_CENTER_X + 2,
+    minY: -4,
+    maxY: 4,
+    spacing: 4,
+  },
   // Dual edge rows extend past the board center toward J4/J2.
   { minX: -21.5, maxX: 14.5, minY: 21.5, maxY: 25.5, spacing: 4 },
   { minX: -21.5, maxX: 14.5, minY: -25.5, maxY: -21.5, spacing: 4 },
@@ -104,10 +121,26 @@ export const BOOSTERPACK_CLAD_PLACEMENT_ZONES = [
   {
     name: "central-chips-and-sensors",
     purpose: "chips-and-sensors",
-    minX: -17.5,
+    minX: -7.5,
     maxX: 17.5,
     minY: -11.5,
     maxY: 11.5,
+  },
+  {
+    name: "left-upper-interface",
+    purpose: "interface",
+    minX: -17.5,
+    maxX: -7.5,
+    minY: 4.75,
+    maxY: 11.5,
+  },
+  {
+    name: "left-lower-interface",
+    purpose: "interface",
+    minX: -17.5,
+    maxX: -7.5,
+    minY: -11.5,
+    maxY: -4.75,
   },
   {
     name: "lower-interface",
