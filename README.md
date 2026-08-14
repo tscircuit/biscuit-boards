@@ -54,13 +54,20 @@ downward-facing 2x10 male headers for the target LaunchPad mating arrangement;
 TI's generic stacking recommendation normally describes downward-facing female
 BoosterPack headers.
 
-The via field mirrors the original clad's clustered/open-edge language with 51
-candidates. The two closed 3x2 left-corner clusters keep their original
-coordinates. The upper-left and six-column bottom bands sit one standard 4 mm
-via pitch from those corner clusters and against the top and bottom edges. The
-upper-right edge is open, the 11-via right-edge rail is retained, and a 2x3
-escape cluster sits immediately to the right of the left LaunchPad header. The
-bare template preview is in
+The via field uses 289 candidates at 1.3 mm pitch. Four L-shaped corner fields
+have 4 mm-wide arms; their vertical arms are 14 mm long, and the upper and
+lower pairs leave a symmetric 39.468 mm opening in the center. A compact 5x5
+escape grid is centered at x=-12.795 mm, 2 mm left of the midpoint between
+J1/J3 and the board center. Candidates within 1 mm copper-edge clearance of a
+mounting hole are omitted. A standard upward-facing 1x18 pin header sits flush
+with the left board edge and extends to the top and bottom mounting-hole
+keepouts. Vias that would overlap its body are omitted, and all 18 breakout
+pins are explicitly marked unconnected until a signal map is chosen. Each
+prefabricated via uses a 0.3 mm finished hole and a 0.6 mm copper pad, leaving
+0.7 mm between neighboring pads. The central chips/sensors bay and centered
+upper and lower connector openings remain free for component placement and
+outside-board access.
+The bare template preview is in
 [`examples/boosterpack-clad.tsx`](./examples/boosterpack-clad.tsx), and the
 routed example is in
 [`examples/stm32c071-display-boosterpack.tsx`](./examples/stm32c071-display-boosterpack.tsx).
@@ -68,15 +75,20 @@ It places the STM32C071, display connector, both buttons, status LEDs, SWD
 connector, bulk capacitor, and the two LaunchPad headers within the outline.
 
 The complete example routes all 36 PCB traces, including all five J_SWD pads
-and both bulk-capacitor pads, with no router or clearance errors. SWDIO and
-SWCLK use two deterministic escape traces whose channels are reserved from the
-board autorouter; the other 34 traces are autorouted. The solved route claims
-10 of the 51 prefabricated vias, at these positions in millimeters:
+and both bulk-capacitor pads, with no router or clearance errors. SWDIO, SWCLK,
+and SWD reset use three deterministic escape traces whose channels are reserved
+from the board autorouter; the other 33 traces are autorouted. The solved route
+claims 19 of the 289 prefabricated vias, at these positions in millimeters:
 
 ```text
-(-18,-4) (-18,4) (-14,-4) (-14,0) (-14,4)
-(-5.5,-21.5) (-1.5,-21.5) (-5.5,21.5)
-(32.5,3.75) (32.5,11.75)
+(-31.6,-13.7) (-27.7,25.4)
+(-22.5,21.5) (-22.5,22.8) (-21.2,22.8)
+(-19.9,-21.5) (-19.9,21.5) (-19.9,22.8)
+(-15.395,-1.3) (-15.395,0)
+(-14.095,-1.3) (-14.095,0) (-14.095,1.3)
+(-12.795,-2.6) (-12.795,-1.3)
+(-11.495,2.6) (-10.195,1.3) (-10.195,2.6)
+(19.9,21.5)
 ```
 
 Every router-generated layer change uses one of those fixed via locations; no

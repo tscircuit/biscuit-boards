@@ -1,6 +1,8 @@
 import type { ReactElement, ReactNode } from "react"
 import { Children, cloneElement, Fragment, isValidElement } from "react"
 import {
+  BOOSTERPACK_CLAD_HEIGHT,
+  BOOSTERPACK_CLAD_WIDTH,
   BoosterPackClad,
   type BoosterPackCladProps,
 } from "../lib/BoosterPackClad"
@@ -13,17 +15,17 @@ interface PcbPlacement extends Record<string, unknown> {
 }
 
 const componentPlacements: Record<string, PcbPlacement> = {
-  J_DISPLAY: { pcbX: -2, pcbY: 0, pcbRotation: 90 },
-  R_I2C_SCL: { pcbX: -6.8, pcbY: -4.8, pcbRotation: 90 },
-  R_I2C_SDA: { pcbX: -6.8, pcbY: 4.8, pcbRotation: 90 },
-  SW_BTN1: { pcbX: -12.5, pcbY: 8 },
-  SW_BTN2: { pcbX: -12.5, pcbY: -8 },
+  J_DISPLAY: { pcbX: -4, pcbY: 0, pcbRotation: 90 },
+  R_I2C_SCL: { pcbX: -7.6, pcbY: -4.8, pcbRotation: 90 },
+  R_I2C_SDA: { pcbX: -7.6, pcbY: 4.8, pcbRotation: 90 },
+  SW_BTN1: { pcbX: -13.5, pcbY: 8 },
+  SW_BTN2: { pcbX: -13.5, pcbY: -8 },
   R_BTN1: { pcbX: -7.3, pcbY: 8 },
   R_BTN2: { pcbX: -7.3, pcbY: -8 },
   J_SWD: { pcbX: 8, pcbY: -15, pcbRotation: 180 },
-  U_MCU: { pcbX: 8.5, pcbY: 0, pcbRotation: 270 },
-  C_MCU: { pcbX: 4.1, pcbY: 0, pcbRotation: 90 },
-  C_NRST: { pcbX: 13, pcbY: 5.5, pcbRotation: 90 },
+  U_MCU: { pcbX: 3.5, pcbY: 0, pcbRotation: 270 },
+  C_MCU: { pcbX: 7, pcbY: 0, pcbRotation: 90 },
+  C_NRST: { pcbX: 15, pcbY: 5.5, pcbRotation: 90 },
   C_BULK: { pcbX: 15, pcbY: -10, pcbRotation: 90 },
   R_PWR_LED: { pcbX: -3, pcbY: 13.5 },
   D_PWR: { pcbX: 0.5, pcbY: 13.5 },
@@ -45,9 +47,9 @@ const unusedMcuPins = [
 ]
 
 const silkscreen = [
-  { text: "BTN1", pcbX: -12.5, pcbY: 12, fontSize: "0.7mm" },
-  { text: "BTN2", pcbX: -12.5, pcbY: -12, fontSize: "0.7mm" },
-  { text: "DISPLAY", pcbX: -2, pcbY: 6.1, fontSize: "0.7mm" },
+  { text: "BTN1", pcbX: -13.5, pcbY: 12, fontSize: "0.7mm" },
+  { text: "BTN2", pcbX: -13.5, pcbY: -12, fontSize: "0.7mm" },
+  { text: "DISPLAY", pcbX: -4, pcbY: 6.1, fontSize: "0.7mm" },
   { text: "POWER", pcbX: -1.25, pcbY: 15.1, fontSize: "0.65mm" },
   { text: "PA8", pcbX: 8.75, pcbY: 15.1, fontSize: "0.65mm" },
   { text: "SWD", pcbX: 8, pcbY: -10.6, fontSize: "0.7mm" },
@@ -57,6 +59,7 @@ const reservedTraceObstacle = (
   id: string,
   from: { x: number; y: number },
   to: { x: number; y: number },
+  connectedTo: string[] = [id],
 ) => {
   const dx = to.x - from.x
   const dy = to.y - from.y
@@ -68,30 +71,72 @@ const reservedTraceObstacle = (
     center: { x: (from.x + to.x) / 2, y: (from.y + to.y) / 2 },
     width: isMostlyVertical ? Math.abs(dx) + 0.2 : Math.abs(dx),
     height: isMostlyVertical ? Math.abs(dy) : Math.abs(dy) + 0.2,
-    connectedTo: [id],
+    connectedTo,
   }
 }
+
+const swdioRoute = [
+  { x: 10, y: -12.75 },
+  { x: 10, y: -8 },
+  { x: 5.125, y: -8 },
+  { x: 5.125, y: -2.85 },
+] as const
 
 const swclkRoute = [
   { x: 6, y: -12.75 },
   { x: 6, y: -18 },
   { x: 18, y: -18 },
-  { x: 18, y: -4 },
-  { x: 10.775, y: -4 },
-  { x: 10.775, y: -2.85 },
+  { x: 18, y: -6 },
+  { x: 5.775, y: -6 },
+  { x: 5.775, y: -2.85 },
+] as const
+
+const nrstRoute = [
+  { x: 4, y: -12.75 },
+  { x: 4, y: -20 },
+  { x: 18.7, y: -20 },
+  { x: 18.7, y: 9 },
+  { x: 3.175, y: 9 },
+  { x: 3.175, y: 2.85 },
 ] as const
 
 export const BOOSTERPACK_SWD_RESERVED_ROUTING_OBSTACLES = [
-  reservedTraceObstacle(
-    "reserved-swdio",
-    { x: 10, y: -12.75 },
-    { x: 10.125, y: -2.85 },
-  ),
+  ...swdioRoute
+    .slice(1)
+    .map((to, index) =>
+      reservedTraceObstacle(`reserved-swdio-${index}`, swdioRoute[index]!, to),
+    ),
   ...swclkRoute
     .slice(1)
     .map((to, index) =>
       reservedTraceObstacle(`reserved-swclk-${index}`, swclkRoute[index]!, to),
     ),
+  ...nrstRoute
+    .slice(1)
+    .map((to, index) =>
+      reservedTraceObstacle(`reserved-nrst-${index}`, nrstRoute[index]!, to, [
+        "source_trace_20",
+        "source_trace_28",
+      ]),
+    ),
+]
+
+const BOOSTERPACK_BOTTOM_EDGE_ROUTING_GUARD = 0.8
+const BOOSTERPACK_BOARD_EDGE_ROUTING_OBSTACLES = [
+  {
+    obstacleId: "reserved-bottom-board-edge",
+    type: "rect" as const,
+    layers: ["top", "bottom"],
+    center: {
+      x: 0,
+      y:
+        -BOOSTERPACK_CLAD_HEIGHT / 2 +
+        BOOSTERPACK_BOTTOM_EDGE_ROUTING_GUARD / 2,
+    },
+    width: BOOSTERPACK_CLAD_WIDTH,
+    height: BOOSTERPACK_BOTTOM_EDGE_ROUTING_GUARD,
+    connectedTo: ["reserved-bottom-board-edge"],
+  },
 ]
 
 const getRepackedDisplayChildren = (routeSwdAndBulk: boolean): ReactNode => {
@@ -130,7 +175,14 @@ const getRepackedDisplayChildren = (routeSwdAndBulk: boolean): ReactNode => {
     }
 
     if (name === "SWDIO") {
-      return cloneElement(child, { pcbStraightLine: true })
+      return cloneElement(child, {
+        pcbPathRelativeTo: ".J_SWD > .SWDIO",
+        pcbPath: [
+          // Coordinates are in J_SWD's 180-degree-rotated component frame.
+          { x: -2, y: -7 },
+          { x: 2.875, y: -7 },
+        ],
+      })
     }
 
     if (name === "SWCLK") {
@@ -140,8 +192,22 @@ const getRepackedDisplayChildren = (routeSwdAndBulk: boolean): ReactNode => {
           // Coordinates are in J_SWD's 180-degree-rotated component frame.
           { x: 2, y: 3 },
           { x: -10, y: 3 },
-          { x: -10, y: -11 },
-          { x: -2.775, y: -11 },
+          { x: -10, y: -9 },
+          { x: 2.225, y: -9 },
+        ],
+      })
+    }
+
+    if (name === "SWD_NRST") {
+      return cloneElement(child, {
+        pcbPathRelativeTo: ".J_SWD > .NRST",
+        pcbPath: [
+          // J_SWD is rotated 180 degrees; these map to the reserved absolute
+          // path around the lower and right sides of the populated area.
+          { x: 4, y: 5 },
+          { x: -10.7, y: 5 },
+          { x: -10.7, y: -24 },
+          { x: 4.825, y: -24 },
         ],
       })
     }
@@ -172,12 +238,13 @@ export const Stm32c071DisplayBoosterPackClad = ({
 }: Stm32c071DisplayBoosterPackCladProps = {}) => (
   <BoosterPackClad
     {...props}
-    reservedAutorouterObstacles={
-      routeSwdAndBulk ? BOOSTERPACK_SWD_RESERVED_ROUTING_OBSTACLES : []
-    }
+    reservedAutorouterObstacles={[
+      ...BOOSTERPACK_BOARD_EDGE_ROUTING_OBSTACLES,
+      ...(routeSwdAndBulk ? BOOSTERPACK_SWD_RESERVED_ROUTING_OBSTACLES : []),
+    ]}
     minTraceWidth={props.minTraceWidth ?? 0.2}
     autorouterOptions={{
-      gridClearance: 0.1,
+      gridClearance: 0.16,
       gridPitch: 1,
       maxBlockersPerSearch: 128,
       maxRipsPerRoute: 1_000,
