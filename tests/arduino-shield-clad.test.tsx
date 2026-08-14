@@ -2,7 +2,10 @@ import { expect, test } from "bun:test"
 import { Circuit } from "@tscircuit/core"
 import {
   ARDUINO_SHIELD_CLAD_HEIGHT,
+  ARDUINO_SHIELD_CLAD_VIA_HOLE_DIAMETER,
+  ARDUINO_SHIELD_CLAD_VIA_OUTER_DIAMETER,
   ARDUINO_SHIELD_CLAD_VIA_POSITIONS,
+  ARDUINO_SHIELD_CLAD_VIA_SPACING,
   ARDUINO_SHIELD_CLAD_WIDTH,
   ARDUINO_SHIELD_CONNECTOR_OFFSET_X,
   ARDUINO_SHIELD_HEADER_PLACEMENTS,
@@ -104,7 +107,17 @@ test("uses the UNO R3 connector and BiscuitBoard mounting-hole geometry", async 
   expect(headerPortIds).toHaveLength(38)
   expect(doNotConnectHeaderPortIds).toHaveLength(38)
   expect(vias).toHaveLength(ARDUINO_SHIELD_CLAD_VIA_POSITIONS.length)
-  expect(vias).toHaveLength(58)
+  expect(vias).toHaveLength(262)
+  expect(
+    vias.every(
+      (via) => via.hole_diameter === ARDUINO_SHIELD_CLAD_VIA_HOLE_DIAMETER,
+    ),
+  ).toBe(true)
+  expect(
+    vias.every(
+      (via) => via.outer_diameter === ARDUINO_SHIELD_CLAD_VIA_OUTER_DIAMETER,
+    ),
+  ).toBe(true)
   expect(new Set(vias.map(pointKey))).toEqual(
     new Set(ARDUINO_SHIELD_CLAD_VIA_POSITIONS.map(pointKey)),
   )
@@ -133,8 +146,8 @@ test("preserves the non-grid UNO digital-header gap and clustered via field", as
   const rightEdgeVias = ARDUINO_SHIELD_CLAD_VIA_POSITIONS.filter(
     (via) => via.x === 34.5,
   )
-  const centralVias = ARDUINO_SHIELD_CLAD_VIA_POSITIONS.filter(
-    (via) => via.x >= -8 && via.x <= 8 && via.y >= -6 && via.y <= 6,
+  const shiftedCentralVias = ARDUINO_SHIELD_CLAD_VIA_POSITIONS.filter(
+    (via) => via.x >= -19 && via.x <= -3 && via.y >= -6 && via.y <= 6,
   )
 
   expect(nonPitchGaps).toHaveLength(1)
@@ -151,9 +164,20 @@ test("preserves the non-grid UNO digital-header gap and clustered via field", as
       ),
     ),
   ).toBeGreaterThan(4)
-  expect(leftEdgeVias).toHaveLength(12)
-  expect(rightEdgeVias).toHaveLength(8)
+  expect(leftEdgeVias).toHaveLength(56)
+  expect(rightEdgeVias).toHaveLength(20)
   expect(rightEdgeVias.some((via) => via.y === -3.5)).toBe(false)
   expect(rightEdgeVias.some((via) => via.y === 3.5)).toBe(false)
-  expect(centralVias).toHaveLength(20)
+  expect(shiftedCentralVias).toHaveLength(130)
+  expect(
+    shiftedCentralVias.some(
+      (via) =>
+        Math.abs(via.x - (-19 + ARDUINO_SHIELD_CLAD_VIA_SPACING)) < 0.001,
+    ),
+  ).toBe(true)
+  expect(
+    ARDUINO_SHIELD_CLAD_VIA_POSITIONS.some(
+      (via) => via.x >= 18 && via.x <= 22 && via.y >= -4 && via.y <= 4,
+    ),
+  ).toBe(false)
 })
