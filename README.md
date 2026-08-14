@@ -120,6 +120,34 @@ bun run snapshot:arduino-shield
 bun test tests/arduino-shield-clad.test.tsx
 ```
 
+## Seeed Studio XIAO form-factor clad
+
+[`XiaoCladWithPinHeaders`](./lib/xiao-clad.tsx) is a two-layer 17.8 mm x 21 mm
+clad matching the classic Seeed Studio XIAO outline. It includes the standard
+two rows of seven through-hole headers at 2.54 mm pin pitch and 15.24 mm row
+spacing, and the USB end is marked on top silkscreen. Its 26 fixed through-vias
+use 0.3 mm drills and 0.6 mm pads. They form two 1 x 13 columns on a 1 mm pitch,
+leaving the central component field open while clearing the header pads.
+
+The populated clad preview has a checked-in PCB snapshot:
+
+```sh
+bun run snapshot:xiao-clad-with-pin-headers
+bun test tests/xiao-clad.test.tsx
+```
+
+[`examples/xiao-stm32-usb.tsx`](./examples/xiao-stm32-usb.tsx) validates the
+via placement with a routed STM32C071 USB device. It includes a compact USB-C
+USB2 module, two 5.1 kOhm CC pulldowns, a 3.3 V LDO, input/output capacitors,
+and bottom-side MCU decoupling. All 16 PCB traces route without router or
+clearance errors, and the solution claims two fixed vias at `(-5.8, 4)` and
+`(5.8, -5)` mm. No manufactured vias are added.
+
+```sh
+bun run build:xiao-stm32-usb
+bun run snapshot:xiao-stm32-usb
+```
+
 ## Stainless-steel stencil blank
 
 [`mechanical/biscuit-board-stencil.step`](./mechanical/biscuit-board-stencil.step)

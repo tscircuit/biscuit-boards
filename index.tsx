@@ -1,4 +1,24 @@
 export {
+  ARDUINO_SHIELD_CLAD_HEIGHT,
+  ARDUINO_SHIELD_CLAD_VIA_CANDIDATE_ZONES,
+  ARDUINO_SHIELD_CLAD_VIA_POSITIONS,
+  ARDUINO_SHIELD_CLAD_WIDTH,
+  ARDUINO_SHIELD_CONNECTOR_OFFSET_X,
+  ARDUINO_SHIELD_HEADER_PITCH,
+  ARDUINO_SHIELD_HEADER_PLACEMENTS,
+  ARDUINO_SHIELD_HEADER_ROW_Y,
+  ARDUINO_SHIELD_MOUNTING_HOLE_DIAMETER,
+  ARDUINO_SHIELD_MOUNTING_HOLE_POSITIONS,
+  ArduinoShieldAnalogHeader,
+  ArduinoShieldClad,
+  type ArduinoShieldCladProps,
+  type ArduinoShieldCladViaPosition,
+  ArduinoShieldDigital0To7Header,
+  ArduinoShieldDigital8To13Header,
+  ArduinoShieldIcspSocket,
+  ArduinoShieldPowerHeader,
+} from "./lib/ArduinoShieldClad"
+export {
   BISCUIT_BOARD_HEIGHT,
   BISCUIT_BOARD_MOUNTING_HOLE_POSITIONS,
   BISCUIT_BOARD_VIA_POSITIONS,
@@ -24,26 +44,6 @@ export {
   BoosterPackRightHeader,
 } from "./lib/BoosterPackClad"
 export {
-  ARDUINO_SHIELD_CLAD_HEIGHT,
-  ARDUINO_SHIELD_CLAD_VIA_CANDIDATE_ZONES,
-  ARDUINO_SHIELD_CLAD_VIA_POSITIONS,
-  ARDUINO_SHIELD_CLAD_WIDTH,
-  ARDUINO_SHIELD_CONNECTOR_OFFSET_X,
-  ARDUINO_SHIELD_HEADER_PITCH,
-  ARDUINO_SHIELD_HEADER_PLACEMENTS,
-  ARDUINO_SHIELD_HEADER_ROW_Y,
-  ARDUINO_SHIELD_MOUNTING_HOLE_DIAMETER,
-  ARDUINO_SHIELD_MOUNTING_HOLE_POSITIONS,
-  ArduinoShieldAnalogHeader,
-  ArduinoShieldClad,
-  type ArduinoShieldCladProps,
-  type ArduinoShieldCladViaPosition,
-  ArduinoShieldDigital0To7Header,
-  ArduinoShieldDigital8To13Header,
-  ArduinoShieldIcspSocket,
-  ArduinoShieldPowerHeader,
-} from "./lib/ArduinoShieldClad"
-export {
   BiscuitBoardAutorouter,
   type BiscuitBoardAutorouterOptions,
   createBiscuitBoardAutorouter,
@@ -67,6 +67,22 @@ export {
   type Point as LensDistortionPoint,
   projectedToDesign,
 } from "./lib/lightburn-lens-distortion"
+export {
+  XIAO_CLAD_HEIGHT,
+  XIAO_CLAD_VIA_HOLE_DIAMETER,
+  XIAO_CLAD_VIA_PAD_DIAMETER,
+  XIAO_CLAD_VIA_POSITIONS,
+  XIAO_CLAD_VIA_SPACING,
+  XIAO_CLAD_WIDTH,
+  XIAO_HEADER_HOLE_DIAMETER,
+  XIAO_HEADER_PAD_DIAMETER,
+  XIAO_HEADER_PITCH,
+  XIAO_HEADER_POSITIONS,
+  XIAO_HEADER_ROW_SPACING,
+  XiaoCladWithPinHeaders,
+  type XiaoCladWithPinHeadersProps,
+  XiaoPinHeaders,
+} from "./lib/xiao-clad"
 
 import { BiscuitBoard } from "./lib/BiscuitBoard"
 

@@ -12,6 +12,7 @@
     "build:arduino-shield": "tsci build examples/arduino-shield-clad.tsx --disable-parts-engine --svgs",
     "build:boosterpack": "tsci build examples/stm32c071-display-boosterpack.tsx --disable-parts-engine --svgs",
     "build:example": "tsci build examples/stm32c071.tsx --disable-parts-engine --svgs",
+    "build:xiao-stm32-usb": "tsci build examples/xiao-stm32-usb.tsx --disable-parts-engine --svgs",
     "export:lightburn": "bun run scripts/export-lightburn.tsx",
     "export:stencil-step": "bun run scripts/export-stencil-step.ts",
     "generate:lens-calibration": "bun run scripts/generate-lens-calibration.ts",
@@ -28,12 +29,16 @@
     "snapshot:boosterpack-clad:update": "tsci snapshot examples/boosterpack-clad.tsx --disable-parts-engine --pcb-only --update",
     "snapshot:arduino-shield": "tsci snapshot examples/arduino-shield-clad.tsx --disable-parts-engine --pcb-only --ci",
     "snapshot:arduino-shield:update": "tsci snapshot examples/arduino-shield-clad.tsx --disable-parts-engine --pcb-only --update",
+    "snapshot:xiao-clad-with-pin-headers": "tsci snapshot examples/xiao-clad-with-pin-headers.tsx --disable-parts-engine --pcb-only --ci",
+    "snapshot:xiao-clad-with-pin-headers:update": "tsci snapshot examples/xiao-clad-with-pin-headers.tsx --disable-parts-engine --pcb-only --update",
+    "snapshot:xiao-stm32-usb": "tsci snapshot examples/xiao-stm32-usb.tsx --disable-parts-engine --pcb-only --ci",
+    "snapshot:xiao-stm32-usb:update": "tsci snapshot examples/xiao-stm32-usb.tsx --disable-parts-engine --pcb-only --update",
     "snapshot:lightburn": "bun test tests/lightburn-export.test.tsx tests/lightburn-lens-distortion.test.tsx",
     "snapshot:lightburn:update": "BUN_UPDATE_SNAPSHOTS=1 bun test tests/lightburn-export.test.tsx tests/lightburn-lens-distortion.test.tsx",
     "start": "tsci dev",
     "test": "bun test",
     "typecheck": "tsc --noEmit",
-    "check": "bun run typecheck && bun run test && bun run snapshot:stm32 && bun run snapshot:rp2040 && bun run snapshot:boosterpack && bun run snapshot:boosterpack-clad && bun run snapshot:arduino-shield && bun run build && bun run build:example && bun run build:arduino-shield && bun run export:lightburn examples/stm32c071-display.tsx"
+    "check": "bun run typecheck && bun run test && bun run snapshot:stm32 && bun run snapshot:rp2040 && bun run snapshot:boosterpack && bun run snapshot:boosterpack-clad && bun run snapshot:arduino-shield && bun run snapshot:xiao-clad-with-pin-headers && bun run snapshot:xiao-stm32-usb && bun run build && bun run build:example && bun run build:arduino-shield && bun run build:xiao-stm32-usb && bun run export:lightburn examples/stm32c071-display.tsx"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.4",
