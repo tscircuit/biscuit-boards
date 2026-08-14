@@ -10,6 +10,7 @@ export {
 } from "./lib/BiscuitBoard"
 export {
   BOOSTERPACK_CLAD_HEIGHT,
+  BOOSTERPACK_CLAD_PLACEMENT_ZONES,
   BOOSTERPACK_CLAD_VIA_CANDIDATE_ZONES,
   BOOSTERPACK_CLAD_VIA_EXCLUSION_ZONES,
   BOOSTERPACK_CLAD_VIA_POSITIONS,
@@ -18,6 +19,7 @@ export {
   BOOSTERPACK_HEADER_CENTER_Y,
   BOOSTERPACK_HEADER_PITCH,
   BoosterPackClad,
+  type BoosterPackCladPlacementZone,
   type BoosterPackCladProps,
   type BoosterPackCladViaPosition,
   BoosterPackLeftHeader,

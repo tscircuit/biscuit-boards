@@ -20,8 +20,6 @@ export const BOOSTERPACK_HEADER_CENTER_Y = 1.27
 
 const BOOSTERPACK_CLAD_EDGE_CLEARANCE = 0.2
 const BOOSTERPACK_CLAD_EDGE_CLEARANCE_VALIDATION_TOLERANCE = 0.001
-const BOOSTERPACK_LEFT_ESCAPE_CLUSTER_CENTER_X =
-  -BOOSTERPACK_HEADER_CENTER_X / 2
 
 export interface BoosterPackCladViaPosition {
   x: number
@@ -34,6 +32,15 @@ interface ViaCandidateZone {
   minY: number
   maxY: number
   spacing: number
+}
+
+export interface BoosterPackCladPlacementZone {
+  name: string
+  purpose: "connector" | "chips-and-sensors" | "interface"
+  minX: number
+  maxX: number
+  minY: number
+  maxY: number
 }
 
 const rangeInclusive = (start: number, end: number, increment: number) =>
@@ -52,9 +59,9 @@ const createViaZone = (zone: ViaCandidateZone): BoosterPackCladViaPosition[] =>
  * 3-by-2 corner blocks remain at the original clad coordinates. The other
  * dual-row clusters hug the left side of the top and bottom edges at the same
  * 4 mm pitch from the corner blocks. The top-right edge remains open, while a
- * right-side via rail and a compact 2-by-3 escape cluster centered between
- * the left LaunchPad header and the board center provide vertical routing
- * channels.
+ * right-side via rail and a compact 2-by-3 escape cluster outside the left
+ * LaunchPad header provide vertical routing channels without consuming the
+ * central component bays.
  */
 export const BOOSTERPACK_CLAD_VIA_CANDIDATE_ZONES = [
   // Closed 3-by-2 clusters outside the left header.
@@ -63,17 +70,76 @@ export const BOOSTERPACK_CLAD_VIA_CANDIDATE_ZONES = [
   // Edge bands continue one standard 4 mm pitch from the corner clusters.
   { minX: -21.5, maxX: -5.5, minY: 21.5, maxY: 25.5, spacing: 4 },
   { minX: -21.5, maxX: -1.5, minY: -25.5, maxY: -21.5, spacing: 4 },
-  // Escape cluster centered between the left header and the board center.
-  {
-    minX: BOOSTERPACK_LEFT_ESCAPE_CLUSTER_CENTER_X - 2,
-    maxX: BOOSTERPACK_LEFT_ESCAPE_CLUSTER_CENTER_X + 2,
-    minY: -4,
-    maxY: 4,
-    spacing: 4,
-  },
+  // Escape cluster in the routing corridor outside the left header.
+  { minX: -29.5, maxX: -25.5, minY: -4, maxY: 4, spacing: 4 },
   // Open right-edge rail.
   { minX: 32.5, maxX: 32.5, minY: -20.25, maxY: 19.75, spacing: 4 },
 ] as const satisfies readonly ViaCandidateZone[]
+
+/**
+ * Reusable placement bays kept clear of prefabricated via pads. The central
+ * bays cover controls, chips, sensors, debug, and power circuitry. Open bays
+ * along the upper-right and lower-right edges leave room for connectors whose
+ * bodies or cables must reach beyond the board outline.
+ */
+export const BOOSTERPACK_CLAD_PLACEMENT_ZONES = [
+  {
+    name: "left-launchpad-header",
+    purpose: "connector",
+    minX: -24.5,
+    maxX: -18.5,
+    minY: -12,
+    maxY: 14.5,
+  },
+  {
+    name: "right-launchpad-header",
+    purpose: "connector",
+    minX: 18.5,
+    maxX: 24.5,
+    minY: -12,
+    maxY: 14.5,
+  },
+  {
+    name: "upper-interface",
+    purpose: "interface",
+    minX: -17.5,
+    maxX: 17.5,
+    minY: 11.5,
+    maxY: 19.5,
+  },
+  {
+    name: "central-chips-and-sensors",
+    purpose: "chips-and-sensors",
+    minX: -17.5,
+    maxX: 17.5,
+    minY: -11.5,
+    maxY: 11.5,
+  },
+  {
+    name: "lower-interface",
+    purpose: "interface",
+    minX: -17.5,
+    maxX: 17.5,
+    minY: -19.5,
+    maxY: -11.5,
+  },
+  {
+    name: "upper-edge-connector",
+    purpose: "connector",
+    minX: 1,
+    maxX: 27,
+    minY: 20.5,
+    maxY: 26.5,
+  },
+  {
+    name: "lower-edge-connector",
+    purpose: "connector",
+    minX: 1,
+    maxX: 27,
+    minY: -26.5,
+    maxY: -20.5,
+  },
+] as const satisfies readonly BoosterPackCladPlacementZone[]
 
 /** The candidate zones are placed directly in known open routing channels. */
 export const BOOSTERPACK_CLAD_VIA_EXCLUSION_ZONES: readonly ViaCandidateZone[] =
@@ -303,6 +369,27 @@ export const BoosterPackClad = ({
           pcbPositionAnchor="center"
           pcbX={zone.minX + (zone.maxX - zone.minX) / 2}
           pcbY={zone.minY + (zone.maxY - zone.minY) / 2}
+        />
+      </Fragment>
+    ))}
+
+    {BOOSTERPACK_CLAD_PLACEMENT_ZONES.map((zone) => (
+      <Fragment key={`placement-zone-${zone.name}`}>
+        <pcbnoterect
+          color="orange"
+          width={zone.maxX - zone.minX}
+          height={zone.maxY - zone.minY}
+          pcbPositionAnchor="center"
+          pcbX={zone.minX + (zone.maxX - zone.minX) / 2}
+          pcbY={zone.minY + (zone.maxY - zone.minY) / 2}
+        />
+        <pcbnotetext
+          text={zone.name}
+          color="orange"
+          fontSize="0.55mm"
+          pcbX={zone.minX + 0.5}
+          pcbY={zone.maxY - 0.5}
+          anchorAlignment="top_left"
         />
       </Fragment>
     ))}

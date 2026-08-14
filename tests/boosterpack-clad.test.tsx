@@ -9,9 +9,9 @@ import { Stm32c071DisplayBoosterPackClad } from "../examples/stm32c071-display-b
 import { BISCUIT_BOARD_MOUNTING_HOLE_POSITIONS } from "../lib/BiscuitBoard"
 import {
   BOOSTERPACK_CLAD_HEIGHT,
+  BOOSTERPACK_CLAD_PLACEMENT_ZONES,
   BOOSTERPACK_CLAD_VIA_POSITIONS,
   BOOSTERPACK_CLAD_WIDTH,
-  BOOSTERPACK_HEADER_CENTER_X,
 } from "../lib/BoosterPackClad"
 
 const pointKey = (point: { x: number; y: number }) =>
@@ -40,13 +40,38 @@ test("uses the BiscuitBoard outline and TI 40-pin header geometry", async () => 
       via.x >= -21.5 && via.x <= -1.5 && (via.y === -25.5 || via.y === -21.5),
   )
   const rightEdgeVias = vias.filter((via) => via.x === 32.5)
-  const escapeClusterCenterX = -BOOSTERPACK_HEADER_CENTER_X / 2
   const escapeClusterVias = vias.filter(
-    (via) =>
-      (via.x === escapeClusterCenterX - 2 ||
-        via.x === escapeClusterCenterX + 2) &&
-      via.y >= -4 &&
-      via.y <= 4,
+    (via) => (via.x === -29.5 || via.x === -25.5) && via.y >= -4 && via.y <= 4,
+  )
+  const viaPadRadius = 0.6
+  const placementZoneIntrusions = vias.flatMap((via) =>
+    BOOSTERPACK_CLAD_PLACEMENT_ZONES.filter(
+      (zone) =>
+        via.x + viaPadRadius >= zone.minX &&
+        via.x - viaPadRadius <= zone.maxX &&
+        via.y + viaPadRadius >= zone.minY &&
+        via.y - viaPadRadius <= zone.maxY,
+    ).map((zone) => ({ via: pointKey(via), zone: zone.name })),
+  )
+  const sourceComponentNames = new Map(
+    circuitJson.flatMap((element) =>
+      element.type === "source_component"
+        ? [[element.source_component_id, element.name] as const]
+        : [],
+    ),
+  )
+  const componentsOutsidePlacementZones = circuitJson.flatMap((element) =>
+    element.type === "pcb_component" &&
+    !element.source_component_id.startsWith("source_manually_placed_via_") &&
+    !BOOSTERPACK_CLAD_PLACEMENT_ZONES.some(
+      (zone) =>
+        element.center.x >= zone.minX &&
+        element.center.x <= zone.maxX &&
+        element.center.y >= zone.minY &&
+        element.center.y <= zone.maxY,
+    )
+      ? [sourceComponentNames.get(element.source_component_id)]
+      : [],
   )
   const topRightClusterVias = vias.filter(
     (via) => via.x >= 12.75 && via.x <= 24.75 && via.y >= 21.5 && via.y <= 25.5,
@@ -100,11 +125,8 @@ test("uses the BiscuitBoard outline and TI 40-pin header geometry", async () => 
   expect(topRightClusterVias).toHaveLength(0)
   expect(rightEdgeVias).toHaveLength(11)
   expect(escapeClusterVias).toHaveLength(6)
-  expect(
-    (Math.min(...escapeClusterVias.map((via) => via.x)) +
-      Math.max(...escapeClusterVias.map((via) => via.x))) /
-      2,
-  ).toBe(escapeClusterCenterX)
+  expect(placementZoneIntrusions).toEqual([])
+  expect(componentsOutsidePlacementZones).toEqual([])
   expect(
     circuitJson.some(
       (element) =>
