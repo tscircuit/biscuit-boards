@@ -44,6 +44,25 @@ export {
   ArduinoShieldPowerHeader,
 } from "./lib/ArduinoShieldClad"
 export {
+  XIAO_CLAD_HEIGHT,
+  XIAO_CLAD_COMPONENT_AREA,
+  XIAO_CLAD_MIN_VIA_CLEARANCE,
+  XIAO_CLAD_MOUNTING_HOLE_DIAMETER,
+  XIAO_CLAD_MOUNTING_HOLE_POSITIONS,
+  XIAO_CLAD_VIA_CANDIDATE_ZONES,
+  XIAO_CLAD_VIA_GRID_AREAS,
+  XIAO_CLAD_VIA_HOLE_DIAMETER,
+  XIAO_CLAD_VIA_OUTER_DIAMETER,
+  XIAO_CLAD_VIA_POSITIONS,
+  XIAO_CLAD_WIDTH,
+  XiaoClad,
+  type XiaoCladProps,
+  type XiaoCladViaGridArea,
+  type XiaoCladViaGridOptions,
+  type XiaoCladViaPosition,
+  createXiaoCladViaPositions,
+} from "./lib/XiaoClad"
+export {
   BiscuitBoardAutorouter,
   type BiscuitBoardAutorouterOptions,
   createBiscuitBoardAutorouter,

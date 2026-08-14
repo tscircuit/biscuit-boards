@@ -141,3 +141,95 @@ export const S5B_PH_SM4_TB = (props: ConnectorProps) => (
     {...props}
   />
 )
+
+const JstShTopEntryFootprint = () => (
+  <footprint insertionDirection="from_z_pos">
+    {Array.from({ length: 5 }, (_, index) => {
+      const pin = index + 1
+      return (
+        <Fragment key={`pin${pin}`}>
+          <smtpad
+            portHints={[`pin${pin}`]}
+            pcbX={index - 2}
+            pcbY="-1.325mm"
+            width="0.6mm"
+            height="1.8mm"
+            shape="rect"
+          />
+        </Fragment>
+      )
+    })}
+    <smtpad
+      pcbX="-3mm"
+      pcbY="1.325mm"
+      width="1.2mm"
+      height="1.8mm"
+      shape="rect"
+    />
+    <smtpad
+      pcbX="3mm"
+      pcbY="1.325mm"
+      width="1.2mm"
+      height="1.8mm"
+      shape="rect"
+    />
+    <silkscreenrect width="7mm" height="4.2mm" />
+    <silkscreentext text="{NAME}" pcbY="2.8mm" fontSize="0.7mm" />
+  </footprint>
+)
+
+/** Compact five-pin, 1 mm-pitch JST SH top-entry SWD connector. */
+export const BM05B_SRSS_TB = (props: ConnectorProps) => (
+  <connector
+    pinLabels={swdPins}
+    manufacturerPartNumber="BM05B-SRSS-TB"
+    footprint={<JstShTopEntryFootprint />}
+    {...props}
+  />
+)
+
+const JstSurTopEntryFootprint = () => (
+  <footprint insertionDirection="from_z_pos">
+    {Array.from({ length: 5 }, (_, index) => {
+      const pin = index + 1
+      return (
+        <Fragment key={`pin${pin}`}>
+          <smtpad
+            portHints={[`pin${pin}`]}
+            pcbX={(index - 2) * 0.8}
+            pcbY="-0.85mm"
+            width="0.5mm"
+            height="1.2mm"
+            shape="rect"
+          />
+        </Fragment>
+      )
+    })}
+    <smtpad
+      pcbX="-2.75mm"
+      pcbY="0.85mm"
+      width="0.7mm"
+      height="1.7mm"
+      shape="rect"
+    />
+    <smtpad
+      pcbX="2.75mm"
+      pcbY="0.85mm"
+      width="0.7mm"
+      height="1.7mm"
+      shape="rect"
+    />
+    <silkscreenrect width="6.2mm" height="2.7mm" />
+    <silkscreentext text="{NAME}" pcbY="2mm" fontSize="0.6mm" />
+  </footprint>
+)
+
+/** Ultra-compact five-pin, 0.8 mm-pitch JST SUR top-entry SWD connector. */
+export const BM05B_SURS_TF = (props: ConnectorProps) => (
+  <connector
+    pinLabels={swdPins}
+    manufacturerPartNumber="BM05B-SURS-TF"
+    footprint={<JstSurTopEntryFootprint />}
+    {...props}
+  />
+)

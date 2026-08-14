@@ -120,6 +120,51 @@ bun run snapshot:arduino-shield
 bun test tests/arduino-shield-clad.test.tsx
 ```
 
+## XIAO form-factor clad
+
+[`XiaoClad`](./lib/XiaoClad.tsx) is a bare 17.8 mm x 21 mm clad using the
+classic Seeed Studio XIAO outline. It is the clad itself, not a carrier for a
+XIAO module: there are no socket headers or module footprint. Four 2.2 mm M2
+clearance holes sit 2.5 mm from the edges. Three separate via zones run along
+the board edges. The two side zones are 1.4 mm wide and therefore fit one via
+column each. The 2.8 mm tall bottom zone fits two rows, while the top center
+remains open for components or connectors. With the default 0.4 mm outer
+diameter and 1 mm edge-to-edge clearance, the 1.4 mm center pitch produces 28
+vias while leaving a conservative 9.8 mm x 12.8 mm central component area open
+for chips and sensors. The drill diameter is 0.3 mm.
+
+The via count is derived independently for every physical `viaGridAreas`
+rectangle. Minimum clearance is enforced both within and between zones.
+
+```tsx
+<XiaoClad
+  viaGridAreas={[
+    { width: 1.4, height: 10, centerX: -6.8 },
+    { width: 1.4, height: 10, centerX: 6.8 },
+  ]}
+  viaHoleDiameter={1}
+  viaOuterDiameter={1.5}
+  minViaClearance={1}
+/>
+```
+
+The bare preview is in [`examples/xiao-clad.tsx`](./examples/xiao-clad.tsx).
+The complete STM32C071 circuit is placed and routed in
+[`examples/stm32c071-xiao-clad.tsx`](./examples/stm32c071-xiao-clad.tsx). It
+uses the same 17 electrical connections as the full-size STM32 example. Every
+part fits on the top face, including a compact 0.8 mm-pitch JST SUR five-pin SWD
+connector between the upper mounting holes. All layer changes claim existing
+prefabricated vias.
+
+```sh
+bun run build:xiao-clad
+bun run build:stm32-xiao-clad
+bun run snapshot:xiao-clad
+bun run snapshot:stm32-xiao-clad
+bun test tests/xiao-clad.test.tsx
+bun test tests/stm32c071-xiao-clad.test.tsx
+```
+
 ## Stainless-steel stencil blank
 
 [`mechanical/biscuit-board-stencil.step`](./mechanical/biscuit-board-stencil.step)
