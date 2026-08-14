@@ -126,6 +126,9 @@ bun test tests/arduino-shield-clad.test.tsx
 the classic Seeed Studio XIAO outline. The USB end is marked on top silkscreen.
 It is available as a completely bare board or with the standard two rows of
 seven through-hole headers at 2.54 mm pin pitch and 15.24 mm row spacing.
+Both variants include the same nine 0.8 mm fixed through-vias: two four-via
+side rails flanking the central component field and one bottom-center escape
+via. The side rails clear the optional header pads.
 
 Use `XiaoCladWithPinHeaders` for the populated-header convenience variant, or
 set `withPinHeaders` on `XiaoClad`. Both bare previews have checked-in PCB
@@ -135,6 +138,18 @@ snapshots:
 bun run snapshot:xiao-clad
 bun run snapshot:xiao-clad-with-pin-headers
 bun test tests/xiao-clad.test.tsx
+```
+
+[`examples/xiao-stm32-usb.tsx`](./examples/xiao-stm32-usb.tsx) validates the
+via placement with a routed STM32C071 USB device. It includes a compact USB-C
+USB2 module, two 5.1 kOhm CC pulldowns, a 3.3 V LDO, input/output capacitors,
+and bottom-side MCU decoupling. All 16 PCB traces route without router or
+clearance errors, and the solution claims exactly three of the fixed vias at
+`(-5.8, 4)`, `(0, -8)`, and `(5.8, -8)` mm. No manufactured vias are added.
+
+```sh
+bun run build:xiao-stm32-usb
+bun run snapshot:xiao-stm32-usb
 ```
 
 ## Stainless-steel stencil blank

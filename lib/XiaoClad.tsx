@@ -1,5 +1,7 @@
 import type { AutorouterProp, ConnectorProps } from "@tscircuit/props"
 import { Fragment, type ReactNode } from "react"
+import type { BiscuitBoardAutorouterOptions } from "./biscuit-board-autorouter"
+import { createPrefabricatedViaAutorouter } from "./create-prefabricated-via-autorouter"
 
 /** The classic Seeed Studio XIAO outline, with USB at the positive Y edge. */
 export const XIAO_CLAD_WIDTH = 17.8
@@ -8,6 +10,21 @@ export const XIAO_HEADER_PITCH = 2.54
 export const XIAO_HEADER_ROW_SPACING = 15.24
 export const XIAO_HEADER_HOLE_DIAMETER = 1
 export const XIAO_HEADER_PAD_DIAMETER = 1.7
+export const XIAO_CLAD_VIA_HOLE_DIAMETER = 0.8
+export const XIAO_CLAD_VIA_PAD_DIAMETER = 1.2
+
+const XIAO_CLAD_EDGE_CLEARANCE = 0.2
+const XIAO_CLAD_EDGE_CLEARANCE_VALIDATION_TOLERANCE = 0.001
+
+/**
+ * A compact 2x4 grid flanking the central component field, plus two center
+ * escape vias at the top and bottom. The grid clears both optional header rows
+ * and leaves the USB edge and central TSSOP placement open.
+ */
+export const XIAO_CLAD_VIA_POSITIONS = [
+  ...[-5.8, 5.8].flatMap((x) => [-8, -4, 0, 4].map((y) => ({ x, y }))),
+  { x: 0, y: -8 },
+] as const
 
 const xiaoHeaderYs = Array.from(
   { length: 7 },
@@ -80,20 +97,29 @@ export const XiaoPinHeaders = (props: ConnectorProps) => (
 export interface XiaoCladProps {
   children?: ReactNode
   autorouter?: AutorouterProp
+  autorouterOptions?: BiscuitBoardAutorouterOptions
+  minTraceWidth?: number
+  nominalTraceWidth?: number
   routingDisabled?: boolean
   /** Adds the classic 2x7, 2.54 mm pitch XIAO through-hole header pattern. */
   withPinHeaders?: boolean
   /** Marks every header pin NC for bare-template previews only. */
   markHeadersNoConnect?: boolean
+  /** Shows the USB-edge orientation mark. Defaults to true. */
+  showUsbLabel?: boolean
 }
 
 /** A two-layer copper clad matching the classic Seeed Studio XIAO outline. */
 export const XiaoClad = ({
   children,
   autorouter,
+  autorouterOptions,
+  minTraceWidth,
+  nominalTraceWidth = 0.2,
   routingDisabled = false,
   withPinHeaders = false,
   markHeadersNoConnect = false,
+  showUsbLabel = true,
 }: XiaoCladProps) => (
   <board
     name={withPinHeaders ? "XiaoCladWithPinHeaders" : "XiaoClad"}
@@ -106,7 +132,21 @@ export const XiaoClad = ({
     height={`${XIAO_CLAD_HEIGHT}mm`}
     borderRadius="1mm"
     layers={2}
-    autorouter={autorouter}
+    minTraceWidth={`${minTraceWidth ?? 0.15}mm`}
+    minBoardEdgeClearance={`${XIAO_CLAD_EDGE_CLEARANCE - XIAO_CLAD_EDGE_CLEARANCE_VALIDATION_TOLERANCE}mm`}
+    minViaHoleDiameter="0.2mm"
+    minViaPadDiameter="0.4mm"
+    autorouter={
+      autorouter ??
+      createPrefabricatedViaAutorouter({
+        width: XIAO_CLAD_WIDTH,
+        height: XIAO_CLAD_HEIGHT,
+        edgeClearance: XIAO_CLAD_EDGE_CLEARANCE,
+        options: autorouterOptions,
+        minimumTraceWidth: minTraceWidth,
+        nominalTraceWidth,
+      })
+    }
     routingDisabled={routingDisabled}
   >
     {withPinHeaders && (
@@ -116,12 +156,28 @@ export const XiaoClad = ({
       />
     )}
 
-    <silkscreentext
-      text="USB"
-      pcbX={0}
-      pcbY={XIAO_CLAD_HEIGHT / 2 - 1.2}
-      fontSize="0.7mm"
-    />
+    {showUsbLabel && (
+      <silkscreentext
+        text="USB"
+        pcbX={0}
+        pcbY={XIAO_CLAD_HEIGHT / 2 - 1.2}
+        fontSize="0.7mm"
+      />
+    )}
+
+    {XIAO_CLAD_VIA_POSITIONS.map((via) => (
+      <Fragment key={`xiao-prefab-via-${via.x}-${via.y}`}>
+        <via
+          netIsAssignable
+          pcbX={via.x}
+          pcbY={via.y}
+          fromLayer="top"
+          toLayer="bottom"
+          holeDiameter={`${XIAO_CLAD_VIA_HOLE_DIAMETER}mm`}
+          outerDiameter={`${XIAO_CLAD_VIA_PAD_DIAMETER}mm`}
+        />
+      </Fragment>
+    ))}
 
     <pcbnotedimension
       from={{ x: -XIAO_CLAD_WIDTH / 2, y: XIAO_CLAD_HEIGHT / 2 + 2 }}
