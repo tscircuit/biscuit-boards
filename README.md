@@ -62,6 +62,7 @@ x=14.5 mm; the two pads nearest the left mounting holes are omitted for
 clearance. Standard upward-facing 1x10 pin headers sit flush with the left and
 right board edges, with their rows centered at x=+/-36.23 mm. Their 20 breakout
 pins are explicitly marked unconnected until a signal map is chosen.
+Each prefabricated via uses a 0.3 mm finished hole and a 0.6 mm copper pad.
 The central chips/sensors bay and the upper and lower connector/interface bays
 remain free of prefabricated via pads. Dedicated upper-right and lower-right
 edge bays also remain open for connectors that need outside-board access.
@@ -76,14 +77,14 @@ The complete example routes all 36 PCB traces, including all five J_SWD pads
 and both bulk-capacitor pads, with no router or clearance errors. SWDIO, SWCLK,
 and SWD reset use three deterministic escape traces whose channels are reserved
 from the board autorouter; the other 33 traces are autorouted. The solved route
-claims 15 of the 74 prefabricated vias, at these positions in millimeters:
+claims 17 of the 74 prefabricated vias, at these positions in millimeters:
 
 ```text
 (-12.795,-4) (-12.795,0) (-12.795,4)
 (-8.795,-4) (-8.795,0) (-8.795,4)
-(-28.5,12) (28.5,8)
-(-13.5,-21.5) (-9.5,-25.5) (-5.5,-25.5) (-5.5,-21.5)
-(-1.5,-21.5) (2.5,-21.5) (-9.5,21.5)
+(-5.5,-21.5) (-1.5,-25.5) (2.5,-25.5) (2.5,-21.5)
+(-5.5,21.5) (-1.5,21.5) (-1.5,25.5)
+(6.5,21.5) (6.5,25.5) (10.5,21.5) (14.5,21.5)
 ```
 
 Every router-generated layer change uses one of those fixed via locations; no

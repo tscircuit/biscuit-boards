@@ -66,7 +66,7 @@ test("uses the BiscuitBoard outline and TI 40-pin header geometry", async () => 
       via.y >= -4 &&
       via.y <= 4,
   )
-  const viaPadRadius = 0.6
+  const viaPadRadius = 0.3
   const placementZoneIntrusions = vias.flatMap((via) =>
     BOOSTERPACK_CLAD_PLACEMENT_ZONES.filter(
       (zone) =>
@@ -176,6 +176,8 @@ test("uses the BiscuitBoard outline and TI 40-pin header geometry", async () => 
   )
   expect(vias).toHaveLength(BOOSTERPACK_CLAD_VIA_POSITIONS.length)
   expect(vias).toHaveLength(74)
+  expect(vias.every((via) => via.hole_diameter === 0.3)).toBe(true)
+  expect(vias.every((via) => via.outer_diameter === 0.6)).toBe(true)
   expect(topLeftEdgeVias).toHaveLength(25)
   expect(bottomEdgeVias).toHaveLength(25)
   expect(new Set(topLeftEdgeVias.map((via) => via.x)).size).toBe(13)

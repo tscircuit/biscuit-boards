@@ -542,8 +542,8 @@ export const BoosterPackClad = ({
           pcbY={via.y}
           fromLayer="top"
           toLayer="bottom"
-          holeDiameter="0.8mm"
-          outerDiameter="1.2mm"
+          holeDiameter="0.3mm"
+          outerDiameter="0.6mm"
         />
       </Fragment>
     ))}
