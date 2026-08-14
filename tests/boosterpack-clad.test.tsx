@@ -32,16 +32,15 @@ test("uses the BiscuitBoard outline and TI 40-pin header geometry", async () => 
   )
   const vias = circuitJson.filter((element) => element.type === "pcb_via")
   const topLeftEdgeVias = vias.filter(
-    (via) =>
-      via.x >= -21.5 && via.x <= -5.5 && (via.y === 21.5 || via.y === 25.5),
+    (via) => via.x >= -21.5 && via.x <= -5.5 && via.y === 21.5,
   )
   const bottomEdgeVias = vias.filter(
-    (via) =>
-      via.x >= -21.5 && via.x <= -1.5 && (via.y === -25.5 || via.y === -21.5),
+    (via) => via.x >= -21.5 && via.x <= -1.5 && via.y === -21.5,
   )
   const rightEdgeVias = vias.filter((via) => via.x === 32.5)
-  const escapeClusterVias = vias.filter(
-    (via) => (via.x === -29.5 || via.x === -25.5) && via.y >= -4 && via.y <= 4,
+  const leftRoutingRailVias = vias.filter(
+    (via) =>
+      (via.x === -29.5 || via.x === -25.5) && via.y >= -16 && via.y <= 16,
   )
   const viaPadRadius = 0.6
   const placementZoneIntrusions = vias.flatMap((via) =>
@@ -113,18 +112,17 @@ test("uses the BiscuitBoard outline and TI 40-pin header geometry", async () => 
   )
   expect(launchpadPorts).toHaveLength(40)
   expect(vias).toHaveLength(BOOSTERPACK_CLAD_VIA_POSITIONS.length)
-  expect(vias).toHaveLength(51)
-  expect(topLeftEdgeVias).toHaveLength(10)
-  expect(bottomEdgeVias).toHaveLength(12)
+  expect(vias).toHaveLength(38)
+  expect(topLeftEdgeVias).toHaveLength(5)
+  expect(bottomEdgeVias).toHaveLength(6)
   expect(new Set(bottomEdgeVias.map((via) => via.x)).size).toBe(6)
-  expect(vias.some((via) => via.x === -33.5 && via.y === 17.5)).toBe(true)
-  expect(vias.some((via) => via.x === -21.5 && via.y === 25.5)).toBe(true)
+  expect(vias.some((via) => via.x === -21.5 && via.y === 21.5)).toBe(true)
   expect(Math.min(...topLeftEdgeVias.map((via) => via.x)) - -25.5).toBe(4)
   expect(Math.min(...bottomEdgeVias.map((via) => via.x)) - -25.5).toBe(4)
-  expect(vias.some((via) => via.x === -1.5 && via.y === -25.5)).toBe(true)
+  expect(vias.some((via) => via.x === -1.5 && via.y === -21.5)).toBe(true)
   expect(topRightClusterVias).toHaveLength(0)
-  expect(rightEdgeVias).toHaveLength(11)
-  expect(escapeClusterVias).toHaveLength(6)
+  expect(rightEdgeVias).toHaveLength(9)
+  expect(leftRoutingRailVias).toHaveLength(18)
   expect(placementZoneIntrusions).toEqual([])
   expect(componentsOutsidePlacementZones).toEqual([])
   expect(

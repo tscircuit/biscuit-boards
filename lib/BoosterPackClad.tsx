@@ -55,25 +55,19 @@ const createViaZone = (zone: ViaCandidateZone): BoosterPackCladViaPosition[] =>
   )
 
 /**
- * Outer via pattern derived from BiscuitBoard's clustered layout. The two
- * 3-by-2 corner blocks remain at the original clad coordinates. The other
- * dual-row clusters hug the left side of the top and bottom edges at the same
- * 4 mm pitch from the corner blocks. The top-right edge remains open, while a
- * right-side via rail and a compact 2-by-3 escape cluster outside the left
- * LaunchPad header provide vertical routing channels without consuming the
- * central component bays.
+ * Four routing corridors surround the reusable placement bays: a dual-column
+ * rail outside the left LaunchPad header, single-row upper and lower bands,
+ * and a right-edge rail. The right halves of the upper and lower edges remain
+ * open for connectors.
  */
 export const BOOSTERPACK_CLAD_VIA_CANDIDATE_ZONES = [
-  // Closed 3-by-2 clusters outside the left header.
-  { minX: -33.5, maxX: -25.5, minY: 17.5, maxY: 21.5, spacing: 4 },
-  { minX: -33.5, maxX: -25.5, minY: -21.5, maxY: -17.5, spacing: 4 },
-  // Edge bands continue one standard 4 mm pitch from the corner clusters.
-  { minX: -21.5, maxX: -5.5, minY: 21.5, maxY: 25.5, spacing: 4 },
-  { minX: -21.5, maxX: -1.5, minY: -25.5, maxY: -21.5, spacing: 4 },
-  // Escape cluster in the routing corridor outside the left header.
-  { minX: -29.5, maxX: -25.5, minY: -4, maxY: 4, spacing: 4 },
-  // Open right-edge rail.
-  { minX: 32.5, maxX: 32.5, minY: -20.25, maxY: 19.75, spacing: 4 },
+  // Continuous escape rail in the narrow corridor outside J1/J3.
+  { minX: -29.5, maxX: -25.5, minY: -16, maxY: 16, spacing: 4 },
+  // Single inner-edge rows leave the outer edge available for hardware.
+  { minX: -21.5, maxX: -5.5, minY: 21.5, maxY: 21.5, spacing: 4 },
+  { minX: -21.5, maxX: -1.5, minY: -21.5, maxY: -21.5, spacing: 4 },
+  // Shortened right-edge rail clears both connector bays.
+  { minX: 32.5, maxX: 32.5, minY: -16.25, maxY: 15.75, spacing: 4 },
 ] as const satisfies readonly ViaCandidateZone[]
 
 /**

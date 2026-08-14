@@ -177,7 +177,7 @@ export const Stm32c071DisplayBoosterPackClad = ({
     }
     minTraceWidth={props.minTraceWidth ?? 0.2}
     autorouterOptions={{
-      gridClearance: 0.11,
+      gridClearance: 0.125,
       gridPitch: 1,
       maxBlockersPerSearch: 128,
       maxRipsPerRoute: 1_000,

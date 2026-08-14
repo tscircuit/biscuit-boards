@@ -54,12 +54,11 @@ downward-facing 2x10 male headers for the target LaunchPad mating arrangement;
 TI's generic stacking recommendation normally describes downward-facing female
 BoosterPack headers.
 
-The via field mirrors the original clad's clustered/open-edge language with 51
-candidates. The two closed 3x2 left-corner clusters keep their original
-coordinates. The upper-left and six-column bottom bands sit one standard 4 mm
-via pitch from those corner clusters and against the top and bottom edges. The
-upper-right edge is open, the 11-via right-edge rail is retained, and a 2x3
-escape cluster sits in the routing corridor outside the left LaunchPad header.
+The via field uses 38 candidates in four routing corridors. An 18-via
+dual-column rail runs outside the left LaunchPad header, five- and six-via rows
+follow the upper-left and lower-left placement boundaries, and a nine-via rail
+runs along the right edge. The redundant outer rows and isolated corner
+clusters from the earlier layout are removed.
 The central chips/sensors bay and the upper and lower connector/interface bays
 remain free of prefabricated via pads. Dedicated upper-right and lower-right
 edge bays also remain open for connectors that need outside-board access.
@@ -75,12 +74,13 @@ The complete example routes all 36 PCB traces, including all five J_SWD pads
 and both bulk-capacitor pads, with no router or clearance errors. SWDIO and
 SWCLK use two deterministic escape traces whose channels are reserved from the
 board autorouter; the other 34 traces are autorouted. The solved route claims
-11 of the 51 prefabricated vias, at these positions in millimeters:
+14 of the 38 prefabricated vias, at these positions in millimeters:
 
 ```text
-(-29.5,4) (-25.5,4) (-25.5,17.5)
-(-9.5,-21.5) (-5.5,-21.5) (-1.5,-21.5) (-5.5,21.5)
-(32.5,-0.25) (32.5,3.75) (32.5,7.75) (32.5,11.75)
+(-29.5,-8) (-25.5,-8) (-25.5,0) (-25.5,12)
+(-17.5,21.5) (-9.5,21.5) (-5.5,21.5)
+(-9.5,-21.5) (-1.5,-21.5)
+(32.5,-16.25) (32.5,-4.25) (32.5,3.75) (32.5,7.75) (32.5,15.75)
 ```
 
 Every router-generated layer change uses one of those fixed via locations; no
