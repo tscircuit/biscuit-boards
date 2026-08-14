@@ -10,21 +10,20 @@ export const XIAO_HEADER_PITCH = 2.54
 export const XIAO_HEADER_ROW_SPACING = 15.24
 export const XIAO_HEADER_HOLE_DIAMETER = 1
 export const XIAO_HEADER_PAD_DIAMETER = 1.7
-export const XIAO_CLAD_VIA_HOLE_DIAMETER = 0.8
-export const XIAO_CLAD_VIA_PAD_DIAMETER = 1.2
+export const XIAO_CLAD_VIA_HOLE_DIAMETER = 0.3
+export const XIAO_CLAD_VIA_PAD_DIAMETER = 0.6
+export const XIAO_CLAD_VIA_SPACING = 1
 
 const XIAO_CLAD_EDGE_CLEARANCE = 0.2
 const XIAO_CLAD_EDGE_CLEARANCE_VALIDATION_TOLERANCE = 0.001
 
-/**
- * A compact 2x4 grid flanking the central component field, plus two center
- * escape vias at the top and bottom. The grid clears both optional header rows
- * and leaves the USB edge and central TSSOP placement open.
- */
-export const XIAO_CLAD_VIA_POSITIONS = [
-  ...[-5.8, 5.8].flatMap((x) => [-8, -4, 0, 4].map((y) => ({ x, y }))),
-  { x: 0, y: -8 },
-] as const
+/** Two 2 x 13 via grids flanking the central component field. */
+export const XIAO_CLAD_VIA_POSITIONS = [-5.8, -4.8, 4.8, 5.8].flatMap((x) =>
+  Array.from({ length: 13 }, (_, index) => ({
+    x,
+    y: -8 + index * XIAO_CLAD_VIA_SPACING,
+  })),
+)
 
 const xiaoHeaderYs = Array.from(
   { length: 7 },

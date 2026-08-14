@@ -11,6 +11,7 @@ import {
   XIAO_CLAD_VIA_HOLE_DIAMETER,
   XIAO_CLAD_VIA_PAD_DIAMETER,
   XIAO_CLAD_VIA_POSITIONS,
+  XIAO_CLAD_VIA_SPACING,
   XIAO_CLAD_WIDTH,
   XIAO_HEADER_HOLE_DIAMETER,
   XIAO_HEADER_PAD_DIAMETER,
@@ -21,6 +22,25 @@ import {
 
 const pointKey = (point: { x: number; y: number }) =>
   `${point.x.toFixed(3)},${point.y.toFixed(3)}`
+
+const expectOneMillimeterViaGrid = (vias: Array<{ x: number; y: number }>) => {
+  const columns = new Map<number, number[]>()
+  for (const via of vias) {
+    columns.set(via.x, [...(columns.get(via.x) ?? []), via.y])
+  }
+
+  expect(columns.size).toBe(4)
+  expect([...columns.keys()].toSorted((a, b) => a - b)).toEqual([
+    -5.8, -4.8, 4.8, 5.8,
+  ])
+  for (const ys of columns.values()) {
+    const sortedYs = ys.toSorted((a, b) => a - b)
+    expect(sortedYs).toHaveLength(13)
+    expect(
+      sortedYs.slice(1).every((y, index) => y - sortedYs[index]! === 1),
+    ).toBe(true)
+  }
+}
 
 test("creates the bare classic XIAO outline without header holes", async () => {
   const circuit = new Circuit()
@@ -55,6 +75,8 @@ test("creates the bare classic XIAO outline without header holes", async () => {
         via.outer_diameter === XIAO_CLAD_VIA_PAD_DIAMETER,
     ),
   ).toBe(true)
+  expect(XIAO_CLAD_VIA_SPACING).toBe(1)
+  expectOneMillimeterViaGrid(vias)
   expect(errorsAndWarnings).toEqual([])
 })
 
@@ -116,6 +138,8 @@ test("adds the standard 2x7 XIAO pin-header geometry", async () => {
             hole.rect_pad_height === XIAO_HEADER_PAD_DIAMETER)),
     ),
   ).toBe(true)
+  expect(XIAO_CLAD_VIA_SPACING).toBe(1)
+  expectOneMillimeterViaGrid(vias)
   expect(headerPortIds).toHaveLength(14)
   expect(noConnectHeaderPortIds).toHaveLength(14)
   expect(errorsAndWarnings).toEqual([])
@@ -145,11 +169,11 @@ test("routes STM32 USB through only the fixed XIAO via field", async () => {
   expect(errorsAndWarnings).toEqual([])
   expect(clearanceErrors).toEqual([])
   expect(traces).toHaveLength(16)
-  expect(routedPrefabVias).toHaveLength(3)
+  expect(routedPrefabVias).toHaveLength(4)
   expect(
     routedPrefabVias.every((via) => allowedViaPositions.has(pointKey(via))),
   ).toBe(true)
   expect(new Set(routedPrefabVias.map(pointKey))).toEqual(
-    new Set(["-5.800,4.000", "0.000,-8.000", "5.800,-8.000"]),
+    new Set(["-4.800,3.000", "-4.800,-2.000", "-4.800,-1.000", "4.800,3.000"]),
   )
 }, 30_000)
