@@ -1,4 +1,7 @@
-import { XiaoClad, type XiaoCladProps } from "../lib/XiaoClad"
+import {
+  XiaoCladWithPinHeaders,
+  type XiaoCladWithPinHeadersProps,
+} from "../lib/xiao-clad"
 import { STM32C071FBP6 } from "./stm32c071-parts"
 import { UsbCUsb2Module, XC6206P332MR } from "./xiao-stm32-usb-parts"
 
@@ -10,11 +13,11 @@ const usbDm = { displayName: "USB D-", schDisplayLabel: "USB_DM" } as const
 
 export const XiaoStm32Usb = (
   props: Pick<
-    XiaoCladProps,
+    XiaoCladWithPinHeadersProps,
     "autorouter" | "autorouterOptions" | "routingDisabled"
   > = {},
 ) => (
-  <XiaoClad
+  <XiaoCladWithPinHeaders
     autorouterOptions={{
       gridPitch: 0.5,
       gridClearance: 0.11,
@@ -25,6 +28,7 @@ export const XiaoStm32Usb = (
     {...props}
     minTraceWidth={0.15}
     nominalTraceWidth={0.2}
+    markHeadersNoConnect
     showUsbLabel={false}
   >
     <net name="GND" isGroundNet />
@@ -143,7 +147,7 @@ export const XiaoStm32Usb = (
     <trace name="C_MCU_GND" from=".C_MCU > .pin2" to="net.GND" {...gnd} />
     <trace name="MCU_3V3" from=".U_MCU > .VDD_VDDA" to="net.V3V3" {...v3v3} />
     <trace name="MCU_GND" from=".U_MCU > .VSS_VSSA" to="net.GND" {...gnd} />
-  </XiaoClad>
+  </XiaoCladWithPinHeaders>
 )
 
 export default XiaoStm32Usb

@@ -17,8 +17,8 @@ export const XIAO_CLAD_VIA_SPACING = 1
 const XIAO_CLAD_EDGE_CLEARANCE = 0.2
 const XIAO_CLAD_EDGE_CLEARANCE_VALIDATION_TOLERANCE = 0.001
 
-/** Two 2 x 13 via grids flanking the central component field. */
-export const XIAO_CLAD_VIA_POSITIONS = [-5.8, -4.8, 4.8, 5.8].flatMap((x) =>
+/** Two 1 x 13 via columns flanking the central component field. */
+export const XIAO_CLAD_VIA_POSITIONS = [-5.8, 5.8].flatMap((x) =>
   Array.from({ length: 13 }, (_, index) => ({
     x,
     y: -8 + index * XIAO_CLAD_VIA_SPACING,
@@ -93,40 +93,33 @@ export const XiaoPinHeaders = (props: ConnectorProps) => (
   />
 )
 
-export interface XiaoCladProps {
+export interface XiaoCladWithPinHeadersProps {
   children?: ReactNode
   autorouter?: AutorouterProp
   autorouterOptions?: BiscuitBoardAutorouterOptions
   minTraceWidth?: number
   nominalTraceWidth?: number
   routingDisabled?: boolean
-  /** Adds the classic 2x7, 2.54 mm pitch XIAO through-hole header pattern. */
-  withPinHeaders?: boolean
-  /** Marks every header pin NC for bare-template previews only. */
+  /** Marks every header pin NC for template previews and routing examples. */
   markHeadersNoConnect?: boolean
   /** Shows the USB-edge orientation mark. Defaults to true. */
   showUsbLabel?: boolean
 }
 
 /** A two-layer copper clad matching the classic Seeed Studio XIAO outline. */
-export const XiaoClad = ({
+export const XiaoCladWithPinHeaders = ({
   children,
   autorouter,
   autorouterOptions,
   minTraceWidth,
   nominalTraceWidth = 0.2,
   routingDisabled = false,
-  withPinHeaders = false,
   markHeadersNoConnect = false,
   showUsbLabel = true,
-}: XiaoCladProps) => (
+}: XiaoCladWithPinHeadersProps) => (
   <board
-    name={withPinHeaders ? "XiaoCladWithPinHeaders" : "XiaoClad"}
-    title={
-      withPinHeaders
-        ? "XIAO form-factor copper clad with pin headers"
-        : "XIAO form-factor copper clad"
-    }
+    name="XiaoCladWithPinHeaders"
+    title="XIAO form-factor copper clad with pin headers"
     width={`${XIAO_CLAD_WIDTH}mm`}
     height={`${XIAO_CLAD_HEIGHT}mm`}
     borderRadius="1mm"
@@ -148,12 +141,10 @@ export const XiaoClad = ({
     }
     routingDisabled={routingDisabled}
   >
-    {withPinHeaders && (
-      <XiaoPinHeaders
-        name="J_XIAO"
-        noConnect={markHeadersNoConnect ? pinNames : undefined}
-      />
-    )}
+    <XiaoPinHeaders
+      name="J_XIAO"
+      noConnect={markHeadersNoConnect ? pinNames : undefined}
+    />
 
     {showUsbLabel && (
       <silkscreentext
@@ -191,11 +182,4 @@ export const XiaoClad = ({
 
     {children}
   </board>
-)
-
-export type XiaoCladWithPinHeadersProps = Omit<XiaoCladProps, "withPinHeaders">
-
-/** Convenience component for the populated-header XIAO clad variant. */
-export const XiaoCladWithPinHeaders = (props: XiaoCladWithPinHeadersProps) => (
-  <XiaoClad {...props} withPinHeaders />
 )

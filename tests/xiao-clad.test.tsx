@@ -16,23 +16,22 @@ import {
   XIAO_HEADER_HOLE_DIAMETER,
   XIAO_HEADER_PAD_DIAMETER,
   XIAO_HEADER_POSITIONS,
-  XiaoClad,
   XiaoCladWithPinHeaders,
-} from "../lib/XiaoClad"
+} from "../lib/xiao-clad"
 
 const pointKey = (point: { x: number; y: number }) =>
   `${point.x.toFixed(3)},${point.y.toFixed(3)}`
 
-const expectOneMillimeterViaGrid = (vias: Array<{ x: number; y: number }>) => {
+const expectOneMillimeterViaColumns = (
+  vias: Array<{ x: number; y: number }>,
+) => {
   const columns = new Map<number, number[]>()
   for (const via of vias) {
     columns.set(via.x, [...(columns.get(via.x) ?? []), via.y])
   }
 
-  expect(columns.size).toBe(4)
-  expect([...columns.keys()].toSorted((a, b) => a - b)).toEqual([
-    -5.8, -4.8, 4.8, 5.8,
-  ])
+  expect(columns.size).toBe(2)
+  expect([...columns.keys()].toSorted((a, b) => a - b)).toEqual([-5.8, 5.8])
   for (const ys of columns.values()) {
     const sortedYs = ys.toSorted((a, b) => a - b)
     expect(sortedYs).toHaveLength(13)
@@ -42,50 +41,13 @@ const expectOneMillimeterViaGrid = (vias: Array<{ x: number; y: number }>) => {
   }
 }
 
-test("creates the bare classic XIAO outline without header holes", async () => {
-  const circuit = new Circuit()
-  circuit.add(<XiaoClad routingDisabled />)
-  await circuit.renderUntilSettled()
-
-  const circuitJson = circuit.getCircuitJson()
-  const board = circuitJson.find((element) => element.type === "pcb_board")
-  const platedHoles = circuitJson.filter(
-    (element) => element.type === "pcb_plated_hole",
-  )
-  const vias = circuitJson.filter((element) => element.type === "pcb_via")
-  const errorsAndWarnings = circuitJson.filter(
-    (element) =>
-      element.type.endsWith("error") || element.type.endsWith("warning"),
-  )
-
-  expect(board).toMatchObject({
-    width: XIAO_CLAD_WIDTH,
-    height: XIAO_CLAD_HEIGHT,
-    num_layers: 2,
-  })
-  expect(platedHoles).toEqual([])
-  expect(vias).toHaveLength(XIAO_CLAD_VIA_POSITIONS.length)
-  expect(new Set(vias.map(pointKey))).toEqual(
-    new Set(XIAO_CLAD_VIA_POSITIONS.map(pointKey)),
-  )
-  expect(
-    vias.every(
-      (via) =>
-        via.hole_diameter === XIAO_CLAD_VIA_HOLE_DIAMETER &&
-        via.outer_diameter === XIAO_CLAD_VIA_PAD_DIAMETER,
-    ),
-  ).toBe(true)
-  expect(XIAO_CLAD_VIA_SPACING).toBe(1)
-  expectOneMillimeterViaGrid(vias)
-  expect(errorsAndWarnings).toEqual([])
-})
-
 test("adds the standard 2x7 XIAO pin-header geometry", async () => {
   const circuit = new Circuit()
   circuit.add(<XiaoCladWithPinHeaders routingDisabled markHeadersNoConnect />)
   await circuit.renderUntilSettled()
 
   const circuitJson = circuit.getCircuitJson()
+  const board = circuitJson.find((element) => element.type === "pcb_board")
   const platedHoles = circuitJson.filter(
     (element) => element.type === "pcb_plated_hole",
   )
@@ -117,6 +79,11 @@ test("adds the standard 2x7 XIAO pin-header geometry", async () => {
       element.type.endsWith("error") || element.type.endsWith("warning"),
   )
 
+  expect(board).toMatchObject({
+    width: XIAO_CLAD_WIDTH,
+    height: XIAO_CLAD_HEIGHT,
+    num_layers: 2,
+  })
   expect(platedHoles).toHaveLength(14)
   expect(vias).toHaveLength(XIAO_CLAD_VIA_POSITIONS.length)
   expect(new Set(vias.map(pointKey))).toEqual(
@@ -125,6 +92,13 @@ test("adds the standard 2x7 XIAO pin-header geometry", async () => {
   expect(new Set(platedHoles.map(pointKey))).toEqual(
     new Set(XIAO_HEADER_POSITIONS.map(pointKey)),
   )
+  expect(
+    vias.every(
+      (via) =>
+        via.hole_diameter === XIAO_CLAD_VIA_HOLE_DIAMETER &&
+        via.outer_diameter === XIAO_CLAD_VIA_PAD_DIAMETER,
+    ),
+  ).toBe(true)
   expect(
     platedHoles.every(
       (hole) =>
@@ -139,7 +113,7 @@ test("adds the standard 2x7 XIAO pin-header geometry", async () => {
     ),
   ).toBe(true)
   expect(XIAO_CLAD_VIA_SPACING).toBe(1)
-  expectOneMillimeterViaGrid(vias)
+  expectOneMillimeterViaColumns(vias)
   expect(headerPortIds).toHaveLength(14)
   expect(noConnectHeaderPortIds).toHaveLength(14)
   expect(errorsAndWarnings).toEqual([])
@@ -169,11 +143,11 @@ test("routes STM32 USB through only the fixed XIAO via field", async () => {
   expect(errorsAndWarnings).toEqual([])
   expect(clearanceErrors).toEqual([])
   expect(traces).toHaveLength(16)
-  expect(routedPrefabVias).toHaveLength(4)
+  expect(routedPrefabVias).toHaveLength(2)
   expect(
     routedPrefabVias.every((via) => allowedViaPositions.has(pointKey(via))),
   ).toBe(true)
   expect(new Set(routedPrefabVias.map(pointKey))).toEqual(
-    new Set(["-4.800,3.000", "-4.800,-2.000", "-4.800,-1.000", "4.800,3.000"]),
+    new Set(["-5.800,4.000", "5.800,-5.000"]),
   )
 }, 30_000)

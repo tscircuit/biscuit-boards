@@ -79,12 +79,10 @@ export {
   XIAO_HEADER_PITCH,
   XIAO_HEADER_POSITIONS,
   XIAO_HEADER_ROW_SPACING,
-  XiaoClad,
-  type XiaoCladProps,
   XiaoCladWithPinHeaders,
   type XiaoCladWithPinHeadersProps,
   XiaoPinHeaders,
-} from "./lib/XiaoClad"
+} from "./lib/xiao-clad"
 
 import { BiscuitBoard } from "./lib/BiscuitBoard"
 
