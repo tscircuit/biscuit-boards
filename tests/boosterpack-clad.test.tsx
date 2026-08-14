@@ -50,20 +50,12 @@ test("uses the BiscuitBoard outline and TI 40-pin header geometry", async () => 
       via.y >= -16 &&
       via.y <= 16,
   )
-  const innerEscapeGridOffsetX = BOOSTERPACK_HEADER_CENTER_X / 2
-  const leftInnerEscapeGridVias = vias.filter(
-    (via) =>
-      (via.x === -innerEscapeGridOffsetX - 2 ||
-        via.x === -innerEscapeGridOffsetX + 2) &&
-      via.y >= -4 &&
-      via.y <= 4,
+  const innerEscapeColumnOffsetX = BOOSTERPACK_HEADER_CENTER_X / 2
+  const leftInnerEscapeColumnVias = vias.filter(
+    (via) => via.x === -innerEscapeColumnOffsetX && via.y >= -4 && via.y <= 4,
   )
-  const rightInnerEscapeGridVias = vias.filter(
-    (via) =>
-      (via.x === innerEscapeGridOffsetX - 2 ||
-        via.x === innerEscapeGridOffsetX + 2) &&
-      via.y >= -4 &&
-      via.y <= 4,
+  const rightInnerEscapeColumnVias = vias.filter(
+    (via) => via.x === innerEscapeColumnOffsetX && via.y >= -4 && via.y <= 4,
   )
   const viaPadRadius = 0.6
   const placementZoneIntrusions = vias.flatMap((via) =>
@@ -135,7 +127,7 @@ test("uses the BiscuitBoard outline and TI 40-pin header geometry", async () => 
   )
   expect(launchpadPorts).toHaveLength(40)
   expect(vias).toHaveLength(BOOSTERPACK_CLAD_VIA_POSITIONS.length)
-  expect(vias).toHaveLength(79)
+  expect(vias).toHaveLength(73)
   expect(topLeftEdgeVias).toHaveLength(20)
   expect(bottomEdgeVias).toHaveLength(20)
   expect(new Set(bottomEdgeVias.map((via) => via.x)).size).toBe(10)
@@ -146,25 +138,25 @@ test("uses the BiscuitBoard outline and TI 40-pin header geometry", async () => 
   expect(topRightClusterVias).toHaveLength(2)
   expect(rightEdgeVias).toHaveLength(9)
   expect(leftRoutingRailVias).toHaveLength(18)
-  expect(leftInnerEscapeGridVias).toHaveLength(6)
-  expect(rightInnerEscapeGridVias).toHaveLength(6)
+  expect(leftInnerEscapeColumnVias).toHaveLength(3)
+  expect(rightInnerEscapeColumnVias).toHaveLength(3)
   expect(
     (Math.min(...leftRoutingRailVias.map((via) => via.x)) +
       Math.max(...leftRoutingRailVias.map((via) => via.x))) /
       2,
   ).toBe(leftRoutingRailCenterX)
   expect(
-    (Math.min(...leftInnerEscapeGridVias.map((via) => via.x)) +
-      Math.max(...leftInnerEscapeGridVias.map((via) => via.x))) /
+    (Math.min(...leftInnerEscapeColumnVias.map((via) => via.x)) +
+      Math.max(...leftInnerEscapeColumnVias.map((via) => via.x))) /
       2,
-  ).toBe(-innerEscapeGridOffsetX)
+  ).toBe(-innerEscapeColumnOffsetX)
   expect(
-    (Math.min(...rightInnerEscapeGridVias.map((via) => via.x)) +
-      Math.max(...rightInnerEscapeGridVias.map((via) => via.x))) /
+    (Math.min(...rightInnerEscapeColumnVias.map((via) => via.x)) +
+      Math.max(...rightInnerEscapeColumnVias.map((via) => via.x))) /
       2,
-  ).toBe(innerEscapeGridOffsetX)
-  expect(rightInnerEscapeGridVias.map(pointKey).sort()).toEqual(
-    leftInnerEscapeGridVias
+  ).toBe(innerEscapeColumnOffsetX)
+  expect(rightInnerEscapeColumnVias.map(pointKey).sort()).toEqual(
+    leftInnerEscapeColumnVias
       .map((via) => pointKey({ x: -via.x, y: via.y }))
       .sort(),
   )
