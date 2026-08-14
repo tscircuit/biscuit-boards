@@ -58,10 +58,10 @@ const createViaZone = (zone: ViaCandidateZone): BoosterPackCladViaPosition[] =>
   )
 
 /**
- * Six routing corridors surround the reusable placement bays: a dual-column
+ * Five routing corridors surround the reusable placement bays: a dual-column
  * rail outside the left LaunchPad header, mirrored inner escape columns,
- * dual-row upper and lower bands, and a right-edge rail. A compact strip at
- * the upper-right and lower-right remains open for connectors.
+ * a dual-row upper band, and a right-edge rail. The lower board edge remains
+ * open, along with compact strips at the upper-right and lower-right.
  */
 export const BOOSTERPACK_CLAD_VIA_CANDIDATE_ZONES = [
   // Continuous escape rail in the narrow corridor outside J1/J3.
@@ -88,9 +88,8 @@ export const BOOSTERPACK_CLAD_VIA_CANDIDATE_ZONES = [
     maxY: 4,
     spacing: 4,
   },
-  // Dual edge rows extend past the board center toward J4/J2.
+  // Dual upper-edge rows extend past the board center toward J4/J2.
   { minX: -21.5, maxX: 14.5, minY: 21.5, maxY: 25.5, spacing: 4 },
-  { minX: -21.5, maxX: 14.5, minY: -25.5, maxY: -21.5, spacing: 4 },
   // Shortened right-edge rail clears both connector bays.
   { minX: 32.5, maxX: 32.5, minY: -16.25, maxY: 15.75, spacing: 4 },
 ] as const satisfies readonly ViaCandidateZone[]
