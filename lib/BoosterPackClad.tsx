@@ -23,6 +23,9 @@ const BOOSTERPACK_CLAD_EDGE_CLEARANCE_VALIDATION_TOLERANCE = 0.001
 const BOOSTERPACK_INNER_ESCAPE_GRID_OFFSET_X = BOOSTERPACK_HEADER_CENTER_X / 2
 const BOOSTERPACK_EDGE_HEADER_CENTER_X =
   BOOSTERPACK_CLAD_WIDTH / 2 - BOOSTERPACK_HEADER_PITCH / 2
+const BOOSTERPACK_SIDE_ESCAPE_COLUMN_OFFSET_X = 28.5
+const BOOSTERPACK_EDGE_BAND_MIN_X = -33.5
+const BOOSTERPACK_EDGE_BAND_MAX_X = 14.5
 
 export interface BoosterPackCladViaPosition {
   x: number
@@ -58,9 +61,9 @@ const createViaZone = (zone: ViaCandidateZone): BoosterPackCladViaPosition[] =>
   )
 
 /**
- * Two routing corridors remain clear of the reusable placement bays: one
- * compact escape grid between J1/J3 and the board center, and one dual-row
- * upper band. The center-right and lower areas remain open for components.
+ * Five routing corridors remain clear of the reusable placement bays: one
+ * compact escape grid between J1/J3 and the board center, mirrored columns
+ * between the old and new side headers, and dual-row upper and lower bands.
  */
 export const BOOSTERPACK_CLAD_VIA_CANDIDATE_ZONES = [
   // Compact grid halfway between J1/J3 and the board center.
@@ -71,8 +74,36 @@ export const BOOSTERPACK_CLAD_VIA_CANDIDATE_ZONES = [
     maxY: 4,
     spacing: 4,
   },
-  // Dual upper-edge rows extend past the board center toward J4/J2.
-  { minX: -21.5, maxX: 14.5, minY: 21.5, maxY: 25.5, spacing: 4 },
+  // Mirrored columns halfway between the LaunchPad and edge pin headers.
+  {
+    minX: -BOOSTERPACK_SIDE_ESCAPE_COLUMN_OFFSET_X,
+    maxX: -BOOSTERPACK_SIDE_ESCAPE_COLUMN_OFFSET_X,
+    minY: -16,
+    maxY: 16,
+    spacing: 4,
+  },
+  {
+    minX: BOOSTERPACK_SIDE_ESCAPE_COLUMN_OFFSET_X,
+    maxX: BOOSTERPACK_SIDE_ESCAPE_COLUMN_OFFSET_X,
+    minY: -16,
+    maxY: 16,
+    spacing: 4,
+  },
+  // Mirrored dual-row edge bands extend left to the mounting-hole corridor.
+  {
+    minX: BOOSTERPACK_EDGE_BAND_MIN_X,
+    maxX: BOOSTERPACK_EDGE_BAND_MAX_X,
+    minY: 21.5,
+    maxY: 25.5,
+    spacing: 4,
+  },
+  {
+    minX: BOOSTERPACK_EDGE_BAND_MIN_X,
+    maxX: BOOSTERPACK_EDGE_BAND_MAX_X,
+    minY: -25.5,
+    maxY: -21.5,
+    spacing: 4,
+  },
 ] as const satisfies readonly ViaCandidateZone[]
 
 /**
@@ -188,9 +219,11 @@ export const BOOSTERPACK_CLAD_PLACEMENT_ZONES = [
   },
 ] as const satisfies readonly BoosterPackCladPlacementZone[]
 
-/** The candidate zones are placed directly in known open routing channels. */
-export const BOOSTERPACK_CLAD_VIA_EXCLUSION_ZONES: readonly ViaCandidateZone[] =
-  []
+/** Keep the leftmost edge-band vias clear of the mounting-hole pads. */
+export const BOOSTERPACK_CLAD_VIA_EXCLUSION_ZONES = [
+  { minX: -36.7, maxX: -33.3, minY: 23.3, maxY: 26.7, spacing: 4 },
+  { minX: -36.7, maxX: -33.3, minY: -26.7, maxY: -23.3, spacing: 4 },
+] as const satisfies readonly ViaCandidateZone[]
 
 const pointKey = (point: BoosterPackCladViaPosition) =>
   `${point.x.toFixed(3)},${point.y.toFixed(3)}`

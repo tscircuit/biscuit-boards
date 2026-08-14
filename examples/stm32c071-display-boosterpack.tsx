@@ -57,6 +57,7 @@ const reservedTraceObstacle = (
   id: string,
   from: { x: number; y: number },
   to: { x: number; y: number },
+  connectedTo: string[] = [id],
 ) => {
   const dx = to.x - from.x
   const dy = to.y - from.y
@@ -68,7 +69,7 @@ const reservedTraceObstacle = (
     center: { x: (from.x + to.x) / 2, y: (from.y + to.y) / 2 },
     width: isMostlyVertical ? Math.abs(dx) + 0.2 : Math.abs(dx),
     height: isMostlyVertical ? Math.abs(dy) : Math.abs(dy) + 0.2,
-    connectedTo: [id],
+    connectedTo,
   }
 }
 
@@ -88,6 +89,15 @@ const swclkRoute = [
   { x: 5.775, y: -2.85 },
 ] as const
 
+const nrstRoute = [
+  { x: 4, y: -12.75 },
+  { x: 4, y: -20 },
+  { x: 18.7, y: -20 },
+  { x: 18.7, y: 9 },
+  { x: 3.175, y: 9 },
+  { x: 3.175, y: 2.85 },
+] as const
+
 export const BOOSTERPACK_SWD_RESERVED_ROUTING_OBSTACLES = [
   ...swdioRoute
     .slice(1)
@@ -98,6 +108,14 @@ export const BOOSTERPACK_SWD_RESERVED_ROUTING_OBSTACLES = [
     .slice(1)
     .map((to, index) =>
       reservedTraceObstacle(`reserved-swclk-${index}`, swclkRoute[index]!, to),
+    ),
+  ...nrstRoute
+    .slice(1)
+    .map((to, index) =>
+      reservedTraceObstacle(`reserved-nrst-${index}`, nrstRoute[index]!, to, [
+        "source_trace_20",
+        "source_trace_28",
+      ]),
     ),
 ]
 
@@ -156,6 +174,20 @@ const getRepackedDisplayChildren = (routeSwdAndBulk: boolean): ReactNode => {
           { x: -10, y: 3 },
           { x: -10, y: -9 },
           { x: 2.225, y: -9 },
+        ],
+      })
+    }
+
+    if (name === "SWD_NRST") {
+      return cloneElement(child, {
+        pcbPathRelativeTo: ".J_SWD > .NRST",
+        pcbPath: [
+          // J_SWD is rotated 180 degrees; these map to the reserved absolute
+          // path around the lower and right sides of the populated area.
+          { x: 4, y: 5 },
+          { x: -10.7, y: 5 },
+          { x: -10.7, y: -24 },
+          { x: 4.825, y: -24 },
         ],
       })
     }

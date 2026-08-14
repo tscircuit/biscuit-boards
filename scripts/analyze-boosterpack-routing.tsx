@@ -130,7 +130,8 @@ console.log(
         .filter(
           (trace) =>
             trace.source_trace_id === "source_trace_26" ||
-            trace.source_trace_id === "source_trace_27",
+            trace.source_trace_id === "source_trace_27" ||
+            trace.source_trace_id === "source_trace_28",
         )
         .map((trace) => ({
           sourceTraceId: trace.source_trace_id,
