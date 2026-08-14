@@ -9,10 +9,14 @@ import { Stm32c071DisplayBoosterPackClad } from "../examples/stm32c071-display-b
 import { BISCUIT_BOARD_MOUNTING_HOLE_POSITIONS } from "../lib/BiscuitBoard"
 import {
   BOOSTERPACK_CLAD_HEIGHT,
+  BOOSTERPACK_CLAD_MOUNTING_HOLE_VIA_CLEARANCE,
   BOOSTERPACK_CLAD_PLACEMENT_ZONES,
+  BOOSTERPACK_CLAD_VIA_OUTER_DIAMETER,
+  BOOSTERPACK_CLAD_VIA_PITCH,
   BOOSTERPACK_CLAD_VIA_POSITIONS,
   BOOSTERPACK_CLAD_WIDTH,
-  BOOSTERPACK_HEADER_CENTER_X,
+  BOOSTERPACK_EDGE_BAND_CENTER_GAP,
+  BOOSTERPACK_EDGE_BAND_OUTER_X,
   BOOSTERPACK_HEADER_CENTER_Y,
   BOOSTERPACK_HEADER_PITCH,
 } from "../lib/BoosterPackClad"
@@ -36,37 +40,23 @@ test("uses the BiscuitBoard outline and TI 40-pin header geometry", async () => 
   const vias = circuitJson.filter((element) => element.type === "pcb_via")
   const edgeHeaderCenterX =
     BOOSTERPACK_CLAD_WIDTH / 2 - BOOSTERPACK_HEADER_PITCH / 2
-  const sideEscapeColumnOffsetX = 28.5
-  const topLeftEdgeVias = vias.filter(
-    (via) =>
-      via.x >= -33.5 && via.x <= 14.5 && (via.y === 21.5 || via.y === 25.5),
+  const topEdgeVias = vias.filter((via) => via.y >= 21.5 && via.y <= 25.5)
+  const bottomEdgeVias = vias.filter((via) => via.y >= -25.5 && via.y <= -21.5)
+  const rightSideVias = vias.filter(
+    (via) => via.x >= 27.5 && via.x <= 31.5 && via.y >= -16 && via.y <= 16,
   )
-  const bottomEdgeVias = vias.filter(
-    (via) =>
-      via.x >= -33.5 && via.x <= 14.5 && (via.y === -25.5 || via.y === -21.5),
+  const leftOfJ1Vias = vias.filter(
+    (via) => via.x >= -31.5 && via.x <= -27.5 && via.y >= -16 && via.y <= 16,
   )
-  const rightSideEscapeColumnVias = vias.filter(
-    (via) => via.x === sideEscapeColumnOffsetX && via.y >= -16 && via.y <= 16,
+  const rightOfJ3Vias = vias.filter(
+    (via) => via.x >= -16.15 && via.x <= -9.85 && via.y >= -2.8 && via.y <= 2.8,
   )
-  const leftSideEscapeColumnVias = vias.filter(
-    (via) => via.x === -sideEscapeColumnOffsetX && via.y >= -16 && via.y <= 16,
+  const viaPadRadius = BOOSTERPACK_CLAD_VIA_OUTER_DIAMETER / 2
+  const viaPairPitches = vias.flatMap((via, viaIndex) =>
+    vias
+      .slice(viaIndex + 1)
+      .map((otherVia) => Math.hypot(via.x - otherVia.x, via.y - otherVia.y)),
   )
-  const innerEscapeGridOffsetX = BOOSTERPACK_HEADER_CENTER_X / 2
-  const leftInnerEscapeGridVias = vias.filter(
-    (via) =>
-      (via.x === -innerEscapeGridOffsetX - 2 ||
-        via.x === -innerEscapeGridOffsetX + 2) &&
-      via.y >= -4 &&
-      via.y <= 4,
-  )
-  const rightInnerEscapeGridVias = vias.filter(
-    (via) =>
-      (via.x === innerEscapeGridOffsetX - 2 ||
-        via.x === innerEscapeGridOffsetX + 2) &&
-      via.y >= -4 &&
-      via.y <= 4,
-  )
-  const viaPadRadius = 0.3
   const placementZoneIntrusions = vias.flatMap((via) =>
     BOOSTERPACK_CLAD_PLACEMENT_ZONES.filter(
       (zone) =>
@@ -78,7 +68,9 @@ test("uses the BiscuitBoard outline and TI 40-pin header geometry", async () => 
   )
   const mountingHoleIntrusions = vias.flatMap((via) =>
     BISCUIT_BOARD_MOUNTING_HOLE_POSITIONS.filter(
-      (hole) => Math.hypot(via.x - hole.x, via.y - hole.y) < 1.1 + viaPadRadius,
+      (hole) =>
+        Math.hypot(via.x - hole.x, via.y - hole.y) <
+        1.1 + viaPadRadius + BOOSTERPACK_CLAD_MOUNTING_HOLE_VIA_CLEARANCE,
     ).map((hole) => ({ hole: pointKey(hole), via: pointKey(via) })),
   )
   const sourceComponentNames = new Map(
@@ -100,9 +92,6 @@ test("uses the BiscuitBoard outline and TI 40-pin header geometry", async () => 
     )
       ? [sourceComponentNames.get(element.source_component_id)]
       : [],
-  )
-  const topRightClusterVias = vias.filter(
-    (via) => via.x >= 12.75 && via.x <= 24.75 && via.y >= 21.5 && via.y <= 25.5,
   )
   const launchpadSourceComponentIds = new Set(
     circuitJson.flatMap((element) =>
@@ -154,7 +143,7 @@ test("uses the BiscuitBoard outline and TI 40-pin header geometry", async () => 
     height: BOOSTERPACK_CLAD_HEIGHT,
     num_layers: 2,
   })
-  expect(platedHoles).toHaveLength(60)
+  expect(platedHoles).toHaveLength(50)
   expect(mountingHoles).toHaveLength(
     BISCUIT_BOARD_MOUNTING_HOLE_POSITIONS.length,
   )
@@ -162,45 +151,55 @@ test("uses the BiscuitBoard outline and TI 40-pin header geometry", async () => 
     new Set(BISCUIT_BOARD_MOUNTING_HOLE_POSITIONS.map(pointKey)),
   )
   expect(launchpadPorts).toHaveLength(40)
-  expect(edgeHeaderSourceComponents).toHaveLength(2)
-  expect(edgeHeaderPorts).toHaveLength(20)
+  expect(edgeHeaderSourceComponents).toHaveLength(1)
+  expect(edgeHeaderPorts).toHaveLength(10)
   expect(edgeHeaderPorts.every((port) => port.do_not_connect)).toBe(true)
-  expect(edgeHeaderPcbComponents).toHaveLength(2)
+  expect(edgeHeaderPcbComponents).toHaveLength(1)
   expect(
     new Set(edgeHeaderPcbComponents.map((header) => pointKey(header.center))),
   ).toEqual(
     new Set([
       pointKey({ x: -edgeHeaderCenterX, y: BOOSTERPACK_HEADER_CENTER_Y }),
-      pointKey({ x: edgeHeaderCenterX, y: BOOSTERPACK_HEADER_CENTER_Y }),
     ]),
   )
   expect(vias).toHaveLength(BOOSTERPACK_CLAD_VIA_POSITIONS.length)
-  expect(vias).toHaveLength(74)
+  expect(vias).toHaveLength(438)
   expect(vias.every((via) => via.hole_diameter === 0.3)).toBe(true)
-  expect(vias.every((via) => via.outer_diameter === 0.6)).toBe(true)
-  expect(topLeftEdgeVias).toHaveLength(25)
-  expect(bottomEdgeVias).toHaveLength(25)
-  expect(new Set(topLeftEdgeVias.map((via) => via.x)).size).toBe(13)
-  expect(new Set(bottomEdgeVias.map((via) => via.x)).size).toBe(13)
-  expect(vias.some((via) => via.x === -33.5 && via.y === 21.5)).toBe(true)
-  expect(vias.some((via) => via.x === -33.5 && via.y === 25.5)).toBe(false)
-  expect(vias.some((via) => via.x === -33.5 && via.y === -21.5)).toBe(true)
-  expect(vias.some((via) => via.x === -33.5 && via.y === -25.5)).toBe(false)
-  expect(topRightClusterVias).toHaveLength(2)
-  expect(rightSideEscapeColumnVias).toHaveLength(9)
-  expect(leftSideEscapeColumnVias).toHaveLength(9)
-  expect(rightSideEscapeColumnVias.map(pointKey).sort()).toEqual(
-    leftSideEscapeColumnVias
-      .map((via) => pointKey({ x: -via.x, y: via.y }))
-      .sort(),
-  )
-  expect(leftInnerEscapeGridVias).toHaveLength(6)
-  expect(rightInnerEscapeGridVias).toHaveLength(0)
   expect(
-    (Math.min(...leftInnerEscapeGridVias.map((via) => via.x)) +
-      Math.max(...leftInnerEscapeGridVias.map((via) => via.x))) /
-      2,
-  ).toBe(-innerEscapeGridOffsetX)
+    vias.every(
+      (via) => via.outer_diameter === BOOSTERPACK_CLAD_VIA_OUTER_DIAMETER,
+    ),
+  ).toBe(true)
+  expect(Math.min(...viaPairPitches)).toBeGreaterThanOrEqual(
+    BOOSTERPACK_CLAD_VIA_PITCH - 1e-9,
+  )
+  expect(BOOSTERPACK_EDGE_BAND_CENTER_GAP).toBeCloseTo(32.89)
+  expect(BOOSTERPACK_CLAD_WIDTH / 2 - BOOSTERPACK_EDGE_BAND_OUTER_X).toBe(2)
+  expect(topEdgeVias).toHaveLength(103)
+  expect(bottomEdgeVias).toHaveLength(110)
+  expect(new Set(topEdgeVias.map((via) => via.x)).size).toBe(30)
+  expect(new Set(bottomEdgeVias.map((via) => via.x)).size).toBe(30)
+  expect(Math.min(...topEdgeVias.map((via) => Math.abs(via.x)))).toBeCloseTo(
+    16.8725,
+  )
+  expect(Math.min(...bottomEdgeVias.map((via) => Math.abs(via.x)))).toBeCloseTo(
+    16.8725,
+  )
+  expect(Math.max(...topEdgeVias.map((via) => Math.abs(via.x)))).toBeCloseTo(
+    35.0725,
+  )
+  expect(Math.max(...bottomEdgeVias.map((via) => Math.abs(via.x)))).toBeCloseTo(
+    35.0725,
+  )
+  expect(rightSideVias).toHaveLength(100)
+  expect(new Set(rightSideVias.map((via) => via.x)).size).toBe(4)
+  expect(rightSideVias.map(pointKey).sort()).toEqual(
+    leftOfJ1Vias.map((via) => pointKey({ x: -via.x, y: via.y })).sort(),
+  )
+  expect(leftOfJ1Vias).toHaveLength(100)
+  expect(new Set(leftOfJ1Vias.map((via) => via.x)).size).toBe(4)
+  expect(rightOfJ3Vias).toHaveLength(25)
+  expect(new Set(rightOfJ3Vias.map((via) => via.x)).size).toBe(5)
   expect(placementZoneIntrusions).toEqual([])
   expect(mountingHoleIntrusions).toEqual([])
   expect(componentsOutsidePlacementZones).toEqual([])

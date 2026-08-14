@@ -17,15 +17,18 @@ export const BOOSTERPACK_CLAD_HEIGHT = BISCUIT_BOARD_HEIGHT
 export const BOOSTERPACK_HEADER_PITCH = 2.54
 export const BOOSTERPACK_HEADER_CENTER_X = 21.59
 export const BOOSTERPACK_HEADER_CENTER_Y = 1.27
+export const BOOSTERPACK_CLAD_VIA_OUTER_DIAMETER = 0.6
+export const BOOSTERPACK_CLAD_VIA_PITCH = 1.3
+export const BOOSTERPACK_CLAD_MOUNTING_HOLE_VIA_CLEARANCE = 1
 
 const BOOSTERPACK_CLAD_EDGE_CLEARANCE = 0.2
 const BOOSTERPACK_CLAD_EDGE_CLEARANCE_VALIDATION_TOLERANCE = 0.001
-const BOOSTERPACK_INNER_ESCAPE_GRID_OFFSET_X = BOOSTERPACK_HEADER_CENTER_X / 2
 const BOOSTERPACK_EDGE_HEADER_CENTER_X =
   BOOSTERPACK_CLAD_WIDTH / 2 - BOOSTERPACK_HEADER_PITCH / 2
-const BOOSTERPACK_SIDE_ESCAPE_COLUMN_OFFSET_X = 28.5
-const BOOSTERPACK_EDGE_BAND_MIN_X = -33.5
-const BOOSTERPACK_EDGE_BAND_MAX_X = 14.5
+export const BOOSTERPACK_EDGE_BAND_OUTER_X = BOOSTERPACK_CLAD_WIDTH / 2 - 2
+export const BOOSTERPACK_EDGE_BAND_CENTER_GAP =
+  (BOOSTERPACK_CLAD_WIDTH / 2 - 14.5) * 1.1 * 1.3
+const BOOSTERPACK_EDGE_BAND_INNER_X = BOOSTERPACK_EDGE_BAND_CENTER_GAP / 2
 
 export interface BoosterPackCladViaPosition {
   x: number
@@ -49,60 +52,84 @@ export interface BoosterPackCladPlacementZone {
   maxY: number
 }
 
-const rangeInclusive = (start: number, end: number, increment: number) =>
-  Array.from(
-    { length: Math.max(0, Math.floor((end - start) / increment) + 1) },
-    (_, index) => start + index * increment,
+const roundCoordinate = (value: number) => Math.round(value * 1e6) / 1e6
+
+const maximallyPackedRange = (start: number, end: number, pitch: number) => {
+  const intervalCount = Math.floor((end - start) / pitch)
+  if (intervalCount <= 0) return [(start + end) / 2]
+
+  const populatedStart = (start + end - intervalCount * pitch) / 2
+  return Array.from({ length: intervalCount + 1 }, (_, index) =>
+    roundCoordinate(populatedStart + index * pitch),
   )
+}
 
 const createViaZone = (zone: ViaCandidateZone): BoosterPackCladViaPosition[] =>
-  rangeInclusive(zone.minX, zone.maxX, zone.spacing).flatMap((x) =>
-    rangeInclusive(zone.minY, zone.maxY, zone.spacing).map((y) => ({ x, y })),
+  maximallyPackedRange(zone.minX, zone.maxX, zone.spacing).flatMap((x) =>
+    maximallyPackedRange(zone.minY, zone.maxY, zone.spacing).map((y) => ({
+      x,
+      y,
+    })),
   )
 
 /**
- * Five routing corridors remain clear of the reusable placement bays: one
- * compact escape grid between J1/J3 and the board center, mirrored columns
- * between the old and new side headers, and dual-row upper and lower bands.
+ * Dense grids flank J1/J3 on the left and right. Split upper and lower bands
+ * sit against the board edges with a connector-sized opening in the center.
  */
 export const BOOSTERPACK_CLAD_VIA_CANDIDATE_ZONES = [
-  // Compact grid halfway between J1/J3 and the board center.
+  // Dense grid right of J3, before the central chips-and-sensors bay.
   {
-    minX: -BOOSTERPACK_INNER_ESCAPE_GRID_OFFSET_X - 2,
-    maxX: -BOOSTERPACK_INNER_ESCAPE_GRID_OFFSET_X + 2,
-    minY: -4,
-    maxY: 4,
-    spacing: 4,
+    minX: -16.15,
+    maxX: -9.85,
+    minY: -2.8,
+    maxY: 2.8,
+    spacing: BOOSTERPACK_CLAD_VIA_PITCH,
   },
-  // Mirrored columns halfway between the LaunchPad and edge pin headers.
+  // Dense grid left of J1, between the LaunchPad and edge pin headers.
   {
-    minX: -BOOSTERPACK_SIDE_ESCAPE_COLUMN_OFFSET_X,
-    maxX: -BOOSTERPACK_SIDE_ESCAPE_COLUMN_OFFSET_X,
+    minX: -31.5,
+    maxX: -27.5,
     minY: -16,
     maxY: 16,
-    spacing: 4,
+    spacing: BOOSTERPACK_CLAD_VIA_PITCH,
   },
+  // Mirror the outer grid into the open right-edge corridor.
   {
-    minX: BOOSTERPACK_SIDE_ESCAPE_COLUMN_OFFSET_X,
-    maxX: BOOSTERPACK_SIDE_ESCAPE_COLUMN_OFFSET_X,
+    minX: 27.5,
+    maxX: 31.5,
     minY: -16,
     maxY: 16,
-    spacing: 4,
+    spacing: BOOSTERPACK_CLAD_VIA_PITCH,
   },
-  // Mirrored dual-row edge bands extend left to the mounting-hole corridor.
+  // Split top band, leaving a 32.89 mm connector opening in the center.
   {
-    minX: BOOSTERPACK_EDGE_BAND_MIN_X,
-    maxX: BOOSTERPACK_EDGE_BAND_MAX_X,
+    minX: -BOOSTERPACK_EDGE_BAND_OUTER_X,
+    maxX: -BOOSTERPACK_EDGE_BAND_INNER_X,
     minY: 21.5,
     maxY: 25.5,
-    spacing: 4,
+    spacing: BOOSTERPACK_CLAD_VIA_PITCH,
   },
   {
-    minX: BOOSTERPACK_EDGE_BAND_MIN_X,
-    maxX: BOOSTERPACK_EDGE_BAND_MAX_X,
+    minX: BOOSTERPACK_EDGE_BAND_INNER_X,
+    maxX: BOOSTERPACK_EDGE_BAND_OUTER_X,
+    minY: 21.5,
+    maxY: 25.5,
+    spacing: BOOSTERPACK_CLAD_VIA_PITCH,
+  },
+  // Mirror the split band along the bottom edge.
+  {
+    minX: -BOOSTERPACK_EDGE_BAND_OUTER_X,
+    maxX: -BOOSTERPACK_EDGE_BAND_INNER_X,
     minY: -25.5,
     maxY: -21.5,
-    spacing: 4,
+    spacing: BOOSTERPACK_CLAD_VIA_PITCH,
+  },
+  {
+    minX: BOOSTERPACK_EDGE_BAND_INNER_X,
+    maxX: BOOSTERPACK_EDGE_BAND_OUTER_X,
+    minY: -25.5,
+    maxY: -21.5,
+    spacing: BOOSTERPACK_CLAD_VIA_PITCH,
   },
 ] as const satisfies readonly ViaCandidateZone[]
 
@@ -134,14 +161,6 @@ export const BOOSTERPACK_CLAD_PLACEMENT_ZONES = [
     purpose: "connector",
     minX: -BOOSTERPACK_CLAD_WIDTH / 2,
     maxX: -BOOSTERPACK_CLAD_WIDTH / 2 + BOOSTERPACK_HEADER_PITCH,
-    minY: -12,
-    maxY: 14.5,
-  },
-  {
-    name: "right-edge-pin-header",
-    purpose: "connector",
-    minX: BOOSTERPACK_CLAD_WIDTH / 2 - BOOSTERPACK_HEADER_PITCH,
-    maxX: BOOSTERPACK_CLAD_WIDTH / 2,
     minY: -12,
     maxY: 14.5,
   },
@@ -204,25 +223,58 @@ export const BOOSTERPACK_CLAD_PLACEMENT_ZONES = [
   {
     name: "upper-edge-connector",
     purpose: "connector",
-    minX: 18.5,
-    maxX: 27,
+    minX: -10.5,
+    maxX: 10.5,
     minY: 20.5,
     maxY: 26.5,
   },
   {
     name: "lower-edge-connector",
     purpose: "connector",
-    minX: 18.5,
-    maxX: 27,
+    minX: -10.5,
+    maxX: 10.5,
     minY: -26.5,
     maxY: -20.5,
   },
 ] as const satisfies readonly BoosterPackCladPlacementZone[]
 
-/** Keep the leftmost edge-band vias clear of the mounting-hole pads. */
+/** Keep the outer edge-band vias clear of all four mounting-hole pads. */
 export const BOOSTERPACK_CLAD_VIA_EXCLUSION_ZONES = [
-  { minX: -36.7, maxX: -33.3, minY: 23.3, maxY: 26.7, spacing: 4 },
-  { minX: -36.7, maxX: -33.3, minY: -26.7, maxY: -23.3, spacing: 4 },
+  {
+    minX: -36.7,
+    maxX: -33.3,
+    minY: 23.3,
+    maxY: 26.7,
+    spacing: BOOSTERPACK_CLAD_VIA_PITCH,
+  },
+  {
+    minX: -36.7,
+    maxX: -33.3,
+    minY: -26.7,
+    maxY: -23.3,
+    spacing: BOOSTERPACK_CLAD_VIA_PITCH,
+  },
+  {
+    minX: 33.3,
+    maxX: 36.7,
+    minY: 23.3,
+    maxY: 26.7,
+    spacing: BOOSTERPACK_CLAD_VIA_PITCH,
+  },
+  {
+    minX: 29.6,
+    maxX: 32.4,
+    minY: 23.6,
+    maxY: 26.4,
+    spacing: BOOSTERPACK_CLAD_VIA_PITCH,
+  },
+  {
+    minX: 33.3,
+    maxX: 36.7,
+    minY: -26.7,
+    maxY: -23.3,
+    spacing: BOOSTERPACK_CLAD_VIA_PITCH,
+  },
 ] as const satisfies readonly ViaCandidateZone[]
 
 const pointKey = (point: BoosterPackCladViaPosition) =>
@@ -235,6 +287,13 @@ const isInsideExclusion = (point: BoosterPackCladViaPosition) =>
       point.x <= zone.maxX &&
       point.y >= zone.minY &&
       point.y <= zone.maxY,
+  ) ||
+  BISCUIT_BOARD_MOUNTING_HOLE_POSITIONS.some(
+    (hole) =>
+      Math.hypot(point.x - hole.x, point.y - hole.y) <
+      1.1 +
+        BOOSTERPACK_CLAD_VIA_OUTER_DIAMETER / 2 +
+        BOOSTERPACK_CLAD_MOUNTING_HOLE_VIA_CLEARANCE,
   )
 
 export const BOOSTERPACK_CLAD_VIA_POSITIONS = Array.from(
@@ -494,11 +553,6 @@ export const BoosterPackClad = ({
       pcbX={-BOOSTERPACK_EDGE_HEADER_CENTER_X}
       pcbY={BOOSTERPACK_HEADER_CENTER_Y}
     />
-    <BoosterPackEdgePinHeader
-      name="J_EDGE_RIGHT"
-      pcbX={BOOSTERPACK_EDGE_HEADER_CENTER_X}
-      pcbY={BOOSTERPACK_HEADER_CENTER_Y}
-    />
 
     <silkscreentext
       text="LAUNCHPAD SIDE"
@@ -514,13 +568,6 @@ export const BoosterPackClad = ({
       pcbY={14.9}
       fontSize="0.65mm"
     />
-    <silkscreentext
-      text="EDGE RIGHT"
-      pcbX={BOOSTERPACK_EDGE_HEADER_CENTER_X - 3.5}
-      pcbY={14.9}
-      fontSize="0.65mm"
-    />
-
     {BOOSTERPACK_CLAD_VIA_CANDIDATE_ZONES.map((zone) => (
       <Fragment key={`candidate-zone-${zone.minX}-${zone.minY}`}>
         <pcbnoterect
