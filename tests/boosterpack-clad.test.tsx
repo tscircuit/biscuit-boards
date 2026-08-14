@@ -32,10 +32,12 @@ test("uses the BiscuitBoard outline and TI 40-pin header geometry", async () => 
   )
   const vias = circuitJson.filter((element) => element.type === "pcb_via")
   const topLeftEdgeVias = vias.filter(
-    (via) => via.x >= -21.5 && via.x <= -5.5 && via.y === 21.5,
+    (via) =>
+      via.x >= -21.5 && via.x <= 14.5 && (via.y === 21.5 || via.y === 25.5),
   )
   const bottomEdgeVias = vias.filter(
-    (via) => via.x >= -21.5 && via.x <= -1.5 && via.y === -21.5,
+    (via) =>
+      via.x >= -21.5 && via.x <= 14.5 && (via.y === -25.5 || via.y === -21.5),
   )
   const rightEdgeVias = vias.filter((via) => via.x === 32.5)
   const leftRoutingRailVias = vias.filter(
@@ -112,15 +114,15 @@ test("uses the BiscuitBoard outline and TI 40-pin header geometry", async () => 
   )
   expect(launchpadPorts).toHaveLength(40)
   expect(vias).toHaveLength(BOOSTERPACK_CLAD_VIA_POSITIONS.length)
-  expect(vias).toHaveLength(38)
-  expect(topLeftEdgeVias).toHaveLength(5)
-  expect(bottomEdgeVias).toHaveLength(6)
-  expect(new Set(bottomEdgeVias.map((via) => via.x)).size).toBe(6)
+  expect(vias).toHaveLength(67)
+  expect(topLeftEdgeVias).toHaveLength(20)
+  expect(bottomEdgeVias).toHaveLength(20)
+  expect(new Set(bottomEdgeVias.map((via) => via.x)).size).toBe(10)
   expect(vias.some((via) => via.x === -21.5 && via.y === 21.5)).toBe(true)
   expect(Math.min(...topLeftEdgeVias.map((via) => via.x)) - -25.5).toBe(4)
   expect(Math.min(...bottomEdgeVias.map((via) => via.x)) - -25.5).toBe(4)
-  expect(vias.some((via) => via.x === -1.5 && via.y === -21.5)).toBe(true)
-  expect(topRightClusterVias).toHaveLength(0)
+  expect(vias.some((via) => via.x === 14.5 && via.y === -25.5)).toBe(true)
+  expect(topRightClusterVias).toHaveLength(2)
   expect(rightEdgeVias).toHaveLength(9)
   expect(leftRoutingRailVias).toHaveLength(18)
   expect(placementZoneIntrusions).toEqual([])

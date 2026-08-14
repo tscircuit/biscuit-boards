@@ -56,16 +56,16 @@ const createViaZone = (zone: ViaCandidateZone): BoosterPackCladViaPosition[] =>
 
 /**
  * Four routing corridors surround the reusable placement bays: a dual-column
- * rail outside the left LaunchPad header, single-row upper and lower bands,
- * and a right-edge rail. The right halves of the upper and lower edges remain
- * open for connectors.
+ * rail outside the left LaunchPad header, dual-row upper and lower bands, and
+ * a right-edge rail. A compact strip at the upper-right and lower-right
+ * remains open for connectors.
  */
 export const BOOSTERPACK_CLAD_VIA_CANDIDATE_ZONES = [
   // Continuous escape rail in the narrow corridor outside J1/J3.
   { minX: -29.5, maxX: -25.5, minY: -16, maxY: 16, spacing: 4 },
-  // Single inner-edge rows leave the outer edge available for hardware.
-  { minX: -21.5, maxX: -5.5, minY: 21.5, maxY: 21.5, spacing: 4 },
-  { minX: -21.5, maxX: -1.5, minY: -21.5, maxY: -21.5, spacing: 4 },
+  // Dual edge rows extend past the board center toward J4/J2.
+  { minX: -21.5, maxX: 14.5, minY: 21.5, maxY: 25.5, spacing: 4 },
+  { minX: -21.5, maxX: 14.5, minY: -25.5, maxY: -21.5, spacing: 4 },
   // Shortened right-edge rail clears both connector bays.
   { minX: 32.5, maxX: 32.5, minY: -16.25, maxY: 15.75, spacing: 4 },
 ] as const satisfies readonly ViaCandidateZone[]
@@ -120,7 +120,7 @@ export const BOOSTERPACK_CLAD_PLACEMENT_ZONES = [
   {
     name: "upper-edge-connector",
     purpose: "connector",
-    minX: 1,
+    minX: 18.5,
     maxX: 27,
     minY: 20.5,
     maxY: 26.5,
@@ -128,7 +128,7 @@ export const BOOSTERPACK_CLAD_PLACEMENT_ZONES = [
   {
     name: "lower-edge-connector",
     purpose: "connector",
-    minX: 1,
+    minX: 18.5,
     maxX: 27,
     minY: -26.5,
     maxY: -20.5,
