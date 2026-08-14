@@ -119,17 +119,28 @@ upper-right clad hole clears the D0-D7 header. Relative placement remains
 official UNO R3 geometry for the 1x8 power header, 1x6 analog header, 1x8
 D0-D7 header, 1x10 R3 digital/AREF/I2C header, and 2x3 ICSP socket.
 
-The 58 assignable fixed vias use 4 mm pitch in the established clustered clad
-style: closed upper- and lower-left edge clusters, two inset left clusters, a
-central routing field, an ICSP escape cluster, and split right-edge rails. The
-header rows and original clad mounting holes remain open. The bare template and
-its checked-in PCB snapshot are in
+The 262 assignable fixed vias use 0.3 mm drills, 0.6 mm copper pads, and 1.3 mm
+center-to-center pitch. The clustered layout has upper- and lower-left edge
+fields, two inset left fields, a central routing field spanning -19 to -3 mm,
+and split right-edge rails. The area immediately left of ICSP, the header rows, and
+the original clad mounting holes remain open. The bare template and its
+checked-in PCB snapshot are in
 [`examples/arduino-shield-clad.tsx`](./examples/arduino-shield-clad.tsx).
+
+The routed
+[`examples/stm32c071-display-arduino-shield.tsx`](./examples/stm32c071-display-arduino-shield.tsx)
+example adds the complete STM32C071 display/button/SWD circuit. It takes 3.3 V
+and ground from the Arduino power header, while all unused Arduino and MCU pins
+are explicit no-connects. The display connector is shifted clear of the central
+via field, and the SWD connector sits above the lower shield-header row.
 
 ```sh
 bun run build:arduino-shield
+bun run build:arduino-display
 bun run snapshot:arduino-shield
+bun run snapshot:arduino-display
 bun test tests/arduino-shield-clad.test.tsx
+bun test tests/arduino-shield-display.test.tsx
 ```
 
 ## Seeed Studio XIAO form-factor clad

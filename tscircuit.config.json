@@ -2,6 +2,7 @@
   "mainEntrypoint": "index.tsx",
   "includeBoardFiles": [
     "examples/arduino-shield-clad.tsx",
+    "examples/stm32c071-display-arduino-shield.tsx",
     "examples/boosterpack-clad.tsx",
     "examples/xiao-clad-with-pin-headers.tsx",
     "examples/xiao-stm32-usb.tsx",
