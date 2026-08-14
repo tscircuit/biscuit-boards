@@ -13,17 +13,17 @@ interface PcbPlacement extends Record<string, unknown> {
 }
 
 const componentPlacements: Record<string, PcbPlacement> = {
-  J_DISPLAY: { pcbX: -2, pcbY: 0, pcbRotation: 90 },
-  R_I2C_SCL: { pcbX: -6.8, pcbY: -4.8, pcbRotation: 90 },
-  R_I2C_SDA: { pcbX: -6.8, pcbY: 4.8, pcbRotation: 90 },
-  SW_BTN1: { pcbX: -12.5, pcbY: 8 },
-  SW_BTN2: { pcbX: -12.5, pcbY: -8 },
+  J_DISPLAY: { pcbX: -4, pcbY: 0, pcbRotation: 90 },
+  R_I2C_SCL: { pcbX: -7.6, pcbY: -4.8, pcbRotation: 90 },
+  R_I2C_SDA: { pcbX: -7.6, pcbY: 4.8, pcbRotation: 90 },
+  SW_BTN1: { pcbX: -13.5, pcbY: 8 },
+  SW_BTN2: { pcbX: -13.5, pcbY: -8 },
   R_BTN1: { pcbX: -7.3, pcbY: 8 },
   R_BTN2: { pcbX: -7.3, pcbY: -8 },
   J_SWD: { pcbX: 8, pcbY: -15, pcbRotation: 180 },
-  U_MCU: { pcbX: 8.5, pcbY: 0, pcbRotation: 270 },
-  C_MCU: { pcbX: 4.1, pcbY: 0, pcbRotation: 90 },
-  C_NRST: { pcbX: 13, pcbY: 5.5, pcbRotation: 90 },
+  U_MCU: { pcbX: 3.5, pcbY: 0, pcbRotation: 270 },
+  C_MCU: { pcbX: 7, pcbY: 0, pcbRotation: 90 },
+  C_NRST: { pcbX: 15, pcbY: 5.5, pcbRotation: 90 },
   C_BULK: { pcbX: 15, pcbY: -10, pcbRotation: 90 },
   R_PWR_LED: { pcbX: -3, pcbY: 13.5 },
   D_PWR: { pcbX: 0.5, pcbY: 13.5 },
@@ -45,9 +45,9 @@ const unusedMcuPins = [
 ]
 
 const silkscreen = [
-  { text: "BTN1", pcbX: -12.5, pcbY: 12, fontSize: "0.7mm" },
-  { text: "BTN2", pcbX: -12.5, pcbY: -12, fontSize: "0.7mm" },
-  { text: "DISPLAY", pcbX: -2, pcbY: 6.1, fontSize: "0.7mm" },
+  { text: "BTN1", pcbX: -13.5, pcbY: 12, fontSize: "0.7mm" },
+  { text: "BTN2", pcbX: -13.5, pcbY: -12, fontSize: "0.7mm" },
+  { text: "DISPLAY", pcbX: -4, pcbY: 6.1, fontSize: "0.7mm" },
   { text: "POWER", pcbX: -1.25, pcbY: 15.1, fontSize: "0.65mm" },
   { text: "PA8", pcbX: 8.75, pcbY: 15.1, fontSize: "0.65mm" },
   { text: "SWD", pcbX: 8, pcbY: -10.6, fontSize: "0.7mm" },
@@ -72,21 +72,28 @@ const reservedTraceObstacle = (
   }
 }
 
+const swdioRoute = [
+  { x: 10, y: -12.75 },
+  { x: 10, y: -8 },
+  { x: 5.125, y: -8 },
+  { x: 5.125, y: -2.85 },
+] as const
+
 const swclkRoute = [
   { x: 6, y: -12.75 },
   { x: 6, y: -18 },
   { x: 18, y: -18 },
-  { x: 18, y: -4 },
-  { x: 10.775, y: -4 },
-  { x: 10.775, y: -2.85 },
+  { x: 18, y: -6 },
+  { x: 5.775, y: -6 },
+  { x: 5.775, y: -2.85 },
 ] as const
 
 export const BOOSTERPACK_SWD_RESERVED_ROUTING_OBSTACLES = [
-  reservedTraceObstacle(
-    "reserved-swdio",
-    { x: 10, y: -12.75 },
-    { x: 10.125, y: -2.85 },
-  ),
+  ...swdioRoute
+    .slice(1)
+    .map((to, index) =>
+      reservedTraceObstacle(`reserved-swdio-${index}`, swdioRoute[index]!, to),
+    ),
   ...swclkRoute
     .slice(1)
     .map((to, index) =>
@@ -130,7 +137,14 @@ const getRepackedDisplayChildren = (routeSwdAndBulk: boolean): ReactNode => {
     }
 
     if (name === "SWDIO") {
-      return cloneElement(child, { pcbStraightLine: true })
+      return cloneElement(child, {
+        pcbPathRelativeTo: ".J_SWD > .SWDIO",
+        pcbPath: [
+          // Coordinates are in J_SWD's 180-degree-rotated component frame.
+          { x: -2, y: -7 },
+          { x: 2.875, y: -7 },
+        ],
+      })
     }
 
     if (name === "SWCLK") {
@@ -140,8 +154,8 @@ const getRepackedDisplayChildren = (routeSwdAndBulk: boolean): ReactNode => {
           // Coordinates are in J_SWD's 180-degree-rotated component frame.
           { x: 2, y: 3 },
           { x: -10, y: 3 },
-          { x: -10, y: -11 },
-          { x: -2.775, y: -11 },
+          { x: -10, y: -9 },
+          { x: 2.225, y: -9 },
         ],
       })
     }
