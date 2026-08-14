@@ -11,6 +11,7 @@ import {
   BOOSTERPACK_CLAD_HEIGHT,
   BOOSTERPACK_CLAD_VIA_POSITIONS,
   BOOSTERPACK_CLAD_WIDTH,
+  BOOSTERPACK_HEADER_CENTER_X,
 } from "../lib/BoosterPackClad"
 
 const pointKey = (point: { x: number; y: number }) =>
@@ -39,6 +40,14 @@ test("uses the BiscuitBoard outline and TI 40-pin header geometry", async () => 
       via.x >= -21.5 && via.x <= -1.5 && (via.y === -25.5 || via.y === -21.5),
   )
   const rightEdgeVias = vias.filter((via) => via.x === 32.5)
+  const escapeClusterCenterX = -BOOSTERPACK_HEADER_CENTER_X / 2
+  const escapeClusterVias = vias.filter(
+    (via) =>
+      (via.x === escapeClusterCenterX - 2 ||
+        via.x === escapeClusterCenterX + 2) &&
+      via.y >= -4 &&
+      via.y <= 4,
+  )
   const topRightClusterVias = vias.filter(
     (via) => via.x >= 12.75 && via.x <= 24.75 && via.y >= 21.5 && via.y <= 25.5,
   )
@@ -90,10 +99,12 @@ test("uses the BiscuitBoard outline and TI 40-pin header geometry", async () => 
   expect(vias.some((via) => via.x === -1.5 && via.y === -25.5)).toBe(true)
   expect(topRightClusterVias).toHaveLength(0)
   expect(rightEdgeVias).toHaveLength(11)
+  expect(escapeClusterVias).toHaveLength(6)
   expect(
-    vias.some((via) => via.x === -18 && via.y === -4) &&
-      vias.some((via) => via.x === -14 && via.y === 4),
-  ).toBe(true)
+    (Math.min(...escapeClusterVias.map((via) => via.x)) +
+      Math.max(...escapeClusterVias.map((via) => via.x))) /
+      2,
+  ).toBe(escapeClusterCenterX)
   expect(
     circuitJson.some(
       (element) =>

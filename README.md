@@ -59,8 +59,8 @@ candidates. The two closed 3x2 left-corner clusters keep their original
 coordinates. The upper-left and six-column bottom bands sit one standard 4 mm
 via pitch from those corner clusters and against the top and bottom edges. The
 upper-right edge is open, the 11-via right-edge rail is retained, and a 2x3
-escape cluster sits immediately to the right of the left LaunchPad header. The
-bare template preview is in
+escape cluster is centered between the left LaunchPad header and the center of
+the board. The bare template preview is in
 [`examples/boosterpack-clad.tsx`](./examples/boosterpack-clad.tsx), and the
 routed example is in
 [`examples/stm32c071-display-boosterpack.tsx`](./examples/stm32c071-display-boosterpack.tsx).
@@ -71,12 +71,14 @@ The complete example routes all 36 PCB traces, including all five J_SWD pads
 and both bulk-capacitor pads, with no router or clearance errors. SWDIO and
 SWCLK use two deterministic escape traces whose channels are reserved from the
 board autorouter; the other 34 traces are autorouted. The solved route claims
-10 of the 51 prefabricated vias, at these positions in millimeters:
+20 of the 51 prefabricated vias, at these positions in millimeters:
 
 ```text
-(-18,-4) (-18,4) (-14,-4) (-14,0) (-14,4)
-(-5.5,-21.5) (-1.5,-21.5) (-5.5,21.5)
-(32.5,3.75) (32.5,11.75)
+(-12.795,-4) (-12.795,0) (-12.795,4) (-8.795,-4) (-8.795,0)
+(-5.5,-25.5) (-13.5,-21.5) (-9.5,-21.5) (-5.5,-21.5) (-1.5,-21.5)
+(-17.5,21.5) (-13.5,21.5) (-9.5,21.5) (-5.5,21.5)
+(-9.5,25.5) (-5.5,25.5)
+(32.5,-16.25) (32.5,-12.25) (32.5,-4.25) (32.5,11.75)
 ```
 
 Every router-generated layer change uses one of those fixed via locations; no
