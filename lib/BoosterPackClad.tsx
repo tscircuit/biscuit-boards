@@ -367,27 +367,6 @@ export const BoosterPackClad = ({
       </Fragment>
     ))}
 
-    {BOOSTERPACK_CLAD_PLACEMENT_ZONES.map((zone) => (
-      <Fragment key={`placement-zone-${zone.name}`}>
-        <pcbnoterect
-          color="orange"
-          width={zone.maxX - zone.minX}
-          height={zone.maxY - zone.minY}
-          pcbPositionAnchor="center"
-          pcbX={zone.minX + (zone.maxX - zone.minX) / 2}
-          pcbY={zone.minY + (zone.maxY - zone.minY) / 2}
-        />
-        <pcbnotetext
-          text={zone.name}
-          color="orange"
-          fontSize="0.55mm"
-          pcbX={zone.minX + 0.5}
-          pcbY={zone.maxY - 0.5}
-          anchorAlignment="top_left"
-        />
-      </Fragment>
-    ))}
-
     {BOOSTERPACK_CLAD_VIA_POSITIONS.map((via) => (
       <Fragment key={`prefab-via-${via.x}-${via.y}`}>
         <via

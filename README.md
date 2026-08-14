@@ -62,8 +62,7 @@ clusters from the earlier layout are removed.
 The central chips/sensors bay and the upper and lower connector/interface bays
 remain free of prefabricated via pads. Dedicated upper-right and lower-right
 edge bays also remain open for connectors that need outside-board access.
-These reserved placement zones are outlined in orange in the template preview
-at
+The bare template preview is in
 [`examples/boosterpack-clad.tsx`](./examples/boosterpack-clad.tsx), and the
 routed example is in
 [`examples/stm32c071-display-boosterpack.tsx`](./examples/stm32c071-display-boosterpack.tsx).
