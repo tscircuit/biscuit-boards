@@ -22,8 +22,9 @@ export const Stm32c071XiaoClad = (
     <BM05B_SURS_TF
       name="J_SWD"
       schSectionName={schSections.debug}
-      pcbX={0}
-      pcbY={7.2}
+      pcbX={-6}
+      pcbY={0}
+      pcbRotation={90}
     />
 
     <STM32C071FBP6

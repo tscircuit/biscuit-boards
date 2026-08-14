@@ -37,12 +37,11 @@ export interface XiaoCladViaGridOptions {
 }
 
 /**
- * Three edge grids leave the middle and top of the clad open for components.
+ * Two horizontal edge grids leave the middle and sides open for components.
  * Each physical grid dimension includes the copper radius of its outer vias.
  */
 export const XIAO_CLAD_VIA_GRID_AREAS = [
-  { width: 1.4, height: 10, centerX: -6.8, centerY: 0 },
-  { width: 1.4, height: 10, centerX: 6.8, centerY: 0 },
+  { width: 10, height: 2.8, centerX: 0, centerY: 8.4 },
   { width: 10, height: 2.8, centerX: 0, centerY: -8.4 },
 ] as const satisfies readonly XiaoCladViaGridArea[]
 

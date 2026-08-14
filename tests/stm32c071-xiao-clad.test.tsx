@@ -41,11 +41,11 @@ test("routes the STM32C071 circuit on the XIAO clad's fixed vias", async () => {
     manufacturer_part_number: "BM05B-SURS-TF",
   })
   expect(swdPcbComponent).toMatchObject({
-    display_offset_x: 0,
-    display_offset_y: 7.2,
+    display_offset_x: -6,
+    display_offset_y: 0,
     layer: "top",
     insertion_direction: "from_above",
-    width: 6.2,
+    rotation: 90,
   })
   expect(traces).toHaveLength(17)
   expect(vias).toHaveLength(XIAO_CLAD_VIA_POSITIONS.length)
