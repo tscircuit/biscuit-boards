@@ -54,13 +54,13 @@ downward-facing 2x10 male headers for the target LaunchPad mating arrangement;
 TI's generic stacking recommendation normally describes downward-facing female
 BoosterPack headers.
 
-The via field uses 53 candidates in five routing corridors. An 18-via
+The via field uses 68 candidates in five routing corridors. An 18-via
 dual-column rail is centered between the left board edge and the left
-LaunchPad header. Mirrored three-via columns sit between each LaunchPad header
-and the board center. One 10x2 grid spans the upper edge through x=14.5 mm,
-while a nine-via rail runs along the right edge. The lower edge has no via
-zone. Compact upper-right and lower-right strips remain available for
-edge-access connectors.
+LaunchPad header. Mirrored 2x3 grids sit between each LaunchPad header and the
+board center. One 10x2 grid spans the upper edge through x=14.5 mm, while an
+18-via dual-column rail runs to the right of J2. The lower edge has no via zone.
+Compact upper-right and lower-right strips remain available for edge-access
+connectors.
 The central chips/sensors bay and the upper and lower connector/interface bays
 remain free of prefabricated via pads. Dedicated upper-right and lower-right
 edge bays also remain open for connectors that need outside-board access.
@@ -75,16 +75,15 @@ The complete example routes all 36 PCB traces, including all five J_SWD pads
 and both bulk-capacitor pads, with no router or clearance errors. SWDIO and
 SWCLK use two deterministic escape traces whose channels are reserved from the
 board autorouter; the other 34 traces are autorouted. The solved route claims
-17 of the 53 prefabricated vias, at these positions in millimeters:
+16 of the 68 prefabricated vias, at these positions in millimeters:
 
 ```text
-(-10.795,-4) (-10.795,0) (-10.795,4)
-(10.795,-4) (10.795,0) (10.795,4)
-(-31.545,-12)
-(-27.545,-16) (-27.545,-12) (-27.545,-8) (-27.545,4)
-(-27.545,8) (-27.545,12) (-27.545,16)
+(-12.795,-4) (-12.795,0) (-12.795,4)
+(-8.795,-4) (-8.795,0) (-8.795,4)
+(8.795,0) (12.795,-4) (12.795,0) (12.795,4)
+(-31.545,-16) (-27.545,-12)
 (10.5,21.5)
-(32.5,-16.25) (32.5,-4.25)
+(30.5,-16.25) (30.5,-12.25) (30.5,3.75)
 ```
 
 Every router-generated layer change uses one of those fixed via locations; no

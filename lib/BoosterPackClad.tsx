@@ -22,7 +22,8 @@ const BOOSTERPACK_CLAD_EDGE_CLEARANCE = 0.2
 const BOOSTERPACK_CLAD_EDGE_CLEARANCE_VALIDATION_TOLERANCE = 0.001
 const BOOSTERPACK_LEFT_ROUTING_RAIL_CENTER_X =
   (-BOOSTERPACK_CLAD_WIDTH / 2 - BOOSTERPACK_HEADER_CENTER_X) / 2
-const BOOSTERPACK_INNER_ESCAPE_COLUMN_OFFSET_X = BOOSTERPACK_HEADER_CENTER_X / 2
+const BOOSTERPACK_INNER_ESCAPE_GRID_OFFSET_X = BOOSTERPACK_HEADER_CENTER_X / 2
+const BOOSTERPACK_RIGHT_ROUTING_RAIL_CENTER_X = 32.5
 
 export interface BoosterPackCladViaPosition {
   x: number
@@ -59,9 +60,9 @@ const createViaZone = (zone: ViaCandidateZone): BoosterPackCladViaPosition[] =>
 
 /**
  * Five routing corridors surround the reusable placement bays: a dual-column
- * rail outside the left LaunchPad header, mirrored inner escape columns,
- * a dual-row upper band, and a right-edge rail. The lower board edge remains
- * open, along with compact strips at the upper-right and lower-right.
+ * rail outside the left LaunchPad header, mirrored inner escape grids,
+ * a dual-row upper band, and a dual-column right-edge rail. The lower board
+ * edge remains open, along with compact upper-right and lower-right strips.
  */
 export const BOOSTERPACK_CLAD_VIA_CANDIDATE_ZONES = [
   // Continuous escape rail in the narrow corridor outside J1/J3.
@@ -72,26 +73,32 @@ export const BOOSTERPACK_CLAD_VIA_CANDIDATE_ZONES = [
     maxY: 16,
     spacing: 4,
   },
-  // Compact column halfway between J1/J3 and the board center.
+  // Compact grid halfway between J1/J3 and the board center.
   {
-    minX: -BOOSTERPACK_INNER_ESCAPE_COLUMN_OFFSET_X,
-    maxX: -BOOSTERPACK_INNER_ESCAPE_COLUMN_OFFSET_X,
+    minX: -BOOSTERPACK_INNER_ESCAPE_GRID_OFFSET_X - 2,
+    maxX: -BOOSTERPACK_INNER_ESCAPE_GRID_OFFSET_X + 2,
     minY: -4,
     maxY: 4,
     spacing: 4,
   },
-  // Mirrored column halfway between the board center and J4/J2.
+  // Mirrored grid halfway between the board center and J4/J2.
   {
-    minX: BOOSTERPACK_INNER_ESCAPE_COLUMN_OFFSET_X,
-    maxX: BOOSTERPACK_INNER_ESCAPE_COLUMN_OFFSET_X,
+    minX: BOOSTERPACK_INNER_ESCAPE_GRID_OFFSET_X - 2,
+    maxX: BOOSTERPACK_INNER_ESCAPE_GRID_OFFSET_X + 2,
     minY: -4,
     maxY: 4,
     spacing: 4,
   },
   // Dual upper-edge rows extend past the board center toward J4/J2.
   { minX: -21.5, maxX: 14.5, minY: 21.5, maxY: 25.5, spacing: 4 },
-  // Shortened right-edge rail clears both connector bays.
-  { minX: 32.5, maxX: 32.5, minY: -16.25, maxY: 15.75, spacing: 4 },
+  // Shortened dual-column rail to the right of J4/J2 clears connector bays.
+  {
+    minX: BOOSTERPACK_RIGHT_ROUTING_RAIL_CENTER_X - 2,
+    maxX: BOOSTERPACK_RIGHT_ROUTING_RAIL_CENTER_X + 2,
+    minY: -16.25,
+    maxY: 15.75,
+    spacing: 4,
+  },
 ] as const satisfies readonly ViaCandidateZone[]
 
 /**
