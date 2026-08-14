@@ -13,6 +13,7 @@ import {
   BOOSTERPACK_CLAD_VIA_POSITIONS,
   BOOSTERPACK_CLAD_WIDTH,
   BOOSTERPACK_HEADER_CENTER_X,
+  BOOSTERPACK_HEADER_CENTER_Y,
 } from "../lib/BoosterPackClad"
 
 const pointKey = (point: { x: number; y: number }) =>
@@ -127,13 +128,38 @@ test("uses the BiscuitBoard outline and TI 40-pin header geometry", async () => 
       element.pcb_component_id !== undefined &&
       launchpadPcbComponentIds.has(element.pcb_component_id),
   )
+  const edgeHeaderSourceComponents = circuitJson.flatMap((element) =>
+    element.type === "source_component" &&
+    (element.name === "J_EDGE_LEFT" || element.name === "J_EDGE_RIGHT")
+      ? [element]
+      : [],
+  )
+  const edgeHeaderSourceComponentIds = new Set(
+    edgeHeaderSourceComponents.map(
+      (component) => component.source_component_id,
+    ),
+  )
+  const edgeHeaderPorts = circuitJson.flatMap((element) =>
+    element.type === "source_port" &&
+    edgeHeaderSourceComponentIds.has(element.source_component_id ?? "")
+      ? [element]
+      : [],
+  )
+  const edgeHeaderPcbComponents = circuitJson.flatMap((element) =>
+    element.type === "pcb_component" &&
+    edgeHeaderSourceComponentIds.has(element.source_component_id)
+      ? [element]
+      : [],
+  )
+  const edgeHeaderCenterX =
+    (BOOSTERPACK_CLAD_WIDTH / 2 + BOOSTERPACK_HEADER_CENTER_X) / 2
 
   expect(board).toMatchObject({
     width: BOOSTERPACK_CLAD_WIDTH,
     height: BOOSTERPACK_CLAD_HEIGHT,
     num_layers: 2,
   })
-  expect(platedHoles).toHaveLength(40)
+  expect(platedHoles).toHaveLength(80)
   expect(mountingHoles).toHaveLength(
     BISCUIT_BOARD_MOUNTING_HOLE_POSITIONS.length,
   )
@@ -141,43 +167,35 @@ test("uses the BiscuitBoard outline and TI 40-pin header geometry", async () => 
     new Set(BISCUIT_BOARD_MOUNTING_HOLE_POSITIONS.map(pointKey)),
   )
   expect(launchpadPorts).toHaveLength(40)
+  expect(edgeHeaderSourceComponents).toHaveLength(2)
+  expect(edgeHeaderPorts).toHaveLength(40)
+  expect(edgeHeaderPorts.every((port) => port.do_not_connect)).toBe(true)
+  expect(edgeHeaderPcbComponents).toHaveLength(2)
+  expect(
+    new Set(edgeHeaderPcbComponents.map((header) => pointKey(header.center))),
+  ).toEqual(
+    new Set([
+      pointKey({ x: -edgeHeaderCenterX, y: BOOSTERPACK_HEADER_CENTER_Y }),
+      pointKey({ x: edgeHeaderCenterX, y: BOOSTERPACK_HEADER_CENTER_Y }),
+    ]),
+  )
   expect(vias).toHaveLength(BOOSTERPACK_CLAD_VIA_POSITIONS.length)
-  expect(vias).toHaveLength(68)
+  expect(vias).toHaveLength(26)
   expect(topLeftEdgeVias).toHaveLength(20)
   expect(bottomEdgeVias).toHaveLength(0)
   expect(vias.some((via) => via.x === -21.5 && via.y === 21.5)).toBe(true)
   expect(Math.min(...topLeftEdgeVias.map((via) => via.x)) - -25.5).toBe(4)
   expect(vias.some((via) => via.y <= -21.5)).toBe(false)
   expect(topRightClusterVias).toHaveLength(2)
-  expect(rightEdgeVias).toHaveLength(18)
-  expect(leftRoutingRailVias).toHaveLength(18)
+  expect(rightEdgeVias).toHaveLength(0)
+  expect(leftRoutingRailVias).toHaveLength(0)
   expect(leftInnerEscapeGridVias).toHaveLength(6)
-  expect(rightInnerEscapeGridVias).toHaveLength(6)
-  expect(
-    (Math.min(...leftRoutingRailVias.map((via) => via.x)) +
-      Math.max(...leftRoutingRailVias.map((via) => via.x))) /
-      2,
-  ).toBe(leftRoutingRailCenterX)
-  expect(
-    (Math.min(...rightEdgeVias.map((via) => via.x)) +
-      Math.max(...rightEdgeVias.map((via) => via.x))) /
-      2,
-  ).toBe(rightRoutingRailCenterX)
+  expect(rightInnerEscapeGridVias).toHaveLength(0)
   expect(
     (Math.min(...leftInnerEscapeGridVias.map((via) => via.x)) +
       Math.max(...leftInnerEscapeGridVias.map((via) => via.x))) /
       2,
   ).toBe(-innerEscapeGridOffsetX)
-  expect(
-    (Math.min(...rightInnerEscapeGridVias.map((via) => via.x)) +
-      Math.max(...rightInnerEscapeGridVias.map((via) => via.x))) /
-      2,
-  ).toBe(innerEscapeGridOffsetX)
-  expect(rightInnerEscapeGridVias.map(pointKey).sort()).toEqual(
-    leftInnerEscapeGridVias
-      .map((via) => pointKey({ x: -via.x, y: via.y }))
-      .sort(),
-  )
   expect(placementZoneIntrusions).toEqual([])
   expect(componentsOutsidePlacementZones).toEqual([])
   expect(

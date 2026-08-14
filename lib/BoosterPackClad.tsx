@@ -23,7 +23,9 @@ const BOOSTERPACK_CLAD_EDGE_CLEARANCE_VALIDATION_TOLERANCE = 0.001
 const BOOSTERPACK_LEFT_ROUTING_RAIL_CENTER_X =
   (-BOOSTERPACK_CLAD_WIDTH / 2 - BOOSTERPACK_HEADER_CENTER_X) / 2
 const BOOSTERPACK_INNER_ESCAPE_GRID_OFFSET_X = BOOSTERPACK_HEADER_CENTER_X / 2
-const BOOSTERPACK_RIGHT_ROUTING_RAIL_CENTER_X = 32.5
+const BOOSTERPACK_EDGE_HEADER_CENTER_X = Math.abs(
+  BOOSTERPACK_LEFT_ROUTING_RAIL_CENTER_X,
+)
 
 export interface BoosterPackCladViaPosition {
   x: number
@@ -59,20 +61,11 @@ const createViaZone = (zone: ViaCandidateZone): BoosterPackCladViaPosition[] =>
   )
 
 /**
- * Five routing corridors surround the reusable placement bays: a dual-column
- * rail outside the left LaunchPad header, mirrored inner escape grids,
- * a dual-row upper band, and a dual-column right-edge rail. The lower board
- * edge remains open, along with compact upper-right and lower-right strips.
+ * Two routing corridors remain clear of the reusable placement bays: one
+ * compact escape grid between J1/J3 and the board center, and one dual-row
+ * upper band. The center-right and lower areas remain open for components.
  */
 export const BOOSTERPACK_CLAD_VIA_CANDIDATE_ZONES = [
-  // Continuous escape rail in the narrow corridor outside J1/J3.
-  {
-    minX: BOOSTERPACK_LEFT_ROUTING_RAIL_CENTER_X - 2,
-    maxX: BOOSTERPACK_LEFT_ROUTING_RAIL_CENTER_X + 2,
-    minY: -16,
-    maxY: 16,
-    spacing: 4,
-  },
   // Compact grid halfway between J1/J3 and the board center.
   {
     minX: -BOOSTERPACK_INNER_ESCAPE_GRID_OFFSET_X - 2,
@@ -81,24 +74,8 @@ export const BOOSTERPACK_CLAD_VIA_CANDIDATE_ZONES = [
     maxY: 4,
     spacing: 4,
   },
-  // Mirrored grid halfway between the board center and J4/J2.
-  {
-    minX: BOOSTERPACK_INNER_ESCAPE_GRID_OFFSET_X - 2,
-    maxX: BOOSTERPACK_INNER_ESCAPE_GRID_OFFSET_X + 2,
-    minY: -4,
-    maxY: 4,
-    spacing: 4,
-  },
   // Dual upper-edge rows extend past the board center toward J4/J2.
   { minX: -21.5, maxX: 14.5, minY: 21.5, maxY: 25.5, spacing: 4 },
-  // Shortened dual-column rail to the right of J4/J2 clears connector bays.
-  {
-    minX: BOOSTERPACK_RIGHT_ROUTING_RAIL_CENTER_X - 2,
-    maxX: BOOSTERPACK_RIGHT_ROUTING_RAIL_CENTER_X + 2,
-    minY: -16.25,
-    maxY: 15.75,
-    spacing: 4,
-  },
 ] as const satisfies readonly ViaCandidateZone[]
 
 /**
@@ -121,6 +98,22 @@ export const BOOSTERPACK_CLAD_PLACEMENT_ZONES = [
     purpose: "connector",
     minX: 18.5,
     maxX: 24.5,
+    minY: -12,
+    maxY: 14.5,
+  },
+  {
+    name: "left-edge-pin-header",
+    purpose: "connector",
+    minX: -33,
+    maxX: -26,
+    minY: -12,
+    maxY: 14.5,
+  },
+  {
+    name: "right-edge-pin-header",
+    purpose: "connector",
+    minX: 26,
+    maxX: 33,
     minY: -12,
     maxY: 14.5,
   },
@@ -276,8 +269,12 @@ const rightHeaderNoConnect = Array.from({ length: 20 }, (_, index) => index + 1)
   .filter((pin) => pin !== 2)
   .map((pin) => `pin${pin}`)
 
-const DualMaleHeaderFootprint = () => (
-  <footprint insertionDirection="from_below">
+const DualMaleHeaderFootprint = ({
+  insertionDirection = "from_below",
+}: {
+  insertionDirection?: "from_above" | "from_below"
+}) => (
+  <footprint insertionDirection={insertionDirection}>
     {Array.from({ length: 10 }, (_, row) => {
       const y = (4.5 - row) * BOOSTERPACK_HEADER_PITCH
       return (
@@ -339,6 +336,28 @@ export const BoosterPackRightHeader = (props: ConnectorProps) => (
     manufacturerPartNumber="GENERIC-2X10-MALE-2.54MM-DOWN"
     footprint={<DualMaleHeaderFootprint />}
     noConnect={rightHeaderNoConnect}
+    noSchematicRepresentation
+    {...props}
+  />
+)
+
+const edgeHeaderPins = Object.fromEntries(
+  Array.from({ length: 20 }, (_, index) => [
+    `pin${index + 1}`,
+    [`EDGE_${index + 1}`],
+  ]),
+)
+const edgeHeaderNoConnect = Array.from(
+  { length: 20 },
+  (_, index) => `pin${index + 1}`,
+)
+
+export const BoosterPackEdgePinHeader = (props: ConnectorProps) => (
+  <connector
+    pinLabels={edgeHeaderPins}
+    manufacturerPartNumber="GENERIC-2X10-MALE-2.54MM-UP"
+    footprint={<DualMaleHeaderFootprint insertionDirection="from_above" />}
+    noConnect={edgeHeaderNoConnect}
     noSchematicRepresentation
     {...props}
   />
@@ -407,6 +426,16 @@ export const BoosterPackClad = ({
       pcbX={BOOSTERPACK_HEADER_CENTER_X}
       pcbY={BOOSTERPACK_HEADER_CENTER_Y}
     />
+    <BoosterPackEdgePinHeader
+      name="J_EDGE_LEFT"
+      pcbX={-BOOSTERPACK_EDGE_HEADER_CENTER_X}
+      pcbY={BOOSTERPACK_HEADER_CENTER_Y}
+    />
+    <BoosterPackEdgePinHeader
+      name="J_EDGE_RIGHT"
+      pcbX={BOOSTERPACK_EDGE_HEADER_CENTER_X}
+      pcbY={BOOSTERPACK_HEADER_CENTER_Y}
+    />
 
     <silkscreentext
       text="LAUNCHPAD SIDE"
@@ -416,6 +445,18 @@ export const BoosterPackClad = ({
     />
     <silkscreentext text="J1/J3" pcbX={-21.59} pcbY={14.9} fontSize="0.7mm" />
     <silkscreentext text="J4/J2" pcbX={21.59} pcbY={14.9} fontSize="0.7mm" />
+    <silkscreentext
+      text="EDGE LEFT"
+      pcbX={-BOOSTERPACK_EDGE_HEADER_CENTER_X}
+      pcbY={14.9}
+      fontSize="0.65mm"
+    />
+    <silkscreentext
+      text="EDGE RIGHT"
+      pcbX={BOOSTERPACK_EDGE_HEADER_CENTER_X}
+      pcbY={14.9}
+      fontSize="0.65mm"
+    />
 
     {BOOSTERPACK_CLAD_VIA_CANDIDATE_ZONES.map((zone) => (
       <Fragment key={`candidate-zone-${zone.minX}-${zone.minY}`}>
