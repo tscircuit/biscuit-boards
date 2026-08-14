@@ -1,6 +1,8 @@
 import type { ReactElement, ReactNode } from "react"
 import { Children, cloneElement, Fragment, isValidElement } from "react"
 import {
+  BOOSTERPACK_CLAD_HEIGHT,
+  BOOSTERPACK_CLAD_WIDTH,
   BoosterPackClad,
   type BoosterPackCladProps,
 } from "../lib/BoosterPackClad"
@@ -119,6 +121,24 @@ export const BOOSTERPACK_SWD_RESERVED_ROUTING_OBSTACLES = [
     ),
 ]
 
+const BOOSTERPACK_BOTTOM_EDGE_ROUTING_GUARD = 0.8
+const BOOSTERPACK_BOARD_EDGE_ROUTING_OBSTACLES = [
+  {
+    obstacleId: "reserved-bottom-board-edge",
+    type: "rect" as const,
+    layers: ["top", "bottom"],
+    center: {
+      x: 0,
+      y:
+        -BOOSTERPACK_CLAD_HEIGHT / 2 +
+        BOOSTERPACK_BOTTOM_EDGE_ROUTING_GUARD / 2,
+    },
+    width: BOOSTERPACK_CLAD_WIDTH,
+    height: BOOSTERPACK_BOTTOM_EDGE_ROUTING_GUARD,
+    connectedTo: ["reserved-bottom-board-edge"],
+  },
+]
+
 const getRepackedDisplayChildren = (routeSwdAndBulk: boolean): ReactNode => {
   const original = Stm32c071DisplayBiscuitBoard({
     routingDisabled: true,
@@ -218,9 +238,10 @@ export const Stm32c071DisplayBoosterPackClad = ({
 }: Stm32c071DisplayBoosterPackCladProps = {}) => (
   <BoosterPackClad
     {...props}
-    reservedAutorouterObstacles={
-      routeSwdAndBulk ? BOOSTERPACK_SWD_RESERVED_ROUTING_OBSTACLES : []
-    }
+    reservedAutorouterObstacles={[
+      ...BOOSTERPACK_BOARD_EDGE_ROUTING_OBSTACLES,
+      ...(routeSwdAndBulk ? BOOSTERPACK_SWD_RESERVED_ROUTING_OBSTACLES : []),
+    ]}
     minTraceWidth={props.minTraceWidth ?? 0.2}
     autorouterOptions={{
       gridClearance: 0.16,

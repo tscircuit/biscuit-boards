@@ -54,18 +54,19 @@ downward-facing 2x10 male headers for the target LaunchPad mating arrangement;
 TI's generic stacking recommendation normally describes downward-facing female
 BoosterPack headers.
 
-The via field uses 438 candidates at 1.3 mm pitch. A compact 5x5 escape grid
-sits between J1/J3 and the board center. Mirrored 4x25 grids sit between each
-LaunchPad header and its board edge. Split upper and lower bands extend to a
-2 mm board-edge inset, with a symmetric 32.89 mm opening in the center.
-Candidates within 1 mm copper-edge clearance of a mounting hole are omitted.
-A standard upward-facing 1x10 pin header sits flush with the left board edge,
-its row centered at x=-36.23 mm. Its 10 breakout pins are explicitly marked
-unconnected until a signal map is chosen. Each prefabricated via uses a 0.3 mm
-finished hole and a 0.6 mm copper pad, leaving 0.7 mm between neighboring pads.
-The central chips/sensors bay and the upper and lower connector/interface bays
-remain free of prefabricated via pads. The centered upper and lower openings
-also remain available for connectors that need outside-board access.
+The via field uses 289 candidates at 1.3 mm pitch. Four L-shaped corner fields
+have 4 mm-wide arms; their vertical arms are 14 mm long, and the upper and
+lower pairs leave a symmetric 39.468 mm opening in the center. A compact 5x5
+escape grid is centered at x=-12.795 mm, 2 mm left of the midpoint between
+J1/J3 and the board center. Candidates within 1 mm copper-edge clearance of a
+mounting hole are omitted. A standard upward-facing 1x18 pin header sits flush
+with the left board edge and extends to the top and bottom mounting-hole
+keepouts. Vias that would overlap its body are omitted, and all 18 breakout
+pins are explicitly marked unconnected until a signal map is chosen. Each
+prefabricated via uses a 0.3 mm finished hole and a 0.6 mm copper pad, leaving
+0.7 mm between neighboring pads. The central chips/sensors bay and centered
+upper and lower connector openings remain free for component placement and
+outside-board access.
 The bare template preview is in
 [`examples/boosterpack-clad.tsx`](./examples/boosterpack-clad.tsx), and the
 routed example is in
@@ -77,18 +78,17 @@ The complete example routes all 36 PCB traces, including all five J_SWD pads
 and both bulk-capacitor pads, with no router or clearance errors. SWDIO, SWCLK,
 and SWD reset use three deterministic escape traces whose channels are reserved
 from the board autorouter; the other 33 traces are autorouted. The solved route
-claims 20 of the 438 prefabricated vias, at these positions in millimeters:
+claims 19 of the 289 prefabricated vias, at these positions in millimeters:
 
 ```text
-(-10.4,0) (-10.4,1.3)
-(-11.7,-2.6) (-11.7,-1.3) (-11.7,0) (-11.7,2.6)
-(-13,2.6)
-(-14.3,-2.6) (-14.3,-1.3) (-14.3,0) (-14.3,1.3)
-(-15.6,2.6)
-(-18.172,-21.55)
-(-27.55,-14.3) (-27.55,-13) (-27.55,15.6)
-(16.872,21.55) (16.872,22.85)
-(27.55,5.2) (27.55,14.3)
+(-31.6,-13.7) (-27.7,25.4)
+(-22.5,21.5) (-22.5,22.8) (-21.2,22.8)
+(-19.9,-21.5) (-19.9,21.5) (-19.9,22.8)
+(-15.395,-1.3) (-15.395,0)
+(-14.095,-1.3) (-14.095,0) (-14.095,1.3)
+(-12.795,-2.6) (-12.795,-1.3)
+(-11.495,2.6) (-10.195,1.3) (-10.195,2.6)
+(19.9,21.5)
 ```
 
 Every router-generated layer change uses one of those fixed via locations; no
