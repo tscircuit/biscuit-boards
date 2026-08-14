@@ -120,6 +120,24 @@ bun run snapshot:arduino-shield
 bun test tests/arduino-shield-clad.test.tsx
 ```
 
+## Stainless-steel stencil blank
+
+[`mechanical/biscuit-board-stencil.step`](./mechanical/biscuit-board-stencil.step)
+is a millimeter-scale AP214 STEP model for a 0.12 mm thick stainless-steel
+stencil blank. It follows the standard 75 mm x 55 mm clad outline, including
+the 2 mm corner radius and all five 2.2 mm mounting holes at the exact
+`BISCUIT_BOARD_MOUNTING_HOLE_POSITIONS` coordinates.
+
+Regenerate the checked-in model with `manifold-3d` and `manifold-to-step`:
+
+```sh
+bun run export:stencil-step mechanical/biscuit-board-stencil.step
+```
+
+The generator verifies the model bounds, expected solid volume, and five-hole
+topology before writing the file. This model is a mechanical blank and does
+not contain board-specific solder-paste apertures.
+
 ## LightBurn export
 
 Generate routed Circuit JSON and laser-ready files for any circuit entry file
