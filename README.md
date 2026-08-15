@@ -13,16 +13,14 @@ export default () => (
 );
 ```
 
-For a plain square board, `Clad40x40` provides a bare two-layer 40 mm x 40 mm
-clad without mounting holes, connectors, or prefabricated vias. Its preview and
-checked-in PCB snapshot are in
-[`examples/clad-40x40.tsx`](./examples/clad-40x40.tsx).
+Generate a Gerber ZIP without the front or back solder-mask layers with:
 
-```tsx
-import { Clad40x40 } from "@tsci/tscircuit.biscuit-boards";
-
-export default () => <Clad40x40 />;
+```sh
+bun run export:gerbers:no-solder-mask examples/breadboard-clad.tsx
 ```
+
+The archive defaults to `dist/gerbers/<board-name>.zip`. Pass a second argument
+to choose another ZIP path.
 
 `BiscuitBoard` owns the fixed 75 mm x 55 mm outline, mounting holes, and
 assignable prefabricated vias. Copper pours are intentionally disabled. Its
@@ -53,6 +51,64 @@ denser [`examples/rp2040.tsx`](./examples/rp2040.tsx) example uses the RP2040
 module from `@tsci/seveibar.common` and is also checked in with solved PCB and
 schematic snapshots.
 
+## 40 mm square clad
+
+[`Clad40x40`](./lib/Clad40x40.tsx) is a two-layer 40 mm x 40 mm clad without
+pin headers. It has one centered 2 mm mounting hole and a centered 5.2 mm
+square ring of 16 assignable prefabricated vias. The vias use 0.3 mm drills and
+0.6 mm pads at 1.3 mm pitch, matching the XIAO clad's via geometry.
+
+```tsx
+import { Clad40x40 } from "@tsci/tscircuit.biscuit-boards";
+
+export default () => <Clad40x40 />;
+```
+
+The preview and checked-in PCB snapshot are in
+[`examples/clad-40x40.tsx`](./examples/clad-40x40.tsx).
+
+```sh
+bun run build:clad-40x40
+bun run snapshot:clad-40x40
+bun test tests/clad-40x40.test.tsx
+```
+
+## Combined clad panel
+
+[`CladPanel`](./lib/CladPanel.tsx) places the breadboard clad at the upper-left
+and the Arduino UNO R3 shield at the upper-right. Two standard XIAO clads and
+two perforated XIAO clads sit below the breadboard. A Feather clad occupies the
+remaining lower-left space, replacing four XIAOs; the TI BoosterPack remains at
+the lower-right. The resulting 158 mm x 118 mm fabrication panel has 2 mm
+tab-routing gaps, 3 mm edge rails, and mouse bites enabled by default.
+
+```sh
+bun run build:clad-panel
+bun run snapshot:clad-panel
+bun test tests/clad-panel.test.tsx
+```
+
+The preview entry point is [`examples/clad-panel.tsx`](./examples/clad-panel.tsx).
+
+## Additional fabrication panels
+
+[`FourBoardCladPanel`](./lib/four-board-clad-panel.tsx) is a 2x2 grid containing
+two breadboard clads, one BoosterPack clad, and one Arduino shield clad.
+[`XiaoPairCladPanel`](./lib/xiao-pair-clad-panel.tsx) places one standard XIAO
+clad beside one perforated XIAO clad. Both use 2 mm routed gaps, 3 mm edge
+padding, 2 mm tabs, and mouse bites by default.
+
+```sh
+bun run build:four-board-clad-panel
+bun run build:xiao-pair-clad-panel
+bun run snapshot:four-board-clad-panel
+bun run snapshot:xiao-pair-clad-panel
+```
+
+Their preview entry points are
+[`examples/four-board-clad-panel.tsx`](./examples/four-board-clad-panel.tsx)
+and [`examples/xiao-pair-clad-panel.tsx`](./examples/xiao-pair-clad-panel.tsx).
+
 ## TI BoosterPack clad feasibility layout
 
 [`BoosterPackClad`](./lib/BoosterPackClad.tsx) is an initial prefabricated-via
@@ -65,13 +121,20 @@ downward-facing 2x10 male headers for the target LaunchPad mating arrangement;
 TI's generic stacking recommendation normally describes downward-facing female
 BoosterPack headers.
 
-The via field mirrors the original clad's clustered/open-edge language with 51
-candidates. The two closed 3x2 left-corner clusters keep their original
-coordinates. The upper-left and six-column bottom bands sit one standard 4 mm
-via pitch from those corner clusters and against the top and bottom edges. The
-upper-right edge is open, the 11-via right-edge rail is retained, and a 2x3
-escape cluster sits immediately to the right of the left LaunchPad header. The
-bare template preview is in
+The via field uses 289 candidates at 1.3 mm pitch. Four L-shaped corner fields
+have 4 mm-wide arms; their vertical arms are 14 mm long, and the upper and
+lower pairs leave a symmetric 39.468 mm opening in the center. A compact 5x5
+escape grid is centered at x=-12.795 mm, 2 mm left of the midpoint between
+J1/J3 and the board center. Candidates within 1 mm copper-edge clearance of a
+mounting hole are omitted. A standard upward-facing 1x18 pin header sits flush
+with the left board edge and extends to the top and bottom mounting-hole
+keepouts. Vias that would overlap its body are omitted, and all 18 breakout
+pins are explicitly marked unconnected until a signal map is chosen. Each
+prefabricated via uses a 0.3 mm finished hole and a 0.6 mm copper pad, leaving
+0.7 mm between neighboring pads. The central chips/sensors bay and centered
+upper and lower connector openings remain free for component placement and
+outside-board access.
+The bare template preview is in
 [`examples/boosterpack-clad.tsx`](./examples/boosterpack-clad.tsx), and the
 routed example is in
 [`examples/stm32c071-display-boosterpack.tsx`](./examples/stm32c071-display-boosterpack.tsx).
@@ -79,15 +142,20 @@ It places the STM32C071, display connector, both buttons, status LEDs, SWD
 connector, bulk capacitor, and the two LaunchPad headers within the outline.
 
 The complete example routes all 36 PCB traces, including all five J_SWD pads
-and both bulk-capacitor pads, with no router or clearance errors. SWDIO and
-SWCLK use two deterministic escape traces whose channels are reserved from the
-board autorouter; the other 34 traces are autorouted. The solved route claims
-10 of the 51 prefabricated vias, at these positions in millimeters:
+and both bulk-capacitor pads, with no router or clearance errors. SWDIO, SWCLK,
+and SWD reset use three deterministic escape traces whose channels are reserved
+from the board autorouter; the other 33 traces are autorouted. The solved route
+claims 19 of the 289 prefabricated vias, at these positions in millimeters:
 
 ```text
-(-18,-4) (-18,4) (-14,-4) (-14,0) (-14,4)
-(-5.5,-21.5) (-1.5,-21.5) (-5.5,21.5)
-(32.5,3.75) (32.5,11.75)
+(-31.6,-13.7) (-27.7,25.4)
+(-22.5,21.5) (-22.5,22.8) (-21.2,22.8)
+(-19.9,-21.5) (-19.9,21.5) (-19.9,22.8)
+(-15.395,-1.3) (-15.395,0)
+(-14.095,-1.3) (-14.095,0) (-14.095,1.3)
+(-12.795,-2.6) (-12.795,-1.3)
+(-11.495,2.6) (-10.195,1.3) (-10.195,2.6)
+(19.9,21.5)
 ```
 
 Every router-generated layer change uses one of those fixed via locations; no
@@ -118,18 +186,134 @@ upper-right clad hole clears the D0-D7 header. Relative placement remains
 official UNO R3 geometry for the 1x8 power header, 1x6 analog header, 1x8
 D0-D7 header, 1x10 R3 digital/AREF/I2C header, and 2x3 ICSP socket.
 
-The 58 assignable fixed vias use 4 mm pitch in the established clustered clad
-style: closed upper- and lower-left edge clusters, two inset left clusters, a
-central routing field, an ICSP escape cluster, and split right-edge rails. The
-header rows and original clad mounting holes remain open. The bare template and
-its checked-in PCB snapshot are in
+The 262 assignable fixed vias use 0.3 mm drills, 0.6 mm copper pads, and 1.3 mm
+center-to-center pitch. The clustered layout has upper- and lower-left edge
+fields, two inset left fields, a central routing field spanning -19 to -3 mm,
+and split right-edge rails. The area immediately left of ICSP, the header rows, and
+the original clad mounting holes remain open. The bare template and its
+checked-in PCB snapshot are in
 [`examples/arduino-shield-clad.tsx`](./examples/arduino-shield-clad.tsx).
+
+The routed
+[`examples/stm32c071-display-arduino-shield.tsx`](./examples/stm32c071-display-arduino-shield.tsx)
+example adds the complete STM32C071 display/button/SWD circuit. It takes 3.3 V
+and ground from the Arduino power header, while all unused Arduino and MCU pins
+are explicit no-connects. The display connector is shifted clear of the central
+via field, and the SWD connector sits above the lower shield-header row.
 
 ```sh
 bun run build:arduino-shield
+bun run build:arduino-display
 bun run snapshot:arduino-shield
+bun run snapshot:arduino-display
 bun test tests/arduino-shield-clad.test.tsx
+bun test tests/arduino-shield-display.test.tsx
 ```
+
+## Seeed Studio XIAO form-factor clad
+
+[`XiaoCladWithPinHeaders`](./lib/xiao-clad.tsx) is a two-layer 17.8 mm x 21 mm
+clad matching the classic Seeed Studio XIAO outline. It includes the standard
+two rows of seven through-hole headers at 2.54 mm pin pitch and 15.24 mm row
+spacing, and the USB end is marked `UP` on top silkscreen. Its 26 fixed
+through-vias use 0.3 mm drills and 0.6 mm pads. They form two 1 x 13 columns on a
+1.3 mm pitch, leaving the central component field open while clearing the header
+pads.
+
+The populated clad preview has a checked-in PCB snapshot:
+
+```sh
+bun run snapshot:xiao-clad-with-pin-headers
+bun test tests/xiao-clad.test.tsx
+```
+
+[`XiaoCladWithPerforatedPinHeaders`](./lib/xiao-clad-with-perforated-pin-headers.tsx)
+keeps the same XIAO
+outline and 2x7 header centers, but extends each pin into a 2.13 mm x 2 mm copper
+pad with a 0.7 mm perforation centered on the corresponding side edge. This
+creates the through-hole-plus-edge-notch geometry used by castellated XIAO
+modules while retaining compatibility with ordinary 2.54 mm pin headers.
+The bare preview and its checked-in PCB snapshot are in
+[`examples/xiao-clad-with-perforated-pin-headers.tsx`](./examples/xiao-clad-with-perforated-pin-headers.tsx).
+
+```sh
+bun run snapshot:xiao-clad-with-perforated-pin-headers
+```
+
+[`examples/xiao-stm32-usb.tsx`](./examples/xiao-stm32-usb.tsx) validates the
+via placement with a routed STM32C071 USB device. It includes a compact USB-C
+USB2 module, two 5.1 kOhm CC pulldowns, a 3.3 V LDO, input/output capacitors,
+and bottom-side MCU decoupling. All 16 PCB traces route without router or
+clearance errors, and the solution claims two fixed vias at `(-5.8, 3.7)` and
+`(5.8, -5.4)` mm. No manufactured vias are added.
+
+```sh
+bun run build:xiao-stm32-usb
+bun run snapshot:xiao-stm32-usb
+```
+
+## Adafruit Feather form-factor clad
+
+[`FeatherCladWithPinHeaders`](./lib/feather-clad.tsx) is a two-layer 22.86 mm x
+50.8 mm clad following the
+[classic Adafruit Feather specification](https://learn.adafruit.com/adafruit-feather/feather-specification).
+With USB at the top, it provides the standard 16-pin left header and 12-pin
+right header at 2.54 mm pin pitch and 20.32 mm row spacing, plus four 2.54 mm
+mounting holes. Its 53 fixed through-vias use 0.3 mm drills and 0.6 mm pads on a
+1.3 mm pitch. The left 1 x 31 and right 1 x 22 columns leave the central
+component field and the header-free upper-right region open. The USB edge is
+marked `UP` on top silkscreen.
+
+The populated clad preview has a checked-in PCB snapshot:
+
+```sh
+bun run build:feather-clad-with-pin-headers
+bun run snapshot:feather-clad-with-pin-headers
+bun test tests/feather-clad.test.tsx
+```
+
+## Breadboard clad
+
+[`BreadboardClad`](./lib/breadboard-clad.tsx) is a laser-routable 75 mm x
+55 mm plug-in prototyping board. It provides 210 individually routable female
+header sockets labeled A1 through J21, with the standard 2.54 mm terminal pitch
+and a 7.62 mm DIP channel. Four 21-pin power/header rails run along the top and
+bottom. Unlike a solderless breadboard, none of these sockets are connected in
+groups: the consuming tscircuit design defines every connection, allowing the
+corresponding copper traces to be laser cut for a particular circuit.
+
+The 162 assignable prefabricated vias have 0.3 mm holes and 0.6 mm pads. A
+single 21-via row sits between each power-header pair and its neighboring
+terminal field, while two 21-via rows run through the central DIP channel. A
+single-via-wide outer field runs beyond the headers on all four sides. The
+socket grids themselves remain clear.
+`BreadboardTerminalHeaders` exposes terminal aliases such as `A1` and `J21`;
+`BreadboardPowerHeader` exposes `COL1` through `COL21`. The bare preview is in
+[`examples/breadboard-clad.tsx`](./examples/breadboard-clad.tsx).
+
+```sh
+bun run build:breadboard-clad
+bun run snapshot:breadboard-clad:update
+bun test tests/breadboard-clad.test.tsx
+```
+
+## Stainless-steel stencil blank
+
+[`mechanical/biscuit-board-stencil.step`](./mechanical/biscuit-board-stencil.step)
+is a millimeter-scale AP214 STEP model for a 0.12 mm thick stainless-steel
+stencil blank. It follows the standard 75 mm x 55 mm clad outline, including
+the 2 mm corner radius and all five 2.2 mm mounting holes at the exact
+`BISCUIT_BOARD_MOUNTING_HOLE_POSITIONS` coordinates.
+
+Regenerate the checked-in model with `manifold-3d` and `manifold-to-step`:
+
+```sh
+bun run export:stencil-step mechanical/biscuit-board-stencil.step
+```
+
+The generator verifies the model bounds, expected solid volume, and five-hole
+topology before writing the file. This model is a mechanical blank and does
+not contain board-specific solder-paste apertures.
 
 ## LightBurn export
 

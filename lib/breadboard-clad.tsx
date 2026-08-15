@@ -1,0 +1,391 @@
+import type { AutorouterProp, ConnectorProps } from "@tscircuit/props"
+import { Fragment, type ReactNode } from "react"
+import {
+  BISCUIT_BOARD_HEIGHT,
+  BISCUIT_BOARD_MOUNTING_HOLE_POSITIONS,
+  BISCUIT_BOARD_WIDTH,
+} from "./BiscuitBoard"
+import type { BiscuitBoardAutorouterOptions } from "./biscuit-board-autorouter"
+import { createPrefabricatedViaAutorouter } from "./create-prefabricated-via-autorouter"
+
+export const BREADBOARD_CLAD_WIDTH = BISCUIT_BOARD_WIDTH
+export const BREADBOARD_CLAD_HEIGHT = BISCUIT_BOARD_HEIGHT
+export const BREADBOARD_HEADER_PITCH = 2.54
+export const BREADBOARD_COLUMN_COUNT = 21
+export const BREADBOARD_HEADER_HOLE_DIAMETER = 1
+export const BREADBOARD_HEADER_PAD_DIAMETER = 1.7
+export const BREADBOARD_CLAD_VIA_HOLE_DIAMETER = 0.3
+export const BREADBOARD_CLAD_VIA_PAD_DIAMETER = 0.6
+export const BREADBOARD_CLAD_VIA_PITCH = BREADBOARD_HEADER_PITCH
+export const BREADBOARD_CLAD_VIA_ROW_YS = [
+  -16.51,
+  -BREADBOARD_HEADER_PITCH / 2,
+  BREADBOARD_HEADER_PITCH / 2,
+  16.51,
+] as const
+export const BREADBOARD_OUTER_VIA_ROW_YS = [-24.13, 24.13] as const
+export const BREADBOARD_OUTER_VIA_COLUMN_XS = [-27.94, 27.94] as const
+export const BREADBOARD_MOUNTING_HOLE_DIAMETER = 2.2
+
+const BREADBOARD_CLAD_EDGE_CLEARANCE = 0.2
+const BREADBOARD_CLAD_EDGE_CLEARANCE_VALIDATION_TOLERANCE = 0.001
+const BREADBOARD_TERMINAL_INNER_ROW_Y = 3.81
+
+export const BREADBOARD_TERMINAL_ROW_LABELS = [
+  "A",
+  "B",
+  "C",
+  "D",
+  "E",
+  "F",
+  "G",
+  "H",
+  "I",
+  "J",
+] as const
+
+export type BreadboardTerminalRowLabel =
+  (typeof BREADBOARD_TERMINAL_ROW_LABELS)[number]
+
+export interface BreadboardHeaderPosition {
+  pin: number
+  label: string
+  column: number
+  x: number
+  y: number
+}
+
+export interface BreadboardCladViaPosition {
+  x: number
+  y: number
+}
+
+const roundCoordinate = (value: number) => Math.round(value * 1e6) / 1e6
+
+export const BREADBOARD_COLUMN_XS = Array.from(
+  { length: BREADBOARD_COLUMN_COUNT },
+  (_, index) =>
+    roundCoordinate(
+      (index - (BREADBOARD_COLUMN_COUNT - 1) / 2) * BREADBOARD_HEADER_PITCH,
+    ),
+)
+
+export const BREADBOARD_OUTER_VERTICAL_VIA_YS = Array.from(
+  { length: 18 },
+  (_, index) => roundCoordinate(-21.59 + index * BREADBOARD_CLAD_VIA_PITCH),
+)
+
+export const BREADBOARD_TERMINAL_ROW_YS = Object.fromEntries(
+  BREADBOARD_TERMINAL_ROW_LABELS.map((label, index) => {
+    const bankIndex = index < 5 ? index : index - 5
+    const y =
+      index < 5
+        ? BREADBOARD_TERMINAL_INNER_ROW_Y +
+          (4 - bankIndex) * BREADBOARD_HEADER_PITCH
+        : -BREADBOARD_TERMINAL_INNER_ROW_Y - bankIndex * BREADBOARD_HEADER_PITCH
+    return [label, roundCoordinate(y)]
+  }),
+) as Record<BreadboardTerminalRowLabel, number>
+
+/** Individually routable A1-J21 sockets in a conventional breadboard grid. */
+export const BREADBOARD_TERMINAL_HEADER_POSITIONS =
+  BREADBOARD_TERMINAL_ROW_LABELS.flatMap((row, rowIndex) =>
+    BREADBOARD_COLUMN_XS.map((x, columnIndex) => ({
+      pin: rowIndex * BREADBOARD_COLUMN_COUNT + columnIndex + 1,
+      label: `${row}${columnIndex + 1}`,
+      column: columnIndex + 1,
+      x,
+      y: BREADBOARD_TERMINAL_ROW_YS[row],
+    })),
+  ) satisfies BreadboardHeaderPosition[]
+
+export const BREADBOARD_POWER_RAILS = [
+  { id: "topPositive", label: "+", y: 21.59 },
+  { id: "topNegative", label: "-", y: 19.05 },
+  { id: "bottomPositive", label: "+", y: -19.05 },
+  { id: "bottomNegative", label: "-", y: -21.59 },
+] as const
+
+export type BreadboardPowerRailId =
+  (typeof BREADBOARD_POWER_RAILS)[number]["id"]
+
+export const BREADBOARD_POWER_HEADER_POSITIONS = BREADBOARD_POWER_RAILS.flatMap(
+  (rail) =>
+    BREADBOARD_COLUMN_XS.map((x, columnIndex) => ({
+      rail: rail.id,
+      pin: columnIndex + 1,
+      label: `${rail.id}${columnIndex + 1}`,
+      column: columnIndex + 1,
+      x,
+      y: rail.y,
+    })),
+)
+
+/**
+ * Fixed layer-change rows run through each open channel. A single-via-wide
+ * outer field also runs beyond all four sides of the pin headers while staying
+ * clear of the tooling holes and board edge.
+ */
+export const BREADBOARD_CLAD_VIA_POSITIONS = [
+  ...BREADBOARD_CLAD_VIA_ROW_YS.flatMap((y) =>
+    BREADBOARD_COLUMN_XS.map((x) => ({ x, y })),
+  ),
+  ...BREADBOARD_OUTER_VIA_ROW_YS.flatMap((y) =>
+    BREADBOARD_COLUMN_XS.map((x) => ({ x, y })),
+  ),
+  ...BREADBOARD_OUTER_VIA_COLUMN_XS.flatMap((x) =>
+    BREADBOARD_OUTER_VERTICAL_VIA_YS.map((y) => ({ x, y })),
+  ),
+] satisfies BreadboardCladViaPosition[]
+
+const terminalPinLabels = Object.fromEntries(
+  BREADBOARD_TERMINAL_HEADER_POSITIONS.map((position) => [
+    `pin${position.pin}`,
+    [position.label],
+  ]),
+)
+
+const powerPinLabels = Object.fromEntries(
+  BREADBOARD_COLUMN_XS.map((_, index) => [
+    `pin${index + 1}`,
+    [`COL${index + 1}`],
+  ]),
+)
+
+const terminalPinNames = BREADBOARD_TERMINAL_HEADER_POSITIONS.map(
+  (position) => `pin${position.pin}`,
+)
+const powerPinNames = BREADBOARD_COLUMN_XS.map((_, index) => `pin${index + 1}`)
+
+const BreadboardTerminalHeaderFootprint = () => (
+  <footprint insertionDirection="from_above">
+    {BREADBOARD_TERMINAL_HEADER_POSITIONS.map((position) => (
+      <Fragment key={`terminal-${position.label}`}>
+        {position.pin === 1 ? (
+          <platedhole
+            portHints={[`pin${position.pin}`]}
+            shape="circular_hole_with_rect_pad"
+            holeDiameter={`${BREADBOARD_HEADER_HOLE_DIAMETER}mm`}
+            rectPadWidth={`${BREADBOARD_HEADER_PAD_DIAMETER}mm`}
+            rectPadHeight={`${BREADBOARD_HEADER_PAD_DIAMETER}mm`}
+            pcbX={position.x}
+            pcbY={position.y}
+          />
+        ) : (
+          <platedhole
+            portHints={[`pin${position.pin}`]}
+            shape="circle"
+            holeDiameter={`${BREADBOARD_HEADER_HOLE_DIAMETER}mm`}
+            outerDiameter={`${BREADBOARD_HEADER_PAD_DIAMETER}mm`}
+            pcbX={position.x}
+            pcbY={position.y}
+          />
+        )}
+      </Fragment>
+    ))}
+  </footprint>
+)
+
+const BreadboardPowerHeaderFootprint = () => (
+  <footprint insertionDirection="from_above">
+    {BREADBOARD_COLUMN_XS.map((x, index) => (
+      <Fragment key={`power-pin-${index + 1}`}>
+        {index === 0 ? (
+          <platedhole
+            portHints={[`pin${index + 1}`]}
+            shape="circular_hole_with_rect_pad"
+            holeDiameter={`${BREADBOARD_HEADER_HOLE_DIAMETER}mm`}
+            rectPadWidth={`${BREADBOARD_HEADER_PAD_DIAMETER}mm`}
+            rectPadHeight={`${BREADBOARD_HEADER_PAD_DIAMETER}mm`}
+            pcbX={x}
+          />
+        ) : (
+          <platedhole
+            portHints={[`pin${index + 1}`]}
+            shape="circle"
+            holeDiameter={`${BREADBOARD_HEADER_HOLE_DIAMETER}mm`}
+            outerDiameter={`${BREADBOARD_HEADER_PAD_DIAMETER}mm`}
+            pcbX={x}
+          />
+        )}
+      </Fragment>
+    ))}
+  </footprint>
+)
+
+/** One connector exposing every terminal socket by its breadboard name. */
+export const BreadboardTerminalHeaders = (props: ConnectorProps) => (
+  <connector
+    pinLabels={terminalPinLabels}
+    manufacturerPartNumber="GENERIC-BREADBOARD-10X21-FEMALE-2.54MM"
+    footprint={<BreadboardTerminalHeaderFootprint />}
+    noSchematicRepresentation
+    {...props}
+  />
+)
+
+/** One 1x21 female socket rail; select it with a BREADBOARD_POWER_RAILS id. */
+export const BreadboardPowerHeader = ({
+  rail,
+  ...props
+}: ConnectorProps & { rail: BreadboardPowerRailId }) => (
+  <connector
+    pinLabels={powerPinLabels}
+    manufacturerPartNumber="GENERIC-BREADBOARD-1X21-FEMALE-2.54MM"
+    footprint={<BreadboardPowerHeaderFootprint />}
+    noSchematicRepresentation
+    pcbY={BREADBOARD_POWER_RAILS.find((candidate) => candidate.id === rail)!.y}
+    {...props}
+  />
+)
+
+export interface BreadboardCladProps {
+  children?: ReactNode
+  autorouter?: AutorouterProp
+  autorouterOptions?: BiscuitBoardAutorouterOptions
+  minTraceWidth?: number
+  nominalTraceWidth?: number
+  routingDisabled?: boolean
+  /** Marks all sockets NC for a bare template preview. */
+  markHeadersNoConnect?: boolean
+  /** Per-header no-connect overrides for partially populated designs. */
+  headerNoConnects?: {
+    terminals?: string[]
+    topPositive?: string[]
+    topNegative?: string[]
+    bottomPositive?: string[]
+    bottomNegative?: string[]
+  }
+}
+
+/**
+ * A laser-routable breadboard clad with individual 2.54 mm socket pads and
+ * fixed vias. Nothing is pre-connected, so every breadboard net is defined by
+ * the traces in the consuming circuit.
+ */
+export const BreadboardClad = ({
+  children,
+  autorouter,
+  autorouterOptions,
+  minTraceWidth,
+  nominalTraceWidth = 0.3,
+  routingDisabled = false,
+  markHeadersNoConnect = false,
+  headerNoConnects,
+}: BreadboardCladProps) => (
+  <board
+    name="BreadboardClad"
+    title="Laser-routable breadboard clad with prefabricated vias"
+    width={`${BREADBOARD_CLAD_WIDTH}mm`}
+    height={`${BREADBOARD_CLAD_HEIGHT}mm`}
+    borderRadius="2mm"
+    layers={2}
+    minTraceWidth={`${minTraceWidth ?? 0.15}mm`}
+    minBoardEdgeClearance={`${BREADBOARD_CLAD_EDGE_CLEARANCE - BREADBOARD_CLAD_EDGE_CLEARANCE_VALIDATION_TOLERANCE}mm`}
+    minViaHoleDiameter="0.2mm"
+    minViaPadDiameter="0.4mm"
+    autorouter={
+      autorouter ??
+      createPrefabricatedViaAutorouter({
+        width: BREADBOARD_CLAD_WIDTH,
+        height: BREADBOARD_CLAD_HEIGHT,
+        edgeClearance: BREADBOARD_CLAD_EDGE_CLEARANCE,
+        options: autorouterOptions,
+        minimumTraceWidth: minTraceWidth,
+        nominalTraceWidth,
+      })
+    }
+    routingDisabled={routingDisabled}
+  >
+    <net name="GND" isGroundNet />
+
+    {BISCUIT_BOARD_MOUNTING_HOLE_POSITIONS.map((hole) => (
+      <Fragment key={`breadboard-mounting-hole-${hole.x}-${hole.y}`}>
+        <hole
+          pcbX={hole.x}
+          pcbY={hole.y}
+          diameter={`${BREADBOARD_MOUNTING_HOLE_DIAMETER}mm`}
+        />
+      </Fragment>
+    ))}
+
+    <BreadboardTerminalHeaders
+      name="J_TERMINALS"
+      noConnect={
+        headerNoConnects?.terminals ??
+        (markHeadersNoConnect ? terminalPinNames : undefined)
+      }
+    />
+
+    {BREADBOARD_POWER_RAILS.map((rail) => (
+      <Fragment key={rail.id}>
+        <BreadboardPowerHeader
+          rail={rail.id}
+          name={`J_${rail.id.replace(/([A-Z])/g, "_$1").toUpperCase()}`}
+          noConnect={
+            headerNoConnects?.[rail.id] ??
+            (markHeadersNoConnect ? powerPinNames : undefined)
+          }
+        />
+      </Fragment>
+    ))}
+
+    {[1, 5, 10, 15, 20, BREADBOARD_COLUMN_COUNT].map((column) => (
+      <Fragment key={`column-label-${column}`}>
+        <silkscreentext
+          text={`${column}`}
+          pcbX={BREADBOARD_COLUMN_XS[column - 1]}
+          pcbY={16.5}
+          fontSize="0.55mm"
+        />
+      </Fragment>
+    ))}
+
+    {BREADBOARD_CLAD_VIA_POSITIONS.map((via) => (
+      <Fragment key={`breadboard-prefab-via-${via.x}-${via.y}`}>
+        <via
+          netIsAssignable
+          pcbX={via.x}
+          pcbY={via.y}
+          fromLayer="top"
+          toLayer="bottom"
+          holeDiameter={`${BREADBOARD_CLAD_VIA_HOLE_DIAMETER}mm`}
+          outerDiameter={`${BREADBOARD_CLAD_VIA_PAD_DIAMETER}mm`}
+        />
+      </Fragment>
+    ))}
+
+    <silkscreentext
+      text="BREADBOARD CLAD"
+      pcbX={33.5}
+      pcbY={0}
+      pcbRotation={90}
+      fontSize="0.7mm"
+    />
+
+    <pcbnotedimension
+      from={{
+        x: -BREADBOARD_CLAD_WIDTH / 2,
+        y: BREADBOARD_CLAD_HEIGHT / 2 + 2.5,
+      }}
+      to={{
+        x: BREADBOARD_CLAD_WIDTH / 2,
+        y: BREADBOARD_CLAD_HEIGHT / 2 + 2.5,
+      }}
+      text={`${BREADBOARD_CLAD_WIDTH}mm`}
+    />
+    <pcbnotedimension
+      from={{
+        x: BREADBOARD_CLAD_WIDTH / 2 + 2.5,
+        y: -BREADBOARD_CLAD_HEIGHT / 2,
+      }}
+      to={{
+        x: BREADBOARD_CLAD_WIDTH / 2 + 2.5,
+        y: BREADBOARD_CLAD_HEIGHT / 2,
+      }}
+      text={`${BREADBOARD_CLAD_HEIGHT}mm`}
+    />
+
+    {children}
+  </board>
+)

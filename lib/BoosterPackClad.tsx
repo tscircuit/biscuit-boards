@@ -17,9 +17,36 @@ export const BOOSTERPACK_CLAD_HEIGHT = BISCUIT_BOARD_HEIGHT
 export const BOOSTERPACK_HEADER_PITCH = 2.54
 export const BOOSTERPACK_HEADER_CENTER_X = 21.59
 export const BOOSTERPACK_HEADER_CENTER_Y = 1.27
+export const BOOSTERPACK_CLAD_VIA_OUTER_DIAMETER = 0.6
+export const BOOSTERPACK_CLAD_VIA_PITCH = 1.3
+export const BOOSTERPACK_CLAD_MOUNTING_HOLE_VIA_CLEARANCE = 1
+export const BOOSTERPACK_CORNER_VERTICAL_ARM_INNER_Y = 11.5
 
 const BOOSTERPACK_CLAD_EDGE_CLEARANCE = 0.2
 const BOOSTERPACK_CLAD_EDGE_CLEARANCE_VALIDATION_TOLERANCE = 0.001
+const BOOSTERPACK_MOUNTING_HOLE_RADIUS = 1.1
+export const BOOSTERPACK_EDGE_HEADER_CENTER_X =
+  BOOSTERPACK_CLAD_WIDTH / 2 - BOOSTERPACK_HEADER_PITCH / 2
+const BOOSTERPACK_EDGE_HEADER_CLEARANCE_HALF_HEIGHT =
+  Math.min(
+    ...BISCUIT_BOARD_MOUNTING_HOLE_POSITIONS.map((hole) => Math.abs(hole.y)),
+  ) -
+  BOOSTERPACK_MOUNTING_HOLE_RADIUS -
+  BOOSTERPACK_CLAD_MOUNTING_HOLE_VIA_CLEARANCE
+export const BOOSTERPACK_EDGE_HEADER_PIN_COUNT = Math.floor(
+  (2 * BOOSTERPACK_EDGE_HEADER_CLEARANCE_HALF_HEIGHT) /
+    BOOSTERPACK_HEADER_PITCH,
+)
+const BOOSTERPACK_EDGE_HEADER_HALF_HEIGHT =
+  (BOOSTERPACK_EDGE_HEADER_PIN_COUNT * BOOSTERPACK_HEADER_PITCH) / 2
+export const BOOSTERPACK_MIDDLE_VIA_CLUSTER_CENTER_X =
+  -BOOSTERPACK_HEADER_CENTER_X / 2 - 2
+export const BOOSTERPACK_MIDDLE_VIA_CLUSTER_WIDTH = 6.3
+export const BOOSTERPACK_MIDDLE_VIA_CLUSTER_HEIGHT = 5.6
+export const BOOSTERPACK_EDGE_BAND_OUTER_X = BOOSTERPACK_CLAD_WIDTH / 2 - 2
+export const BOOSTERPACK_EDGE_BAND_CENTER_GAP =
+  (BOOSTERPACK_CLAD_WIDTH / 2 - 14.5) * 1.1 * 1.3 * 1.2
+const BOOSTERPACK_EDGE_BAND_INNER_X = BOOSTERPACK_EDGE_BAND_CENTER_GAP / 2
 
 export interface BoosterPackCladViaPosition {
   x: number
@@ -32,43 +59,320 @@ interface ViaCandidateZone {
   minY: number
   maxY: number
   spacing: number
+  originX?: number
+  originY?: number
 }
 
-const rangeInclusive = (start: number, end: number, increment: number) =>
-  Array.from(
-    { length: Math.max(0, Math.floor((end - start) / increment) + 1) },
-    (_, index) => start + index * increment,
+export interface BoosterPackCladPlacementZone {
+  name: string
+  purpose: "connector" | "chips-and-sensors" | "interface"
+  minX: number
+  maxX: number
+  minY: number
+  maxY: number
+}
+
+const roundCoordinate = (value: number) => Math.round(value * 1e6) / 1e6
+
+const maximallyPackedRange = (start: number, end: number, pitch: number) => {
+  const intervalCount = Math.floor((end - start) / pitch)
+  if (intervalCount <= 0) return [(start + end) / 2]
+
+  const populatedStart = (start + end - intervalCount * pitch) / 2
+  return Array.from({ length: intervalCount + 1 }, (_, index) =>
+    roundCoordinate(populatedStart + index * pitch),
   )
+}
+
+const anchoredPitchedRange = (
+  start: number,
+  end: number,
+  pitch: number,
+  origin: number,
+) => {
+  const firstIndex = Math.ceil((start - origin) / pitch - 1e-9)
+  const lastIndex = Math.floor((end - origin) / pitch + 1e-9)
+  return Array.from(
+    { length: Math.max(0, lastIndex - firstIndex + 1) },
+    (_, index) => roundCoordinate(origin + (firstIndex + index) * pitch),
+  )
+}
+
+const createViaAxis = (
+  start: number,
+  end: number,
+  pitch: number,
+  origin?: number,
+) =>
+  origin === undefined
+    ? maximallyPackedRange(start, end, pitch)
+    : anchoredPitchedRange(start, end, pitch, origin)
 
 const createViaZone = (zone: ViaCandidateZone): BoosterPackCladViaPosition[] =>
-  rangeInclusive(zone.minX, zone.maxX, zone.spacing).flatMap((x) =>
-    rangeInclusive(zone.minY, zone.maxY, zone.spacing).map((y) => ({ x, y })),
+  createViaAxis(zone.minX, zone.maxX, zone.spacing, zone.originX).flatMap((x) =>
+    createViaAxis(zone.minY, zone.maxY, zone.spacing, zone.originY).map(
+      (y) => ({
+        x,
+        y,
+      }),
+    ),
   )
 
 /**
- * Outer via pattern derived from BiscuitBoard's clustered layout. The two
- * 3-by-2 corner blocks remain at the original clad coordinates. The other
- * dual-row clusters hug the left side of the top and bottom edges at the same
- * 4 mm pitch from the corner blocks. The top-right edge remains open, while a
- * right-side via rail and a compact 2-by-3 escape cluster beside the left
- * LaunchPad header provide vertical routing channels.
+ * Four L-shaped corner fields keep the center and the middle of every board
+ * edge open for chips, sensors, controls, and connectors.
  */
 export const BOOSTERPACK_CLAD_VIA_CANDIDATE_ZONES = [
-  // Closed 3-by-2 clusters outside the left header.
-  { minX: -33.5, maxX: -25.5, minY: 17.5, maxY: 21.5, spacing: 4 },
-  { minX: -33.5, maxX: -25.5, minY: -21.5, maxY: -17.5, spacing: 4 },
-  // Edge bands continue one standard 4 mm pitch from the corner clusters.
-  { minX: -21.5, maxX: -5.5, minY: 21.5, maxY: 25.5, spacing: 4 },
-  { minX: -21.5, maxX: -1.5, minY: -25.5, maxY: -21.5, spacing: 4 },
-  // Escape cluster immediately to the right of the left LaunchPad header.
-  { minX: -18, maxX: -14, minY: -4, maxY: 4, spacing: 4 },
-  // Open right-edge rail.
-  { minX: 32.5, maxX: 32.5, minY: -20.25, maxY: 19.75, spacing: 4 },
+  // Compact routing cluster halfway from J1/J3 to the board center.
+  {
+    minX:
+      BOOSTERPACK_MIDDLE_VIA_CLUSTER_CENTER_X -
+      BOOSTERPACK_MIDDLE_VIA_CLUSTER_WIDTH / 2,
+    maxX:
+      BOOSTERPACK_MIDDLE_VIA_CLUSTER_CENTER_X +
+      BOOSTERPACK_MIDDLE_VIA_CLUSTER_WIDTH / 2,
+    minY: -BOOSTERPACK_MIDDLE_VIA_CLUSTER_HEIGHT / 2,
+    maxY: BOOSTERPACK_MIDDLE_VIA_CLUSTER_HEIGHT / 2,
+    spacing: BOOSTERPACK_CLAD_VIA_PITCH,
+  },
+  // Upper-left horizontal and vertical arms share one anchored lattice.
+  {
+    minX: -BOOSTERPACK_EDGE_BAND_OUTER_X,
+    maxX: -BOOSTERPACK_EDGE_BAND_INNER_X,
+    minY: 21.5,
+    maxY: 25.5,
+    spacing: BOOSTERPACK_CLAD_VIA_PITCH,
+    originX: -BOOSTERPACK_EDGE_BAND_OUTER_X,
+    originY: 21.5,
+  },
+  {
+    minX: -BOOSTERPACK_EDGE_BAND_OUTER_X,
+    maxX: -31.5,
+    minY: BOOSTERPACK_CORNER_VERTICAL_ARM_INNER_Y,
+    maxY: 25.5,
+    spacing: BOOSTERPACK_CLAD_VIA_PITCH,
+    originX: -BOOSTERPACK_EDGE_BAND_OUTER_X,
+    originY: 21.5,
+  },
+  // Upper-right corner.
+  {
+    minX: BOOSTERPACK_EDGE_BAND_INNER_X,
+    maxX: BOOSTERPACK_EDGE_BAND_OUTER_X,
+    minY: 21.5,
+    maxY: 25.5,
+    spacing: BOOSTERPACK_CLAD_VIA_PITCH,
+    originX: BOOSTERPACK_EDGE_BAND_OUTER_X,
+    originY: 21.5,
+  },
+  {
+    minX: 31.5,
+    maxX: BOOSTERPACK_EDGE_BAND_OUTER_X,
+    minY: BOOSTERPACK_CORNER_VERTICAL_ARM_INNER_Y,
+    maxY: 25.5,
+    spacing: BOOSTERPACK_CLAD_VIA_PITCH,
+    originX: BOOSTERPACK_EDGE_BAND_OUTER_X,
+    originY: 21.5,
+  },
+  // Lower-left corner.
+  {
+    minX: -BOOSTERPACK_EDGE_BAND_OUTER_X,
+    maxX: -BOOSTERPACK_EDGE_BAND_INNER_X,
+    minY: -25.5,
+    maxY: -21.5,
+    spacing: BOOSTERPACK_CLAD_VIA_PITCH,
+    originX: -BOOSTERPACK_EDGE_BAND_OUTER_X,
+    originY: -21.5,
+  },
+  {
+    minX: -BOOSTERPACK_EDGE_BAND_OUTER_X,
+    maxX: -31.5,
+    minY: -25.5,
+    maxY: -BOOSTERPACK_CORNER_VERTICAL_ARM_INNER_Y,
+    spacing: BOOSTERPACK_CLAD_VIA_PITCH,
+    originX: -BOOSTERPACK_EDGE_BAND_OUTER_X,
+    originY: -21.5,
+  },
+  // Lower-right corner.
+  {
+    minX: BOOSTERPACK_EDGE_BAND_INNER_X,
+    maxX: BOOSTERPACK_EDGE_BAND_OUTER_X,
+    minY: -25.5,
+    maxY: -21.5,
+    spacing: BOOSTERPACK_CLAD_VIA_PITCH,
+    originX: BOOSTERPACK_EDGE_BAND_OUTER_X,
+    originY: -21.5,
+  },
+  {
+    minX: 31.5,
+    maxX: BOOSTERPACK_EDGE_BAND_OUTER_X,
+    minY: -25.5,
+    maxY: -BOOSTERPACK_CORNER_VERTICAL_ARM_INNER_Y,
+    spacing: BOOSTERPACK_CLAD_VIA_PITCH,
+    originX: BOOSTERPACK_EDGE_BAND_OUTER_X,
+    originY: -21.5,
+  },
 ] as const satisfies readonly ViaCandidateZone[]
 
-/** The candidate zones are placed directly in known open routing channels. */
-export const BOOSTERPACK_CLAD_VIA_EXCLUSION_ZONES: readonly ViaCandidateZone[] =
-  []
+/**
+ * Reusable placement bays kept clear of prefabricated via pads. The central
+ * bays cover controls, chips, sensors, debug, and power circuitry. Centered
+ * openings along every edge leave room for connectors whose bodies or cables
+ * must reach beyond the board outline.
+ */
+export const BOOSTERPACK_CLAD_PLACEMENT_ZONES = [
+  {
+    name: "left-edge-pin-header",
+    purpose: "connector",
+    minX: -BOOSTERPACK_CLAD_WIDTH / 2,
+    maxX: -BOOSTERPACK_CLAD_WIDTH / 2 + BOOSTERPACK_HEADER_PITCH,
+    minY: -BOOSTERPACK_EDGE_HEADER_HALF_HEIGHT,
+    maxY: BOOSTERPACK_EDGE_HEADER_HALF_HEIGHT,
+  },
+  {
+    name: "left-launchpad-header",
+    purpose: "connector",
+    minX: -24.5,
+    maxX: -18.5,
+    minY: -12,
+    maxY: 14.5,
+  },
+  {
+    name: "right-launchpad-header",
+    purpose: "connector",
+    minX: 18.5,
+    maxX: 24.5,
+    minY: -12,
+    maxY: 14.5,
+  },
+  {
+    name: "upper-interface",
+    purpose: "interface",
+    minX: -17.5,
+    maxX: 17.5,
+    minY: 11.5,
+    maxY: 19.5,
+  },
+  {
+    name: "central-chips-and-sensors",
+    purpose: "chips-and-sensors",
+    minX: -7.5,
+    maxX: 7.5,
+    minY: -11.5,
+    maxY: 11.5,
+  },
+  {
+    name: "left-upper-interface",
+    purpose: "interface",
+    minX: -17.5,
+    maxX: -7.5,
+    minY: 4.75,
+    maxY: 11.5,
+  },
+  {
+    name: "left-lower-interface",
+    purpose: "interface",
+    minX: -17.5,
+    maxX: -7.5,
+    minY: -11.5,
+    maxY: -4.75,
+  },
+  {
+    name: "right-upper-interface",
+    purpose: "interface",
+    minX: 7.5,
+    maxX: 17.5,
+    minY: 4.75,
+    maxY: 11.5,
+  },
+  {
+    name: "right-lower-interface",
+    purpose: "interface",
+    minX: 7.5,
+    maxX: 17.5,
+    minY: -11.5,
+    maxY: -4.75,
+  },
+  {
+    name: "lower-interface",
+    purpose: "interface",
+    minX: -17.5,
+    maxX: 17.5,
+    minY: -19.5,
+    maxY: -11.5,
+  },
+  {
+    name: "upper-edge-connector",
+    purpose: "connector",
+    minX: -10.5,
+    maxX: 10.5,
+    minY: 20.5,
+    maxY: 26.5,
+  },
+  {
+    name: "lower-edge-connector",
+    purpose: "connector",
+    minX: -10.5,
+    maxX: 10.5,
+    minY: -26.5,
+    maxY: -20.5,
+  },
+] as const satisfies readonly BoosterPackCladPlacementZone[]
+
+/** Keep vias clear of mounting-hole pads and the left-edge header body. */
+export const BOOSTERPACK_CLAD_VIA_EXCLUSION_ZONES = [
+  {
+    minX: -36.7,
+    maxX: -33.3,
+    minY: 23.3,
+    maxY: 26.7,
+    spacing: BOOSTERPACK_CLAD_VIA_PITCH,
+  },
+  {
+    minX: -36.7,
+    maxX: -33.3,
+    minY: -26.7,
+    maxY: -23.3,
+    spacing: BOOSTERPACK_CLAD_VIA_PITCH,
+  },
+  {
+    minX: 33.3,
+    maxX: 36.7,
+    minY: 23.3,
+    maxY: 26.7,
+    spacing: BOOSTERPACK_CLAD_VIA_PITCH,
+  },
+  {
+    minX: 29.6,
+    maxX: 32.4,
+    minY: 23.6,
+    maxY: 26.4,
+    spacing: BOOSTERPACK_CLAD_VIA_PITCH,
+  },
+  {
+    minX: 33.3,
+    maxX: 36.7,
+    minY: -26.7,
+    maxY: -23.3,
+    spacing: BOOSTERPACK_CLAD_VIA_PITCH,
+  },
+  {
+    minX:
+      -BOOSTERPACK_EDGE_HEADER_CENTER_X -
+      BOOSTERPACK_HEADER_PITCH / 2 -
+      BOOSTERPACK_CLAD_VIA_OUTER_DIAMETER / 2,
+    maxX:
+      -BOOSTERPACK_EDGE_HEADER_CENTER_X +
+      BOOSTERPACK_HEADER_PITCH / 2 +
+      BOOSTERPACK_CLAD_VIA_OUTER_DIAMETER / 2,
+    minY:
+      -BOOSTERPACK_EDGE_HEADER_HALF_HEIGHT -
+      BOOSTERPACK_CLAD_VIA_OUTER_DIAMETER / 2,
+    maxY:
+      BOOSTERPACK_EDGE_HEADER_HALF_HEIGHT +
+      BOOSTERPACK_CLAD_VIA_OUTER_DIAMETER / 2,
+    spacing: BOOSTERPACK_CLAD_VIA_PITCH,
+  },
+] as const satisfies readonly ViaCandidateZone[]
 
 const pointKey = (point: BoosterPackCladViaPosition) =>
   `${point.x.toFixed(3)},${point.y.toFixed(3)}`
@@ -80,6 +384,13 @@ const isInsideExclusion = (point: BoosterPackCladViaPosition) =>
       point.x <= zone.maxX &&
       point.y >= zone.minY &&
       point.y <= zone.maxY,
+  ) ||
+  BISCUIT_BOARD_MOUNTING_HOLE_POSITIONS.some(
+    (hole) =>
+      Math.hypot(point.x - hole.x, point.y - hole.y) <
+      1.1 +
+        BOOSTERPACK_CLAD_VIA_OUTER_DIAMETER / 2 +
+        BOOSTERPACK_CLAD_MOUNTING_HOLE_VIA_CLEARANCE,
   )
 
 export const BOOSTERPACK_CLAD_VIA_POSITIONS = Array.from(
@@ -144,8 +455,12 @@ const rightHeaderNoConnect = Array.from({ length: 20 }, (_, index) => index + 1)
   .filter((pin) => pin !== 2)
   .map((pin) => `pin${pin}`)
 
-const DualMaleHeaderFootprint = () => (
-  <footprint insertionDirection="from_below">
+const DualMaleHeaderFootprint = ({
+  insertionDirection = "from_below",
+}: {
+  insertionDirection?: "from_above" | "from_below"
+}) => (
+  <footprint insertionDirection={insertionDirection}>
     {Array.from({ length: 10 }, (_, row) => {
       const y = (4.5 - row) * BOOSTERPACK_HEADER_PITCH
       return (
@@ -190,6 +505,45 @@ const DualMaleHeaderFootprint = () => (
   </footprint>
 )
 
+const SingleMaleHeaderFootprint = ({ pinCount }: { pinCount: number }) => (
+  <footprint insertionDirection="from_above">
+    {Array.from({ length: pinCount }, (_, row) => {
+      const pin = row + 1
+      const y = ((pinCount - 1) / 2 - row) * BOOSTERPACK_HEADER_PITCH
+      return (
+        <Fragment key={`pin-${pin}`}>
+          {pin === 1 ? (
+            <platedhole
+              portHints={[`pin${pin}`]}
+              shape="circular_hole_with_rect_pad"
+              holeDiameter="1.02mm"
+              rectPadWidth="1.7mm"
+              rectPadHeight="1.7mm"
+              pcbY={y}
+            />
+          ) : (
+            <platedhole
+              portHints={[`pin${pin}`]}
+              shape="circle"
+              holeDiameter="1.02mm"
+              outerDiameter="1.7mm"
+              pcbY={y}
+            />
+          )}
+        </Fragment>
+      )
+    })}
+    <silkscreenrect
+      width="2.54mm"
+      height={`${pinCount * BOOSTERPACK_HEADER_PITCH}mm`}
+    />
+    <silkscreencircle
+      pcbY={((pinCount - 1) / 2) * BOOSTERPACK_HEADER_PITCH}
+      radius="0.3mm"
+    />
+  </footprint>
+)
+
 export const BoosterPackLeftHeader = (props: ConnectorProps) => (
   <connector
     pinLabels={leftHeaderPins}
@@ -207,6 +561,30 @@ export const BoosterPackRightHeader = (props: ConnectorProps) => (
     manufacturerPartNumber="GENERIC-2X10-MALE-2.54MM-DOWN"
     footprint={<DualMaleHeaderFootprint />}
     noConnect={rightHeaderNoConnect}
+    noSchematicRepresentation
+    {...props}
+  />
+)
+
+const edgeHeaderPins = Object.fromEntries(
+  Array.from({ length: BOOSTERPACK_EDGE_HEADER_PIN_COUNT }, (_, index) => [
+    `pin${index + 1}`,
+    [`EDGE_${index + 1}`],
+  ]),
+)
+const edgeHeaderNoConnect = Array.from(
+  { length: BOOSTERPACK_EDGE_HEADER_PIN_COUNT },
+  (_, index) => `pin${index + 1}`,
+)
+
+export const BoosterPackEdgePinHeader = (props: ConnectorProps) => (
+  <connector
+    pinLabels={edgeHeaderPins}
+    manufacturerPartNumber={`GENERIC-1X${BOOSTERPACK_EDGE_HEADER_PIN_COUNT}-MALE-2.54MM-UP`}
+    footprint={
+      <SingleMaleHeaderFootprint pinCount={BOOSTERPACK_EDGE_HEADER_PIN_COUNT} />
+    }
+    noConnect={edgeHeaderNoConnect}
     noSchematicRepresentation
     {...props}
   />
@@ -275,7 +653,11 @@ export const BoosterPackClad = ({
       pcbX={BOOSTERPACK_HEADER_CENTER_X}
       pcbY={BOOSTERPACK_HEADER_CENTER_Y}
     />
-
+    <BoosterPackEdgePinHeader
+      name="J_EDGE_LEFT"
+      pcbX={-BOOSTERPACK_EDGE_HEADER_CENTER_X}
+      pcbY={0}
+    />
     <silkscreentext
       text="LAUNCHPAD SIDE"
       pcbX={0}
@@ -284,9 +666,17 @@ export const BoosterPackClad = ({
     />
     <silkscreentext text="J1/J3" pcbX={-21.59} pcbY={14.9} fontSize="0.7mm" />
     <silkscreentext text="J4/J2" pcbX={21.59} pcbY={14.9} fontSize="0.7mm" />
-
+    <silkscreentext
+      text="EDGE LEFT"
+      pcbX={-BOOSTERPACK_EDGE_HEADER_CENTER_X + 3.5}
+      pcbY={0}
+      pcbRotation={90}
+      fontSize="0.65mm"
+    />
     {BOOSTERPACK_CLAD_VIA_CANDIDATE_ZONES.map((zone) => (
-      <Fragment key={`candidate-zone-${zone.minX}-${zone.minY}`}>
+      <Fragment
+        key={`candidate-zone-${zone.minX}-${zone.maxX}-${zone.minY}-${zone.maxY}`}
+      >
         <pcbnoterect
           color="blue"
           width={Math.max(0.2, zone.maxX - zone.minX)}
@@ -306,8 +696,8 @@ export const BoosterPackClad = ({
           pcbY={via.y}
           fromLayer="top"
           toLayer="bottom"
-          holeDiameter="0.8mm"
-          outerDiameter="1.2mm"
+          holeDiameter="0.3mm"
+          outerDiameter="0.6mm"
         />
       </Fragment>
     ))}

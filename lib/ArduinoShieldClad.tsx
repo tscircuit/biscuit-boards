@@ -46,6 +46,9 @@ export const ARDUINO_SHIELD_HEADER_PLACEMENTS = {
 export const ARDUINO_SHIELD_MOUNTING_HOLE_POSITIONS =
   BISCUIT_BOARD_MOUNTING_HOLE_POSITIONS
 export const ARDUINO_SHIELD_MOUNTING_HOLE_DIAMETER = 2.2
+export const ARDUINO_SHIELD_CLAD_VIA_HOLE_DIAMETER = 0.3
+export const ARDUINO_SHIELD_CLAD_VIA_OUTER_DIAMETER = 0.6
+export const ARDUINO_SHIELD_CLAD_VIA_SPACING = 1.3
 
 const ARDUINO_SHIELD_EDGE_CLEARANCE = 0.2
 const ARDUINO_SHIELD_EDGE_CLEARANCE_VALIDATION_TOLERANCE = 0.001
@@ -66,7 +69,7 @@ interface ViaCandidateZone {
 const rangeInclusive = (start: number, end: number, increment: number) =>
   Array.from(
     { length: Math.max(0, Math.floor((end - start) / increment) + 1) },
-    (_, index) => start + index * increment,
+    (_, index) => Math.round((start + index * increment) * 1e6) / 1e6,
   )
 
 const createViaZone = (
@@ -78,18 +81,59 @@ const createViaZone = (
 
 /**
  * Clustered fixed-via field arranged around the UNO shield connectors. The
- * main header rows remain clear, the ICSP socket has a nearby escape cluster,
- * and the right side is split around the two UNO mounting/ICSP regions.
+ * main header rows remain clear and the right side is split around the two UNO
+ * mounting/ICSP regions.
  */
 export const ARDUINO_SHIELD_CLAD_VIA_CANDIDATE_ZONES = [
-  { minX: -33.5, maxX: -25.5, minY: 17.5, maxY: 21.5, spacing: 4 },
-  { minX: -33.5, maxX: -25.5, minY: -21.5, maxY: -17.5, spacing: 4 },
-  { minX: -21.5, maxX: -13.5, minY: 13.5, maxY: 17.5, spacing: 4 },
-  { minX: -21.5, maxX: -13.5, minY: -17.5, maxY: -13.5, spacing: 4 },
-  { minX: -8, maxX: 8, minY: -6, maxY: 6, spacing: 4 },
-  { minX: 18, maxX: 22, minY: -4, maxY: 4, spacing: 4 },
-  { minX: 34.5, maxX: 34.5, minY: -19.5, maxY: -7.5, spacing: 4 },
-  { minX: 34.5, maxX: 34.5, minY: 7.5, maxY: 19.5, spacing: 4 },
+  {
+    minX: -33.5,
+    maxX: -25.5,
+    minY: 17.5,
+    maxY: 21.5,
+    spacing: ARDUINO_SHIELD_CLAD_VIA_SPACING,
+  },
+  {
+    minX: -33.5,
+    maxX: -25.5,
+    minY: -21.5,
+    maxY: -17.5,
+    spacing: ARDUINO_SHIELD_CLAD_VIA_SPACING,
+  },
+  {
+    minX: -21.5,
+    maxX: -13.5,
+    minY: 13.5,
+    maxY: 17.5,
+    spacing: ARDUINO_SHIELD_CLAD_VIA_SPACING,
+  },
+  {
+    minX: -21.5,
+    maxX: -13.5,
+    minY: -17.5,
+    maxY: -13.5,
+    spacing: ARDUINO_SHIELD_CLAD_VIA_SPACING,
+  },
+  {
+    minX: -19,
+    maxX: -3,
+    minY: -6,
+    maxY: 6,
+    spacing: ARDUINO_SHIELD_CLAD_VIA_SPACING,
+  },
+  {
+    minX: 34.5,
+    maxX: 34.5,
+    minY: -19.5,
+    maxY: -7.5,
+    spacing: ARDUINO_SHIELD_CLAD_VIA_SPACING,
+  },
+  {
+    minX: 34.5,
+    maxX: 34.5,
+    minY: 7.5,
+    maxY: 19.5,
+    spacing: ARDUINO_SHIELD_CLAD_VIA_SPACING,
+  },
 ] as const satisfies readonly ViaCandidateZone[]
 
 const pointKey = (point: ArduinoShieldCladViaPosition) =>
@@ -288,6 +332,14 @@ export interface ArduinoShieldCladProps {
   routingDisabled?: boolean
   /** Marks every shield header pin NC for bare-template previews only. */
   markHeadersNoConnect?: boolean
+  /** Overrides the no-connect pins for routed shield applications. */
+  headerNoConnects?: {
+    power?: string[]
+    analog?: string[]
+    digital0To7?: string[]
+    digital8To13?: string[]
+    icsp?: string[]
+  }
 }
 
 /** A BiscuitBoard-sized clad with the official Arduino UNO R3 connector grid. */
@@ -299,6 +351,7 @@ export const ArduinoShieldClad = ({
   nominalTraceWidth = 0.3,
   routingDisabled = false,
   markHeadersNoConnect = false,
+  headerNoConnects,
 }: ArduinoShieldCladProps) => (
   <board
     name="ArduinoShieldClad"
@@ -338,33 +391,48 @@ export const ArduinoShieldClad = ({
 
     <ArduinoShieldPowerHeader
       name="J_POWER"
-      noConnect={markHeadersNoConnect ? pinNames(8) : ["pin1"]}
+      noConnect={
+        headerNoConnects?.power ??
+        (markHeadersNoConnect ? pinNames(8) : ["pin1"])
+      }
       pcbX={ARDUINO_SHIELD_HEADER_PLACEMENTS.power.x}
       pcbY={ARDUINO_SHIELD_HEADER_PLACEMENTS.power.y}
     />
     <ArduinoShieldAnalogHeader
       name="J_ANALOG"
-      noConnect={markHeadersNoConnect ? pinNames(6) : undefined}
+      noConnect={
+        headerNoConnects?.analog ??
+        (markHeadersNoConnect ? pinNames(6) : undefined)
+      }
       pcbX={ARDUINO_SHIELD_HEADER_PLACEMENTS.analog.x}
       pcbY={ARDUINO_SHIELD_HEADER_PLACEMENTS.analog.y}
     />
     <ArduinoShieldDigital0To7Header
       name="J_DIGITAL_0_7"
-      noConnect={markHeadersNoConnect ? pinNames(8) : undefined}
+      noConnect={
+        headerNoConnects?.digital0To7 ??
+        (markHeadersNoConnect ? pinNames(8) : undefined)
+      }
       pcbX={ARDUINO_SHIELD_HEADER_PLACEMENTS.digital0To7.x}
       pcbY={ARDUINO_SHIELD_HEADER_PLACEMENTS.digital0To7.y}
       pcbRotation={ARDUINO_SHIELD_HEADER_PLACEMENTS.digital0To7.rotation}
     />
     <ArduinoShieldDigital8To13Header
       name="J_DIGITAL_8_13"
-      noConnect={markHeadersNoConnect ? pinNames(10) : undefined}
+      noConnect={
+        headerNoConnects?.digital8To13 ??
+        (markHeadersNoConnect ? pinNames(10) : undefined)
+      }
       pcbX={ARDUINO_SHIELD_HEADER_PLACEMENTS.digital8To13.x}
       pcbY={ARDUINO_SHIELD_HEADER_PLACEMENTS.digital8To13.y}
       pcbRotation={ARDUINO_SHIELD_HEADER_PLACEMENTS.digital8To13.rotation}
     />
     <ArduinoShieldIcspSocket
       name="J_ICSP"
-      noConnect={markHeadersNoConnect ? pinNames(6) : undefined}
+      noConnect={
+        headerNoConnects?.icsp ??
+        (markHeadersNoConnect ? pinNames(6) : undefined)
+      }
       pcbX={ARDUINO_SHIELD_HEADER_PLACEMENTS.icsp.x}
       pcbY={ARDUINO_SHIELD_HEADER_PLACEMENTS.icsp.y}
       pcbRotation={ARDUINO_SHIELD_HEADER_PLACEMENTS.icsp.rotation}
@@ -428,8 +496,8 @@ export const ArduinoShieldClad = ({
           pcbY={via.y}
           fromLayer="top"
           toLayer="bottom"
-          holeDiameter="0.8mm"
-          outerDiameter="1.2mm"
+          holeDiameter={`${ARDUINO_SHIELD_CLAD_VIA_HOLE_DIAMETER}mm`}
+          outerDiameter={`${ARDUINO_SHIELD_CLAD_VIA_OUTER_DIAMETER}mm`}
         />
       </Fragment>
     ))}
