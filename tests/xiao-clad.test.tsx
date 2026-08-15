@@ -59,6 +59,9 @@ test("adds the standard 2x7 XIAO pin-header geometry", async () => {
     (element) => element.type === "pcb_plated_hole",
   )
   const vias = circuitJson.filter((element) => element.type === "pcb_via")
+  const silkscreenTexts = circuitJson.flatMap((element) =>
+    element.type === "pcb_silkscreen_text" ? [element.text] : [],
+  )
   const headerIds = new Set(
     circuitJson.flatMap((element) =>
       element.type === "source_component" && element.name === "J_XIAO"
@@ -123,6 +126,8 @@ test("adds the standard 2x7 XIAO pin-header geometry", async () => {
   expectViaColumnsAtConfiguredPitch(vias)
   expect(headerPortIds).toHaveLength(14)
   expect(noConnectHeaderPortIds).toHaveLength(14)
+  expect(silkscreenTexts).toContain("UP")
+  expect(silkscreenTexts).not.toContain("USB")
   expect(errorsAndWarnings).toEqual([])
 })
 
