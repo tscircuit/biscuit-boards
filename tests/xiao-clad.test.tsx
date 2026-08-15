@@ -18,11 +18,18 @@ import {
   XIAO_HEADER_POSITIONS,
   XiaoCladWithPinHeaders,
 } from "../lib/xiao-clad"
+import {
+  XIAO_PERFORATED_HEADER_PAD_HEIGHT,
+  XIAO_PERFORATED_HEADER_PAD_WIDTH,
+  XIAO_PERFORATION_HOLE_DIAMETER,
+  XIAO_PERFORATION_POSITIONS,
+  XiaoCladWithPerforatedPinHeaders,
+} from "../lib/xiao-clad-with-perforated-pin-headers"
 
 const pointKey = (point: { x: number; y: number }) =>
   `${point.x.toFixed(3)},${point.y.toFixed(3)}`
 
-const expectOneMillimeterViaColumns = (
+const expectViaColumnsAtConfiguredPitch = (
   vias: Array<{ x: number; y: number }>,
 ) => {
   const columns = new Map<number, number[]>()
@@ -35,9 +42,9 @@ const expectOneMillimeterViaColumns = (
   for (const ys of columns.values()) {
     const sortedYs = ys.toSorted((a, b) => a - b)
     expect(sortedYs).toHaveLength(13)
-    expect(
-      sortedYs.slice(1).every((y, index) => y - sortedYs[index]! === 1),
-    ).toBe(true)
+    for (const [index, y] of sortedYs.slice(1).entries()) {
+      expect(y - sortedYs[index]!).toBeCloseTo(XIAO_CLAD_VIA_SPACING)
+    }
   }
 }
 
@@ -112,10 +119,76 @@ test("adds the standard 2x7 XIAO pin-header geometry", async () => {
             hole.rect_pad_height === XIAO_HEADER_PAD_DIAMETER)),
     ),
   ).toBe(true)
-  expect(XIAO_CLAD_VIA_SPACING).toBe(1)
-  expectOneMillimeterViaColumns(vias)
+  expect(XIAO_CLAD_VIA_SPACING).toBe(1.3)
+  expectViaColumnsAtConfiguredPitch(vias)
   expect(headerPortIds).toHaveLength(14)
   expect(noConnectHeaderPortIds).toHaveLength(14)
+  expect(errorsAndWarnings).toEqual([])
+})
+
+test("adds perforations to both XIAO pin-header side edges", async () => {
+  const circuit = new Circuit()
+  circuit.add(
+    <XiaoCladWithPerforatedPinHeaders routingDisabled markHeadersNoConnect />,
+  )
+  await circuit.renderUntilSettled()
+
+  const circuitJson = circuit.getCircuitJson()
+  const board = circuitJson.find((element) => element.type === "pcb_board")
+  const platedHoles = circuitJson.filter(
+    (element) => element.type === "pcb_plated_hole",
+  )
+  const vias = circuitJson.filter((element) => element.type === "pcb_via")
+  const edgeCutouts = circuitJson.filter(
+    (element) => element.type === "pcb_cutout" && element.shape === "circle",
+  )
+  const errorsAndWarnings = circuitJson.filter(
+    (element) =>
+      element.type.endsWith("error") || element.type.endsWith("warning"),
+  )
+
+  expect(board).toMatchObject({
+    width: XIAO_CLAD_WIDTH,
+    height: XIAO_CLAD_HEIGHT,
+    num_layers: 2,
+  })
+  expect(platedHoles).toHaveLength(14)
+  expect(vias).toHaveLength(XIAO_CLAD_VIA_POSITIONS.length)
+  expect(new Set(vias.map(pointKey))).toEqual(
+    new Set(XIAO_CLAD_VIA_POSITIONS.map(pointKey)),
+  )
+  expectViaColumnsAtConfiguredPitch(vias)
+  expect(edgeCutouts).toHaveLength(14)
+  expect(new Set(edgeCutouts.map((cutout) => pointKey(cutout.center)))).toEqual(
+    new Set(XIAO_PERFORATION_POSITIONS.map(pointKey)),
+  )
+  expect(
+    edgeCutouts.every(
+      (cutout) => cutout.radius * 2 === XIAO_PERFORATION_HOLE_DIAMETER,
+    ),
+  ).toBe(true)
+  expect(
+    platedHoles.every(
+      (hole) =>
+        hole.shape === "circular_hole_with_rect_pad" &&
+        hole.hole_diameter === XIAO_HEADER_HOLE_DIAMETER &&
+        hole.rect_pad_width === XIAO_PERFORATED_HEADER_PAD_WIDTH &&
+        hole.rect_pad_height === XIAO_PERFORATED_HEADER_PAD_HEIGHT,
+    ),
+  ).toBe(true)
+  const headerDrillPositions = platedHoles.flatMap((hole) =>
+    hole.shape === "circular_hole_with_rect_pad"
+      ? [
+          {
+            x: hole.x + (hole.hole_offset_x ?? 0),
+            y: hole.y + (hole.hole_offset_y ?? 0),
+          },
+        ]
+      : [],
+  )
+  expect(new Set(headerDrillPositions.map(pointKey))).toEqual(
+    new Set(XIAO_HEADER_POSITIONS.map(pointKey)),
+  )
   expect(errorsAndWarnings).toEqual([])
 })
 
@@ -148,6 +221,6 @@ test("routes STM32 USB through only the fixed XIAO via field", async () => {
     routedPrefabVias.every((via) => allowedViaPositions.has(pointKey(via))),
   ).toBe(true)
   expect(new Set(routedPrefabVias.map(pointKey))).toEqual(
-    new Set(["-5.800,4.000", "5.800,-5.000"]),
+    new Set(["-5.800,3.700", "5.800,-5.400"]),
   )
 }, 30_000)
