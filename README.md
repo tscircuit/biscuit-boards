@@ -2,15 +2,19 @@
 
 Prefabricated copper-clad boards for ordinary tscircuit TSX.
 
+```sh
+bun add biscuitboard
+```
+
 ```tsx
-import { BiscuitBoard } from "@tsci/tscircuit.biscuit-boards";
+import { BiscuitBoard } from "biscuitboard"
 
 export default () => (
   <BiscuitBoard>
     <chip name="U1" footprint="soic8" />
     {/* components and traces */}
   </BiscuitBoard>
-);
+)
 ```
 
 Generate a Gerber ZIP without the front or back solder-mask layers with:

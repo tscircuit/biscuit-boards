@@ -4,6 +4,7 @@ node_modules/
 # Build output
 dist/
 build/
+.package.json.prepack
 
 # Environment variables
 .env
