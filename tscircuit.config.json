@@ -8,6 +8,7 @@
     "examples/stm32c071-display-arduino-shield.tsx",
     "examples/boosterpack-clad.tsx",
     "examples/breadboard-clad.tsx",
+    "examples/clad-40x40.tsx",
     "examples/xiao-clad-with-pin-headers.tsx",
     "examples/feather-clad-with-pin-headers.tsx",
     "examples/xiao-clad-with-perforated-pin-headers.tsx",

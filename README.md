@@ -55,6 +55,29 @@ denser [`examples/rp2040.tsx`](./examples/rp2040.tsx) example uses the RP2040
 module from `@tsci/seveibar.common` and is also checked in with solved PCB and
 schematic snapshots.
 
+## 40 mm square clad
+
+[`Clad40x40`](./lib/Clad40x40.tsx) is a two-layer 40 mm x 40 mm clad without
+pin headers. It has one centered 2 mm mounting hole plus a second 2 mm mounting
+hole at the top-right, inset 3 mm from both edges. Three centered concentric
+square rings provide 72 assignable prefabricated vias. The vias use 0.3 mm
+drills and 0.6 mm pads at 1.3 mm pitch, matching the XIAO clad's via geometry.
+
+```tsx
+import { Clad40x40 } from "@tsci/tscircuit.biscuit-boards";
+
+export default () => <Clad40x40 />;
+```
+
+The preview and checked-in PCB snapshot are in
+[`examples/clad-40x40.tsx`](./examples/clad-40x40.tsx).
+
+```sh
+bun run build:clad-40x40
+bun run snapshot:clad-40x40
+bun test tests/clad-40x40.test.tsx
+```
+
 ## Combined clad panel
 
 [`CladPanel`](./lib/CladPanel.tsx) places the breadboard clad at the upper-left
