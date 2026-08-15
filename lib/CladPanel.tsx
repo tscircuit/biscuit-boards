@@ -14,6 +14,7 @@ import {
   BREADBOARD_CLAD_WIDTH,
   BreadboardClad,
 } from "./breadboard-clad"
+import { FEATHER_CLAD_WIDTH, FeatherCladWithPinHeaders } from "./feather-clad"
 import {
   XIAO_CLAD_HEIGHT,
   XIAO_CLAD_WIDTH,
@@ -48,7 +49,7 @@ export interface CladPanelProps {
   mouseBites?: boolean
 }
 
-/** Breadboard and Arduino above standard/perforated XIAOs and BoosterPack. */
+/** All clad variants, with the Feather in a narrow third column. */
 export const CladPanel = ({
   panelizationMethod = "tab-routing",
   mouseBites = true,
@@ -57,7 +58,7 @@ export const CladPanel = ({
     name="CladPanel"
     layoutMode="grid"
     row={1}
-    col={2}
+    col={3}
     boardGap={`${CLAD_PANEL_BOARD_GAP}mm`}
     edgePadding={`${CLAD_PANEL_EDGE_PADDING}mm`}
     panelizationMethod={panelizationMethod}
@@ -130,6 +131,16 @@ export const CladPanel = ({
     >
       <BoosterPackClad routingDisabled />
       <ArduinoShieldClad routingDisabled markHeadersNoConnect />
+    </subpanel>
+    <subpanel
+      name="FeatherCladColumn"
+      layoutMode="grid"
+      row={1}
+      width={`${FEATHER_CLAD_WIDTH}mm`}
+      height={`${CLAD_PANEL_COLUMN_HEIGHT}mm`}
+      edgePadding="0mm"
+    >
+      <FeatherCladWithPinHeaders routingDisabled markHeadersNoConnect />
     </subpanel>
   </panel>
 )

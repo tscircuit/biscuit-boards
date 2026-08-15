@@ -18,9 +18,10 @@ import {
   CLAD_PANEL_XIAO_COUNT,
   CladPanel,
 } from "../lib/CladPanel"
+import { FEATHER_CLAD_HEIGHT, FEATHER_CLAD_WIDTH } from "../lib/feather-clad"
 import { XIAO_CLAD_HEIGHT, XIAO_CLAD_WIDTH } from "../lib/xiao-clad"
 
-test("panels standard XIAOs below the breadboard and perforated XIAOs at the bottom", async () => {
+test("panels every clad variant with the Feather in a third column", async () => {
   const circuit = new Circuit()
   circuit.add(<CladPanel />)
   await circuit.renderUntilSettled()
@@ -38,7 +39,8 @@ test("panels standard XIAOs below the breadboard and perforated XIAOs at the bot
         BREADBOARD_CLAD_WIDTH,
       ) +
       Math.max(ARDUINO_SHIELD_CLAD_WIDTH, BOOSTERPACK_CLAD_WIDTH) +
-      CLAD_PANEL_BOARD_GAP +
+      FEATHER_CLAD_WIDTH +
+      2 * CLAD_PANEL_BOARD_GAP +
       2 * CLAD_PANEL_EDGE_PADDING,
     height:
       Math.max(
@@ -51,13 +53,16 @@ test("panels standard XIAOs below the breadboard and perforated XIAOs at the bot
       ) +
       2 * CLAD_PANEL_EDGE_PADDING,
   })
-  expect(boards).toHaveLength(11)
+  expect(boards).toHaveLength(12)
   const boardTitles = circuitJson.flatMap((element) =>
     element.type === "source_board" ? [element.title] : [],
   )
   expect(
     boardTitles.filter((title) => title?.includes("perforated")),
   ).toHaveLength(CLAD_PANEL_XIAO_COUNT)
+  expect(
+    boardTitles.filter((title) => title?.includes("Feather")),
+  ).toHaveLength(1)
   expect(boards.map((board) => [board.width, board.height])).toEqual([
     [BREADBOARD_CLAD_WIDTH, BREADBOARD_CLAD_HEIGHT],
     ...Array.from({ length: CLAD_PANEL_XIAO_COUNT }, () => [
@@ -70,8 +75,9 @@ test("panels standard XIAOs below the breadboard and perforated XIAOs at the bot
     ]),
     [BOOSTERPACK_CLAD_WIDTH, BOOSTERPACK_CLAD_HEIGHT],
     [ARDUINO_SHIELD_CLAD_WIDTH, ARDUINO_SHIELD_CLAD_HEIGHT],
+    [FEATHER_CLAD_WIDTH, FEATHER_CLAD_HEIGHT],
   ])
-  expect(boards[0]!.center.x).toBeCloseTo(-38.5, 6)
+  expect(boards[0]!.center.x).toBeCloseTo(-50.93, 6)
   expect(boards[0]!.center.y).toBe(28.5)
 
   const xiaoBoards = boards.slice(1, 1 + CLAD_PANEL_XIAO_COUNT)
@@ -79,7 +85,7 @@ test("panels standard XIAOs below the breadboard and perforated XIAOs at the bot
     1 + CLAD_PANEL_XIAO_COUNT,
     1 + 2 * CLAD_PANEL_XIAO_COUNT,
   )
-  const expectedXiaoXs = [-68.2, -48.4, -28.6, -8.8]
+  const expectedXiaoXs = [-80.63, -60.83, -41.03, -21.23]
   for (const row of [xiaoBoards, perforatedXiaoBoards]) {
     row.forEach((board, index) => {
       expect(board.center.x).toBeCloseTo(expectedXiaoXs[index]!, 6)
@@ -90,10 +96,12 @@ test("panels standard XIAOs below the breadboard and perforated XIAOs at the bot
     true,
   )
 
-  expect(boards[9]!.center.x).toBeCloseTo(39.6, 6)
+  expect(boards[9]!.center.x).toBeCloseTo(27.17, 6)
   expect(boards[9]!.center.y).toBe(-28.5)
-  expect(boards[10]!.center.x).toBeCloseTo(39.6, 6)
+  expect(boards[10]!.center.x).toBeCloseTo(27.17, 6)
   expect(boards[10]!.center.y).toBe(28.5)
+  expect(boards[11]!.center.x).toBeCloseTo(78.1, 6)
+  expect(boards[11]!.center.y).toBe(0)
   expect(circuitJson.some((element) => element.type === "pcb_cutout")).toBe(
     true,
   )
