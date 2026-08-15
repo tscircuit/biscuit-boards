@@ -88,6 +88,15 @@ export {
   type XiaoCladWithPinHeadersProps,
   XiaoPinHeaders,
 } from "./lib/xiao-clad"
+export {
+  XIAO_PERFORATED_HEADER_PAD_HEIGHT,
+  XIAO_PERFORATED_HEADER_PAD_WIDTH,
+  XIAO_PERFORATION_HOLE_DIAMETER,
+  XIAO_PERFORATION_POSITIONS,
+  XiaoCladWithPerforatedPinHeaders,
+  type XiaoCladWithPerforatedPinHeadersProps,
+  XiaoPerforatedPinHeaders,
+} from "./lib/xiao-clad-with-perforated-pin-headers"
 
 import { BiscuitBoard } from "./lib/BiscuitBoard"
 

@@ -12,7 +12,7 @@ export const XIAO_HEADER_HOLE_DIAMETER = 1
 export const XIAO_HEADER_PAD_DIAMETER = 1.7
 export const XIAO_CLAD_VIA_HOLE_DIAMETER = 0.3
 export const XIAO_CLAD_VIA_PAD_DIAMETER = 0.6
-export const XIAO_CLAD_VIA_SPACING = 1
+export const XIAO_CLAD_VIA_SPACING = 1.3
 
 const XIAO_CLAD_EDGE_CLEARANCE = 0.2
 const XIAO_CLAD_EDGE_CLEARANCE_VALIDATION_TOLERANCE = 0.001
@@ -21,7 +21,7 @@ const XIAO_CLAD_EDGE_CLEARANCE_VALIDATION_TOLERANCE = 0.001
 export const XIAO_CLAD_VIA_POSITIONS = [-5.8, 5.8].flatMap((x) =>
   Array.from({ length: 13 }, (_, index) => ({
     x,
-    y: -8 + index * XIAO_CLAD_VIA_SPACING,
+    y: Math.round((-8 + index * XIAO_CLAD_VIA_SPACING) * 1e6) / 1e6,
   })),
 )
 
@@ -35,7 +35,7 @@ export const XIAO_HEADER_POSITIONS = [
   ...xiaoHeaderYs.map((y) => ({ x: XIAO_HEADER_ROW_SPACING / 2, y })),
 ]
 
-const xiaoPins = {
+export const XIAO_PIN_LABELS = {
   pin1: ["D0", "A0"],
   pin2: ["D1", "A1"],
   pin3: ["D2", "A2"],
@@ -52,7 +52,10 @@ const xiaoPins = {
   pin14: ["D7", "RX"],
 } as const
 
-const pinNames = Array.from({ length: 14 }, (_, index) => `pin${index + 1}`)
+export const XIAO_PIN_NAMES = Array.from(
+  { length: 14 },
+  (_, index) => `pin${index + 1}`,
+)
 
 const XiaoPinHeaderFootprint = () => (
   <footprint insertionDirection="from_below">
@@ -85,7 +88,7 @@ const XiaoPinHeaderFootprint = () => (
 
 export const XiaoPinHeaders = (props: ConnectorProps) => (
   <connector
-    pinLabels={xiaoPins}
+    pinLabels={XIAO_PIN_LABELS}
     manufacturerPartNumber="GENERIC-XIAO-2X7-MALE-2.54MM-DOWN"
     footprint={<XiaoPinHeaderFootprint />}
     noSchematicRepresentation
@@ -106,20 +109,30 @@ export interface XiaoCladWithPinHeadersProps {
   showUsbLabel?: boolean
 }
 
-/** A two-layer copper clad matching the classic Seeed Studio XIAO outline. */
-export const XiaoCladWithPinHeaders = ({
+export interface XiaoCladLayoutProps
+  extends Omit<XiaoCladWithPinHeadersProps, "markHeadersNoConnect"> {
+  boardName: string
+  boardTitle: string
+  pinHeaders: ReactNode
+  edgeFeatures?: ReactNode
+}
+
+export const XiaoCladLayout = ({
+  boardName,
+  boardTitle,
+  pinHeaders,
+  edgeFeatures,
   children,
   autorouter,
   autorouterOptions,
   minTraceWidth,
   nominalTraceWidth = 0.2,
   routingDisabled = false,
-  markHeadersNoConnect = false,
   showUsbLabel = true,
-}: XiaoCladWithPinHeadersProps) => (
+}: XiaoCladLayoutProps) => (
   <board
-    name="XiaoCladWithPinHeaders"
-    title="XIAO form-factor copper clad with pin headers"
+    name={boardName}
+    title={boardTitle}
     width={`${XIAO_CLAD_WIDTH}mm`}
     height={`${XIAO_CLAD_HEIGHT}mm`}
     borderRadius="1mm"
@@ -141,10 +154,8 @@ export const XiaoCladWithPinHeaders = ({
     }
     routingDisabled={routingDisabled}
   >
-    <XiaoPinHeaders
-      name="J_XIAO"
-      noConnect={markHeadersNoConnect ? pinNames : undefined}
-    />
+    {pinHeaders}
+    {edgeFeatures}
 
     {showUsbLabel && (
       <silkscreentext
@@ -182,4 +193,22 @@ export const XiaoCladWithPinHeaders = ({
 
     {children}
   </board>
+)
+
+/** A two-layer copper clad matching the classic Seeed Studio XIAO outline. */
+export const XiaoCladWithPinHeaders = ({
+  markHeadersNoConnect = false,
+  ...props
+}: XiaoCladWithPinHeadersProps) => (
+  <XiaoCladLayout
+    {...props}
+    boardName="XiaoCladWithPinHeaders"
+    boardTitle="XIAO form-factor copper clad with pin headers"
+    pinHeaders={
+      <XiaoPinHeaders
+        name="J_XIAO"
+        noConnect={markHeadersNoConnect ? XIAO_PIN_NAMES : undefined}
+      />
+    }
+  />
 )
