@@ -1,6 +1,6 @@
 {
   "name": "biscuitboard",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Prefabricated copper-clad board wrappers and fixed-via autorouting for tscircuit",
   "license": "MIT",
   "type": "module",
@@ -112,7 +112,9 @@
   "peerDependencies": {
     "react": "^19.2.0"
   },
-  "trustedDependencies": ["sharp"],
+  "trustedDependencies": [
+    "sharp"
+  ],
   "overrides": {
     "@tscircuit/core": "0.0.1641"
   },
