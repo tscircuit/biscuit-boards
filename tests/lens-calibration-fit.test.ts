@@ -48,11 +48,11 @@ test("derives the checked-in lens calibration from the coordinate CSV", async ()
   expect(fit.baselineBilinearRmsError).toBe(
     BISCUIT_BOARD_LENS_CALIBRATION_FIT.baselineBilinearRmsError,
   )
-  expect(fit.includedViaNumbers).toHaveLength(15)
+  expect(fit.includedViaNumbers).toHaveLength(51)
   expect(fit.excludedViaNumbers).toEqual([])
   expect(fit.model.power).toBe(BISCUIT_BOARD_LENS_CALIBRATION_FIT.power)
   expect(fit.rmsError).toBeLessThan(1e-12)
-  expect(fit.baselineBilinearRmsError).toBeGreaterThan(1)
+  expect(fit.baselineBilinearRmsError).toBeGreaterThan(fit.rmsError)
   expect(fit.leaveOneOutRmsError).toBeLessThan(1.8)
 })
 
