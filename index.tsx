@@ -92,6 +92,14 @@ export {
   type BreadboardTerminalRowLabel,
 } from "./lib/breadboard-clad"
 export {
+  CLAD_PANEL_BOARD_GAP,
+  CLAD_PANEL_EDGE_PADDING,
+  CLAD_PANEL_TAB_WIDTH,
+  CLAD_PANEL_XIAO_COUNT,
+  CladPanel,
+  type CladPanelProps,
+} from "./lib/CladPanel"
+export {
   applyLightBurnLensDistortion,
   BISCUIT_BOARD_LENS_CALIBRATION,
   BISCUIT_BOARD_LENS_CALIBRATION_FIT,
