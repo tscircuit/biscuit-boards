@@ -78,14 +78,39 @@ bun run snapshot:clad-40x40
 bun test tests/clad-40x40.test.tsx
 ```
 
+## 32 mm square corner-via clad
+
+[`Clad32x32`](./lib/Clad32x32.tsx) is a two-layer 32 mm x 32 mm clad with four
+2 mm mounting holes, each inset 3 mm from its corner, and no center mounting
+hole. Four two-via-wide L-shaped fields provide 64 assignable prefabricated
+vias. The fields sit close to the mounting holes, with 1.3 mm of copper
+clearance, and leave 18.2 mm openings at the middle of every side for edge
+connectors. The vias use 0.3 mm drills, 0.6 mm pads, and a 1.3 mm pitch.
+
+```tsx
+import { Clad32x32 } from "@tsci/tscircuit.biscuit-boards";
+
+export default () => <Clad32x32 />;
+```
+
+The preview and checked-in PCB snapshot are in
+[`examples/clad-32x32.tsx`](./examples/clad-32x32.tsx).
+
+```sh
+bun run build:clad-32x32
+bun run snapshot:clad-32x32
+bun test tests/clad-32x32.test.tsx
+```
+
 ## Combined clad panel
 
 [`CladPanel`](./lib/CladPanel.tsx) places the breadboard clad at the upper-left
-and the Arduino UNO R3 shield at the upper-right. Two standard XIAO clads and
-two perforated XIAO clads sit below the breadboard. A Feather clad occupies the
-remaining lower-left space, replacing four XIAOs; the TI BoosterPack remains at
-the lower-right. The resulting 158 mm x 118 mm fabrication panel has 2 mm
-tab-routing gaps, 3 mm edge rails, and mouse bites enabled by default.
+and the Arduino UNO R3 shield at the upper-right. The 32 mm square clad replaces
+one standard and one perforated XIAO below the breadboard; the remaining
+standard and perforated XIAOs sit above it, with the Feather alongside. The TI
+BoosterPack remains at the lower-right. The resulting fabrication panel remains
+158 mm x 118 mm, with 2 mm tab-routing gaps, 3 mm edge rails, and mouse bites
+disabled by default.
 
 ```sh
 bun run build:clad-panel
