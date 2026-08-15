@@ -82,8 +82,9 @@ bun test tests/clad-40x40.test.tsx
 
 [`Clad32x32`](./lib/Clad32x32.tsx) is a two-layer 32 mm x 32 mm clad with four
 2 mm mounting holes, each inset 3 mm from its corner, and no center mounting
-hole. Four two-via-wide L-shaped fields provide 80 assignable prefabricated
-vias. Their 15.6 mm openings at the middle of every side leave room for edge
+hole. Four two-via-wide L-shaped fields provide 64 assignable prefabricated
+vias. The fields sit close to the mounting holes, with 1.3 mm of copper
+clearance, and leave 18.2 mm openings at the middle of every side for edge
 connectors. The vias use 0.3 mm drills, 0.6 mm pads, and a 1.3 mm pitch.
 
 ```tsx
