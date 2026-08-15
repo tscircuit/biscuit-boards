@@ -18,6 +18,7 @@
     "build:boosterpack": "tsci build examples/stm32c071-display-boosterpack.tsx --disable-parts-engine --svgs",
     "build:example": "tsci build examples/stm32c071.tsx --disable-parts-engine --svgs",
     "build:xiao-stm32-usb": "tsci build examples/xiao-stm32-usb.tsx --disable-parts-engine --svgs",
+    "build:micromod-clad": "tsci build examples/micromod-clad.tsx --disable-parts-engine --svgs",
     "export:lightburn": "bun run scripts/export-lightburn.tsx",
     "export:gerbers:no-solder-mask": "bun run scripts/export-gerbers-without-solder-mask.ts",
     "export:stencil-step": "bun run scripts/export-stencil-step.ts",
@@ -51,12 +52,14 @@
     "snapshot:xiao-clad-with-perforated-pin-headers:update": "tsci snapshot examples/xiao-clad-with-perforated-pin-headers.tsx --disable-parts-engine --pcb-only --update",
     "snapshot:xiao-stm32-usb": "tsci snapshot examples/xiao-stm32-usb.tsx --disable-parts-engine --pcb-only --ci",
     "snapshot:xiao-stm32-usb:update": "tsci snapshot examples/xiao-stm32-usb.tsx --disable-parts-engine --pcb-only --update",
+    "snapshot:micromod-clad": "tsci snapshot examples/micromod-clad.tsx --disable-parts-engine --pcb-only --ci",
+    "snapshot:micromod-clad:update": "tsci snapshot examples/micromod-clad.tsx --disable-parts-engine --pcb-only --update",
     "snapshot:lightburn": "bun test tests/lightburn-export.test.tsx tests/lightburn-lens-distortion.test.tsx",
     "snapshot:lightburn:update": "BUN_UPDATE_SNAPSHOTS=1 bun test tests/lightburn-export.test.tsx tests/lightburn-lens-distortion.test.tsx",
     "start": "tsci dev",
     "test": "bun test",
     "typecheck": "tsc --noEmit",
-    "check": "bun run typecheck && bun run test && bun run snapshot:stm32 && bun run snapshot:rp2040 && bun run snapshot:boosterpack && bun run snapshot:boosterpack-clad && bun run snapshot:arduino-shield && bun run snapshot:arduino-display && bun run snapshot:breadboard-clad && bun run snapshot:xiao-clad-with-pin-headers && bun run snapshot:xiao-clad-with-perforated-pin-headers && bun run snapshot:xiao-stm32-usb && bun run snapshot:clad-panel && bun run snapshot:four-board-clad-panel && bun run snapshot:xiao-pair-clad-panel && bun run build && bun run build:example && bun run build:arduino-shield && bun run build:arduino-display && bun run build:breadboard-clad && bun run build:xiao-stm32-usb && bun run build:clad-panel && bun run build:four-board-clad-panel && bun run build:xiao-pair-clad-panel && bun run export:lightburn examples/stm32c071-display.tsx"
+    "check": "bun run typecheck && bun run test && bun run snapshot:stm32 && bun run snapshot:rp2040 && bun run snapshot:boosterpack && bun run snapshot:boosterpack-clad && bun run snapshot:arduino-shield && bun run snapshot:arduino-display && bun run snapshot:breadboard-clad && bun run snapshot:xiao-clad-with-pin-headers && bun run snapshot:xiao-clad-with-perforated-pin-headers && bun run snapshot:xiao-stm32-usb && bun run snapshot:micromod-clad && bun run snapshot:clad-panel && bun run snapshot:four-board-clad-panel && bun run snapshot:xiao-pair-clad-panel && bun run build && bun run build:example && bun run build:arduino-shield && bun run build:arduino-display && bun run build:breadboard-clad && bun run build:xiao-stm32-usb && bun run build:micromod-clad && bun run build:clad-panel && bun run build:four-board-clad-panel && bun run build:xiao-pair-clad-panel && bun run export:lightburn examples/stm32c071-display.tsx"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.4",
