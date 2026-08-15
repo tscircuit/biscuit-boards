@@ -229,6 +229,24 @@ bun run build:xiao-stm32-usb
 bun run snapshot:xiao-stm32-usb
 ```
 
+## Adafruit Feather form-factor clad
+
+[`FeatherCladWithPinHeaders`](./lib/feather-clad.tsx) is a two-layer 22.86 mm x
+50.8 mm clad following the
+[classic Adafruit Feather specification](https://learn.adafruit.com/adafruit-feather/feather-specification).
+With USB at the top, it provides the standard 16-pin left header and 12-pin
+right header at 2.54 mm pin pitch and 20.32 mm row spacing, plus four 2.54 mm
+mounting holes. Its 62 fixed through-vias use 0.3 mm drills and 0.6 mm pads in
+two 1 x 31 columns on a 1.3 mm pitch, leaving the central component field open.
+
+The populated clad preview has a checked-in PCB snapshot:
+
+```sh
+bun run build:feather-clad-with-pin-headers
+bun run snapshot:feather-clad-with-pin-headers
+bun test tests/feather-clad.test.tsx
+```
+
 ## Breadboard clad
 
 [`BreadboardClad`](./lib/breadboard-clad.tsx) is a laser-routable 75 mm x
