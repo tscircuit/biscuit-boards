@@ -23,14 +23,6 @@ export const FEATHER_MOUNTING_HOLE_POSITIONS = [-8.89, 8.89].flatMap((x) =>
   [-22.86, 22.86].map((y) => ({ x, y })),
 )
 
-/** Two 1 x 31 via columns flanking the central component field. */
-export const FEATHER_CLAD_VIA_POSITIONS = [-8, 8].flatMap((x) =>
-  Array.from({ length: 31 }, (_, index) => ({
-    x,
-    y: Math.round((-19.5 + index * FEATHER_CLAD_VIA_SPACING) * 1e6) / 1e6,
-  })),
-)
-
 const featherLeftHeaderYs = Array.from(
   { length: 16 },
   (_, index) => (7.5 - index) * FEATHER_HEADER_PITCH,
@@ -40,6 +32,20 @@ const featherRightHeaderYs = Array.from(
   { length: 12 },
   (_, index) => (3.5 - index) * FEATHER_HEADER_PITCH,
 )
+
+const featherViaYs = Array.from(
+  { length: 31 },
+  (_, index) =>
+    Math.round((-19.5 + index * FEATHER_CLAD_VIA_SPACING) * 1e6) / 1e6,
+)
+
+/** Via columns flank the component field while preserving the header-free top right. */
+export const FEATHER_CLAD_VIA_POSITIONS = [
+  ...featherViaYs.map((y) => ({ x: -8, y })),
+  ...featherViaYs
+    .filter((y) => y <= featherRightHeaderYs[0]!)
+    .map((y) => ({ x: 8, y })),
+]
 
 /** Header positions follow the standard Feather pinout with USB at positive Y. */
 export const FEATHER_HEADER_POSITIONS = [
@@ -193,7 +199,7 @@ export const FeatherCladWithPinHeaders = ({
 
     {showUsbLabel && (
       <silkscreentext
-        text="USB"
+        text="UP"
         pcbX={0}
         pcbY={FEATHER_CLAD_HEIGHT / 2 - 1.2}
         fontSize="0.7mm"

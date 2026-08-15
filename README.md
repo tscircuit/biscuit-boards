@@ -193,9 +193,10 @@ bun test tests/arduino-shield-display.test.tsx
 [`XiaoCladWithPinHeaders`](./lib/xiao-clad.tsx) is a two-layer 17.8 mm x 21 mm
 clad matching the classic Seeed Studio XIAO outline. It includes the standard
 two rows of seven through-hole headers at 2.54 mm pin pitch and 15.24 mm row
-spacing, and the USB end is marked on top silkscreen. Its 26 fixed through-vias
-use 0.3 mm drills and 0.6 mm pads. They form two 1 x 13 columns on a 1.3 mm pitch,
-leaving the central component field open while clearing the header pads.
+spacing, and the USB end is marked `UP` on top silkscreen. Its 26 fixed
+through-vias use 0.3 mm drills and 0.6 mm pads. They form two 1 x 13 columns on a
+1.3 mm pitch, leaving the central component field open while clearing the header
+pads.
 
 The populated clad preview has a checked-in PCB snapshot:
 
@@ -236,8 +237,10 @@ bun run snapshot:xiao-stm32-usb
 [classic Adafruit Feather specification](https://learn.adafruit.com/adafruit-feather/feather-specification).
 With USB at the top, it provides the standard 16-pin left header and 12-pin
 right header at 2.54 mm pin pitch and 20.32 mm row spacing, plus four 2.54 mm
-mounting holes. Its 62 fixed through-vias use 0.3 mm drills and 0.6 mm pads in
-two 1 x 31 columns on a 1.3 mm pitch, leaving the central component field open.
+mounting holes. Its 53 fixed through-vias use 0.3 mm drills and 0.6 mm pads on a
+1.3 mm pitch. The left 1 x 31 and right 1 x 22 columns leave the central
+component field and the header-free upper-right region open. The USB edge is
+marked `UP` on top silkscreen.
 
 The populated clad preview has a checked-in PCB snapshot:
 

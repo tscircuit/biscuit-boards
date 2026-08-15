@@ -159,7 +159,7 @@ export const XiaoCladLayout = ({
 
     {showUsbLabel && (
       <silkscreentext
-        text="USB"
+        text="UP"
         pcbX={0}
         pcbY={XIAO_CLAD_HEIGHT / 2 - 1.2}
         fontSize="0.7mm"

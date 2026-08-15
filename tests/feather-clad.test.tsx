@@ -35,6 +35,9 @@ test("adds the classic Adafruit Feather outline and pin-header geometry", async 
     (element) => element.type === "pcb_hole",
   )
   const vias = circuitJson.filter((element) => element.type === "pcb_via")
+  const silkscreenTexts = circuitJson.flatMap((element) =>
+    element.type === "pcb_silkscreen_text" ? [element.text] : [],
+  )
   const headerIds = new Set(
     circuitJson.flatMap((element) =>
       element.type === "source_component" && element.name === "J_FEATHER"
@@ -100,6 +103,8 @@ test("adds the classic Adafruit Feather outline and pin-header geometry", async 
   ).toBe(true)
   expect(headerPorts).toHaveLength(28)
   expect(headerPorts.every((port) => port.do_not_connect)).toBe(true)
+  expect(silkscreenTexts).toContain("UP")
+  expect(silkscreenTexts).not.toContain("USB")
   expect(errorsAndWarnings).toEqual([])
 })
 
@@ -123,11 +128,22 @@ test("keeps the Feather headers and prefabricated vias on their standard grids",
     viaColumns.set(via.x, [...(viaColumns.get(via.x) ?? []), via.y])
   }
   expect([...viaColumns.keys()].toSorted((a, b) => a - b)).toEqual([-8, 8])
-  for (const ys of viaColumns.values()) {
+  const expectedViaCounts = new Map([
+    [-8, 31],
+    [8, 22],
+  ])
+  for (const [x, ys] of viaColumns) {
     const sortedYs = ys.toSorted((a, b) => a - b)
-    expect(sortedYs).toHaveLength(31)
+    expect(sortedYs).toHaveLength(expectedViaCounts.get(x)!)
     for (const [index, y] of sortedYs.slice(1).entries()) {
       expect(y - sortedYs[index]!).toBeCloseTo(FEATHER_CLAD_VIA_SPACING)
     }
   }
+
+  const rightHeaderTopY = Math.max(
+    ...FEATHER_HEADER_POSITIONS.filter((position) => position.x > 0).map(
+      (position) => position.y,
+    ),
+  )
+  expect(Math.max(...viaColumns.get(8)!)).toBeLessThan(rightHeaderTopY)
 })
