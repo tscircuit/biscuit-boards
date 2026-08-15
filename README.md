@@ -77,10 +77,11 @@ bun test tests/clad-40x40.test.tsx
 ## Combined clad panel
 
 [`CladPanel`](./lib/CladPanel.tsx) places the breadboard clad at the upper-left
-and the Arduino UNO R3 shield at the upper-right. Two standard XIAO clads and
-two perforated XIAO clads sit below the breadboard. A Feather clad occupies the
-remaining lower-left space, replacing four XIAOs; the TI BoosterPack remains at
-the lower-right. The resulting 158 mm x 118 mm fabrication panel has 2 mm
+and the Arduino UNO R3 shield at the upper-right. The 40 mm square clad replaces
+one standard and one perforated XIAO below the breadboard; the remaining
+standard and perforated XIAOs sit above it, with the Feather alongside. The TI
+BoosterPack remains at the lower-right. The resulting 158 mm x 126 mm
+fabrication panel keeps the prior width and adds 8 mm of height. It has 2 mm
 tab-routing gaps, 3 mm edge rails, and mouse bites enabled by default.
 
 ```sh
