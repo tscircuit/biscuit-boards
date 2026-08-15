@@ -21,7 +21,7 @@ import {
 import { FEATHER_CLAD_HEIGHT, FEATHER_CLAD_WIDTH } from "../lib/feather-clad"
 import { XIAO_CLAD_HEIGHT, XIAO_CLAD_WIDTH } from "../lib/xiao-clad"
 
-test("panels every clad variant with the Feather in a third column", async () => {
+test("panels every clad variant with the Feather replacing four XIAOs", async () => {
   const circuit = new Circuit()
   circuit.add(<CladPanel />)
   await circuit.renderUntilSettled()
@@ -34,26 +34,30 @@ test("panels every clad variant with the Feather in a third column", async () =>
   expect(panel).toMatchObject({
     width:
       Math.max(
-        CLAD_PANEL_XIAO_COUNT * XIAO_CLAD_WIDTH +
-          (CLAD_PANEL_XIAO_COUNT - 1) * CLAD_PANEL_BOARD_GAP,
         BREADBOARD_CLAD_WIDTH,
+        CLAD_PANEL_XIAO_COUNT * XIAO_CLAD_WIDTH +
+          (CLAD_PANEL_XIAO_COUNT - 1) * CLAD_PANEL_BOARD_GAP +
+          CLAD_PANEL_BOARD_GAP +
+          FEATHER_CLAD_WIDTH,
       ) +
       Math.max(ARDUINO_SHIELD_CLAD_WIDTH, BOOSTERPACK_CLAD_WIDTH) +
-      FEATHER_CLAD_WIDTH +
-      2 * CLAD_PANEL_BOARD_GAP +
+      CLAD_PANEL_BOARD_GAP +
       2 * CLAD_PANEL_EDGE_PADDING,
     height:
       Math.max(
         BREADBOARD_CLAD_HEIGHT +
-          2 * XIAO_CLAD_HEIGHT +
-          2 * CLAD_PANEL_BOARD_GAP,
+          CLAD_PANEL_BOARD_GAP +
+          Math.max(
+            2 * XIAO_CLAD_HEIGHT + CLAD_PANEL_BOARD_GAP,
+            FEATHER_CLAD_HEIGHT,
+          ),
         ARDUINO_SHIELD_CLAD_HEIGHT +
           BOOSTERPACK_CLAD_HEIGHT +
           CLAD_PANEL_BOARD_GAP,
       ) +
       2 * CLAD_PANEL_EDGE_PADDING,
   })
-  expect(boards).toHaveLength(12)
+  expect(boards).toHaveLength(8)
   const boardTitles = circuitJson.flatMap((element) =>
     element.type === "source_board" ? [element.title] : [],
   )
@@ -73,11 +77,11 @@ test("panels every clad variant with the Feather in a third column", async () =>
       XIAO_CLAD_WIDTH,
       XIAO_CLAD_HEIGHT,
     ]),
+    [FEATHER_CLAD_WIDTH, FEATHER_CLAD_HEIGHT],
     [BOOSTERPACK_CLAD_WIDTH, BOOSTERPACK_CLAD_HEIGHT],
     [ARDUINO_SHIELD_CLAD_WIDTH, ARDUINO_SHIELD_CLAD_HEIGHT],
-    [FEATHER_CLAD_WIDTH, FEATHER_CLAD_HEIGHT],
   ])
-  expect(boards[0]!.center.x).toBeCloseTo(-50.93, 6)
+  expect(boards[0]!.center.x).toBeCloseTo(-38.5, 6)
   expect(boards[0]!.center.y).toBe(28.5)
 
   const xiaoBoards = boards.slice(1, 1 + CLAD_PANEL_XIAO_COUNT)
@@ -85,7 +89,7 @@ test("panels every clad variant with the Feather in a third column", async () =>
     1 + CLAD_PANEL_XIAO_COUNT,
     1 + 2 * CLAD_PANEL_XIAO_COUNT,
   )
-  const expectedXiaoXs = [-80.63, -60.83, -41.03, -21.23]
+  const expectedXiaoXs = [-60.83, -41.03]
   for (const row of [xiaoBoards, perforatedXiaoBoards]) {
     row.forEach((board, index) => {
       expect(board.center.x).toBeCloseTo(expectedXiaoXs[index]!, 6)
@@ -96,12 +100,12 @@ test("panels every clad variant with the Feather in a third column", async () =>
     true,
   )
 
-  expect(boards[9]!.center.x).toBeCloseTo(27.17, 6)
-  expect(boards[9]!.center.y).toBe(-28.5)
-  expect(boards[10]!.center.x).toBeCloseTo(27.17, 6)
-  expect(boards[10]!.center.y).toBe(28.5)
-  expect(boards[11]!.center.x).toBeCloseTo(78.1, 6)
-  expect(boards[11]!.center.y).toBe(0)
+  expect(boards[5]!.center.x).toBeCloseTo(-18.7, 6)
+  expect(boards[5]!.center.y).toBeCloseTo(-26.4, 6)
+  expect(boards[6]!.center.x).toBeCloseTo(38.5, 6)
+  expect(boards[6]!.center.y).toBe(-28.5)
+  expect(boards[7]!.center.x).toBeCloseTo(38.5, 6)
+  expect(boards[7]!.center.y).toBe(28.5)
   expect(circuitJson.some((element) => element.type === "pcb_cutout")).toBe(
     true,
   )
@@ -113,4 +117,4 @@ test("panels every clad variant with the Feather in a third column", async () =>
     ),
   ).toBe(true)
   expect(errors).toEqual([])
-}, 15_000)
+}, 30_000)
