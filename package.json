@@ -95,6 +95,11 @@
     "@types/react": "19.2.18",
     "@tscircuit/biscuit-board-autorouter": "github:tscircuit/biscuit-board-autorouter#a704ab5d6f9693924fe716710c57a7787fe943f4",
     "bun-match-svg": "0.0.15",
+    "circuit-json": "0.0.464",
+    "circuit-json-to-lbrn": "0.0.88",
+    "lbrnts": "0.0.22",
+    "manifold-3d": "^3.5.1",
+    "manifold-to-step": "^0.0.4",
     "react": "19.2.0",
     "tscircuit": "0.0.2277",
     "tsup": "^8.5.1",
@@ -102,15 +107,10 @@
   },
   "dependencies": {
     "@tscircuit/core": "0.0.1641",
-    "@tscircuit/props": "0.0.617",
-    "circuit-json": "0.0.464",
-    "circuit-json-to-lbrn": "0.0.88",
-    "lbrnts": "0.0.22",
-    "manifold-3d": "^3.5.1",
-    "manifold-to-step": "^0.0.4"
+    "@tscircuit/props": "0.0.617"
   },
   "peerDependencies": {
-    "react": "^19.2.0"
+    "react": "^19.1.0"
   },
   "trustedDependencies": [
     "sharp"

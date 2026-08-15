@@ -22,12 +22,6 @@ delete publishedPackageJson.overrides
 delete publishedPackageJson.patchedDependencies
 delete publishedPackageJson.trustedDependencies
 publishedPackageJson.files = ["dist"]
-publishedPackageJson.dependencies = Object.fromEntries(
-  ["@tscircuit/core", "@tscircuit/props"].map((dependencyName) => [
-    dependencyName,
-    publishedPackageJson.dependencies[dependencyName],
-  ]),
-)
 
 await writeFile(
   packageJsonPath,
