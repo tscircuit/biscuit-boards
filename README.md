@@ -54,9 +54,10 @@ schematic snapshots.
 ## 40 mm square clad
 
 [`Clad40x40`](./lib/Clad40x40.tsx) is a two-layer 40 mm x 40 mm clad without
-pin headers. It has one centered 2 mm mounting hole and a centered 5.2 mm
-square ring of 16 assignable prefabricated vias. The vias use 0.3 mm drills and
-0.6 mm pads at 1.3 mm pitch, matching the XIAO clad's via geometry.
+pin headers. It has one centered 2 mm mounting hole plus a second 2 mm mounting
+hole at the top-right, inset 3 mm from both edges. Three centered concentric
+square rings provide 72 assignable prefabricated vias. The vias use 0.3 mm
+drills and 0.6 mm pads at 1.3 mm pitch, matching the XIAO clad's via geometry.
 
 ```tsx
 import { Clad40x40 } from "@tsci/tscircuit.biscuit-boards";
