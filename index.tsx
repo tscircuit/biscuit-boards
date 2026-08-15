@@ -100,6 +100,13 @@ export {
   type CladPanelProps,
 } from "./lib/CladPanel"
 export {
+  FOUR_BOARD_CLAD_PANEL_BOARD_GAP,
+  FOUR_BOARD_CLAD_PANEL_EDGE_PADDING,
+  FOUR_BOARD_CLAD_PANEL_TAB_WIDTH,
+  FourBoardCladPanel,
+  type FourBoardCladPanelProps,
+} from "./lib/four-board-clad-panel"
+export {
   applyLightBurnLensDistortion,
   BISCUIT_BOARD_LENS_CALIBRATION,
   BISCUIT_BOARD_LENS_CALIBRATION_FIT,
@@ -136,6 +143,13 @@ export {
   type XiaoCladWithPerforatedPinHeadersProps,
   XiaoPerforatedPinHeaders,
 } from "./lib/xiao-clad-with-perforated-pin-headers"
+export {
+  XIAO_PAIR_CLAD_PANEL_BOARD_GAP,
+  XIAO_PAIR_CLAD_PANEL_EDGE_PADDING,
+  XIAO_PAIR_CLAD_PANEL_TAB_WIDTH,
+  XiaoPairCladPanel,
+  type XiaoPairCladPanelProps,
+} from "./lib/xiao-pair-clad-panel"
 
 import { BiscuitBoard } from "./lib/BiscuitBoard"
 

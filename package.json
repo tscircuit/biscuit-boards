@@ -11,6 +11,8 @@
     "build": "tsci build index.tsx",
     "build:breadboard-clad": "tsci build examples/breadboard-clad.tsx --disable-parts-engine --svgs",
     "build:clad-panel": "tsci build examples/clad-panel.tsx --disable-parts-engine --svgs",
+    "build:four-board-clad-panel": "tsci build examples/four-board-clad-panel.tsx --disable-parts-engine --svgs",
+    "build:xiao-pair-clad-panel": "tsci build examples/xiao-pair-clad-panel.tsx --disable-parts-engine --svgs",
     "build:arduino-shield": "tsci build examples/arduino-shield-clad.tsx --disable-parts-engine --svgs",
     "build:arduino-display": "tsci build examples/stm32c071-display-arduino-shield.tsx --disable-parts-engine --svgs",
     "build:boosterpack": "tsci build examples/stm32c071-display-boosterpack.tsx --disable-parts-engine --svgs",
@@ -26,6 +28,10 @@
     "snapshot:breadboard-clad:update": "tsci snapshot examples/breadboard-clad.tsx --disable-parts-engine --pcb-only --update",
     "snapshot:clad-panel": "tsci snapshot examples/clad-panel.tsx --disable-parts-engine --pcb-only --ci",
     "snapshot:clad-panel:update": "tsci snapshot examples/clad-panel.tsx --disable-parts-engine --pcb-only --update",
+    "snapshot:four-board-clad-panel": "tsci snapshot examples/four-board-clad-panel.tsx --disable-parts-engine --pcb-only --ci",
+    "snapshot:four-board-clad-panel:update": "tsci snapshot examples/four-board-clad-panel.tsx --disable-parts-engine --pcb-only --update",
+    "snapshot:xiao-pair-clad-panel": "tsci snapshot examples/xiao-pair-clad-panel.tsx --disable-parts-engine --pcb-only --ci",
+    "snapshot:xiao-pair-clad-panel:update": "tsci snapshot examples/xiao-pair-clad-panel.tsx --disable-parts-engine --pcb-only --update",
     "snapshot:update": "tsci snapshot --update",
     "snapshot:stm32": "tsci snapshot examples/stm32c071.tsx --disable-parts-engine --ci",
     "snapshot:stm32:update": "tsci snapshot examples/stm32c071.tsx --disable-parts-engine --update",
@@ -50,7 +56,7 @@
     "start": "tsci dev",
     "test": "bun test",
     "typecheck": "tsc --noEmit",
-    "check": "bun run typecheck && bun run test && bun run snapshot:stm32 && bun run snapshot:rp2040 && bun run snapshot:boosterpack && bun run snapshot:boosterpack-clad && bun run snapshot:arduino-shield && bun run snapshot:arduino-display && bun run snapshot:breadboard-clad && bun run snapshot:xiao-clad-with-pin-headers && bun run snapshot:xiao-clad-with-perforated-pin-headers && bun run snapshot:xiao-stm32-usb && bun run snapshot:clad-panel && bun run build && bun run build:example && bun run build:arduino-shield && bun run build:arduino-display && bun run build:breadboard-clad && bun run build:xiao-stm32-usb && bun run build:clad-panel && bun run export:lightburn examples/stm32c071-display.tsx"
+    "check": "bun run typecheck && bun run test && bun run snapshot:stm32 && bun run snapshot:rp2040 && bun run snapshot:boosterpack && bun run snapshot:boosterpack-clad && bun run snapshot:arduino-shield && bun run snapshot:arduino-display && bun run snapshot:breadboard-clad && bun run snapshot:xiao-clad-with-pin-headers && bun run snapshot:xiao-clad-with-perforated-pin-headers && bun run snapshot:xiao-stm32-usb && bun run snapshot:clad-panel && bun run snapshot:four-board-clad-panel && bun run snapshot:xiao-pair-clad-panel && bun run build && bun run build:example && bun run build:arduino-shield && bun run build:arduino-display && bun run build:breadboard-clad && bun run build:xiao-stm32-usb && bun run build:clad-panel && bun run build:four-board-clad-panel && bun run build:xiao-pair-clad-panel && bun run export:lightburn examples/stm32c071-display.tsx"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.4",
