@@ -42,6 +42,23 @@ denser [`examples/rp2040.tsx`](./examples/rp2040.tsx) example uses the RP2040
 module from `@tsci/seveibar.common` and is also checked in with solved PCB and
 schematic snapshots.
 
+## Combined clad panel
+
+[`CladPanel`](./lib/CladPanel.tsx) places the breadboard clad at the upper-left
+and the Arduino UNO R3 shield at the upper-right. Four standard XIAO clads sit
+directly below the breadboard, followed by four perforated XIAO clads along the
+bottom; the TI BoosterPack remains at the lower-right. The resulting 160.2 mm x
+118 mm fabrication panel has 2 mm tab-routing gaps, 3 mm edge rails, and mouse
+bites enabled by default.
+
+```sh
+bun run build:clad-panel
+bun run snapshot:clad-panel
+bun test tests/clad-panel.test.tsx
+```
+
+The preview entry point is [`examples/clad-panel.tsx`](./examples/clad-panel.tsx).
+
 ## TI BoosterPack clad feasibility layout
 
 [`BoosterPackClad`](./lib/BoosterPackClad.tsx) is an initial prefabricated-via
