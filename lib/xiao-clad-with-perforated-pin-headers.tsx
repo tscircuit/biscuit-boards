@@ -88,5 +88,3 @@ export const XiaoCladWithPerforatedPinHeaders = ({
     ))}
   />
 )
-
-export default XiaoCladWithPerforatedPinHeaders

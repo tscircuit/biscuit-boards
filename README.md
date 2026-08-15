@@ -165,6 +165,8 @@ outline and 2x7 header centers, but extends each pin into a 2.13 mm x 2 mm coppe
 pad with a 0.7 mm perforation centered on the corresponding side edge. This
 creates the through-hole-plus-edge-notch geometry used by castellated XIAO
 modules while retaining compatibility with ordinary 2.54 mm pin headers.
+The bare preview and its checked-in PCB snapshot are in
+[`examples/xiao-clad-with-perforated-pin-headers.tsx`](./examples/xiao-clad-with-perforated-pin-headers.tsx).
 
 ```sh
 bun run snapshot:xiao-clad-with-perforated-pin-headers
