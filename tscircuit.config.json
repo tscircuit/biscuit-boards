@@ -2,6 +2,8 @@
   "mainEntrypoint": "index.tsx",
   "includeBoardFiles": [
     "examples/clad-panel.tsx",
+    "examples/four-board-clad-panel.tsx",
+    "examples/xiao-pair-clad-panel.tsx",
     "examples/arduino-shield-clad.tsx",
     "examples/stm32c071-display-arduino-shield.tsx",
     "examples/boosterpack-clad.tsx",

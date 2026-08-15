@@ -68,6 +68,25 @@ bun test tests/clad-panel.test.tsx
 
 The preview entry point is [`examples/clad-panel.tsx`](./examples/clad-panel.tsx).
 
+## Additional fabrication panels
+
+[`FourBoardCladPanel`](./lib/four-board-clad-panel.tsx) is a 2x2 grid containing
+two breadboard clads, one BoosterPack clad, and one Arduino shield clad.
+[`XiaoPairCladPanel`](./lib/xiao-pair-clad-panel.tsx) places one standard XIAO
+clad beside one perforated XIAO clad. Both use 2 mm routed gaps, 3 mm edge
+padding, 2 mm tabs, and mouse bites by default.
+
+```sh
+bun run build:four-board-clad-panel
+bun run build:xiao-pair-clad-panel
+bun run snapshot:four-board-clad-panel
+bun run snapshot:xiao-pair-clad-panel
+```
+
+Their preview entry points are
+[`examples/four-board-clad-panel.tsx`](./examples/four-board-clad-panel.tsx)
+and [`examples/xiao-pair-clad-panel.tsx`](./examples/xiao-pair-clad-panel.tsx).
+
 ## TI BoosterPack clad feasibility layout
 
 [`BoosterPackClad`](./lib/BoosterPackClad.tsx) is an initial prefabricated-via
