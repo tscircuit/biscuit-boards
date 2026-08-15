@@ -71,17 +71,17 @@ test("renders a 32 mm square clad with four corner mounting holes", async () => 
   expect(errorsAndWarnings).toEqual([])
 })
 
-test("places a three-via-wide L-shaped field in every corner", () => {
+test("places a two-via-wide L-shaped field in every corner", () => {
   expect(CLAD_32X32_VIA_SPACING).toBe(1.3)
-  expect(CLAD_32X32_VIA_ARM_WIDTH).toBe(2.6)
-  expect(CLAD_32X32_VIA_POSITIONS).toHaveLength(108)
+  expect(CLAD_32X32_VIA_ARM_WIDTH).toBe(1.3)
+  expect(CLAD_32X32_VIA_POSITIONS).toHaveLength(80)
 
   for (const xSign of [-1, 1] as const) {
     for (const ySign of [-1, 1] as const) {
       const cornerVias = CLAD_32X32_VIA_POSITIONS.filter(
         ({ x, y }) => Math.sign(x) === xSign && Math.sign(y) === ySign,
       )
-      expect(cornerVias).toHaveLength(27)
+      expect(cornerVias).toHaveLength(20)
 
       for (const via of cornerVias) {
         const localX = via.x * xSign

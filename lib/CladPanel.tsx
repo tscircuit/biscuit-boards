@@ -14,6 +14,7 @@ import {
   BREADBOARD_CLAD_WIDTH,
   BreadboardClad,
 } from "./breadboard-clad"
+import { CLAD_32X32_HEIGHT, CLAD_32X32_WIDTH, Clad32x32 } from "./Clad32x32"
 import {
   FEATHER_CLAD_HEIGHT,
   FEATHER_CLAD_WIDTH,
@@ -34,44 +35,58 @@ export const CLAD_PANEL_XIAO_COUNT = 2
 const CLAD_PANEL_XIAO_ROW_WIDTH =
   CLAD_PANEL_XIAO_COUNT * XIAO_CLAD_WIDTH +
   (CLAD_PANEL_XIAO_COUNT - 1) * CLAD_PANEL_BOARD_GAP
+const CLAD_PANEL_XIAO_ROW_HEIGHT = XIAO_CLAD_HEIGHT
+const CLAD_PANEL_SQUARE_COLUMN_WIDTH = Math.max(
+  CLAD_32X32_WIDTH,
+  CLAD_PANEL_XIAO_ROW_WIDTH,
+)
+const CLAD_PANEL_SQUARE_COLUMN_HEIGHT =
+  CLAD_32X32_HEIGHT + CLAD_PANEL_BOARD_GAP + CLAD_PANEL_XIAO_ROW_HEIGHT
 const CLAD_PANEL_LOWER_REGION_WIDTH =
-  CLAD_PANEL_XIAO_ROW_WIDTH + CLAD_PANEL_BOARD_GAP + FEATHER_CLAD_WIDTH
+  CLAD_PANEL_SQUARE_COLUMN_WIDTH + CLAD_PANEL_BOARD_GAP + FEATHER_CLAD_WIDTH
+const CLAD_PANEL_LOWER_REGION_HEIGHT = Math.max(
+  CLAD_PANEL_SQUARE_COLUMN_HEIGHT,
+  FEATHER_CLAD_HEIGHT,
+)
 const CLAD_PANEL_LEFT_COLUMN_WIDTH = Math.max(
   BREADBOARD_CLAD_WIDTH,
   CLAD_PANEL_LOWER_REGION_WIDTH,
 )
-const CLAD_PANEL_COLUMN_HEIGHT =
+const CLAD_PANEL_LEFT_COLUMN_HEIGHT =
+  BREADBOARD_CLAD_HEIGHT + CLAD_PANEL_BOARD_GAP + CLAD_PANEL_LOWER_REGION_HEIGHT
+const CLAD_PANEL_LARGE_COLUMN_HEIGHT =
   ARDUINO_SHIELD_CLAD_HEIGHT + BOOSTERPACK_CLAD_HEIGHT + CLAD_PANEL_BOARD_GAP
 const CLAD_PANEL_BREADBOARD_CENTER_Y =
-  (CLAD_PANEL_COLUMN_HEIGHT - BREADBOARD_CLAD_HEIGHT) / 2
-const CLAD_PANEL_STANDARD_XIAO_CENTER_Y =
-  CLAD_PANEL_BREADBOARD_CENTER_Y -
-  BREADBOARD_CLAD_HEIGHT / 2 -
-  CLAD_PANEL_BOARD_GAP -
-  XIAO_CLAD_HEIGHT / 2
-const CLAD_PANEL_PERFORATED_XIAO_CENTER_Y =
-  CLAD_PANEL_STANDARD_XIAO_CENTER_Y - XIAO_CLAD_HEIGHT - CLAD_PANEL_BOARD_GAP
-const CLAD_PANEL_XIAO_ROW_CENTER_X =
-  -(CLAD_PANEL_LOWER_REGION_WIDTH - CLAD_PANEL_XIAO_ROW_WIDTH) / 2
+  (CLAD_PANEL_LEFT_COLUMN_HEIGHT - BREADBOARD_CLAD_HEIGHT) / 2
+const CLAD_PANEL_LOWER_REGION_CENTER_Y =
+  -(CLAD_PANEL_LEFT_COLUMN_HEIGHT - CLAD_PANEL_LOWER_REGION_HEIGHT) / 2
+const CLAD_PANEL_SQUARE_COLUMN_CENTER_X =
+  -(CLAD_PANEL_LOWER_REGION_WIDTH - CLAD_PANEL_SQUARE_COLUMN_WIDTH) / 2
+const CLAD_PANEL_XIAO_CENTER_Y =
+  CLAD_PANEL_LOWER_REGION_CENTER_Y +
+  (CLAD_PANEL_LOWER_REGION_HEIGHT - CLAD_PANEL_XIAO_ROW_HEIGHT) / 2
+const CLAD_PANEL_XIAO_CENTER_XS = [-1, 1].map(
+  (direction) =>
+    CLAD_PANEL_SQUARE_COLUMN_CENTER_X +
+    (direction * (XIAO_CLAD_WIDTH + CLAD_PANEL_BOARD_GAP)) / 2,
+)
+const CLAD_PANEL_32X32_CENTER_Y =
+  CLAD_PANEL_LOWER_REGION_CENTER_Y -
+  (CLAD_PANEL_LOWER_REGION_HEIGHT - CLAD_32X32_HEIGHT) / 2
 const CLAD_PANEL_FEATHER_CENTER_X =
   (CLAD_PANEL_LOWER_REGION_WIDTH - FEATHER_CLAD_WIDTH) / 2
-const CLAD_PANEL_FEATHER_CENTER_Y =
-  CLAD_PANEL_BREADBOARD_CENTER_Y -
-  BREADBOARD_CLAD_HEIGHT / 2 -
-  CLAD_PANEL_BOARD_GAP -
-  FEATHER_CLAD_HEIGHT / 2
 
 export interface CladPanelProps {
-  /** Defaults to routed tabs with mouse bites. */
+  /** Defaults to routed tabs. */
   panelizationMethod?: PanelProps["panelizationMethod"]
-  /** Adds perforations to the routed tabs. Defaults to true. */
+  /** Adds perforations to the routed tabs. Defaults to false. */
   mouseBites?: boolean
 }
 
-/** All clad variants, with the Feather replacing four XIAOs. */
+/** All clad variants, with the 32 mm square clad replacing two XIAOs. */
 export const CladPanel = ({
   panelizationMethod = "tab-routing",
-  mouseBites = true,
+  mouseBites = false,
 }: CladPanelProps) => (
   <panel
     name="CladPanel"
@@ -88,7 +103,7 @@ export const CladPanel = ({
       name="LeftCladColumn"
       layoutMode="none"
       width={`${CLAD_PANEL_LEFT_COLUMN_WIDTH}mm`}
-      height={`${CLAD_PANEL_COLUMN_HEIGHT}mm`}
+      height={`${CLAD_PANEL_LEFT_COLUMN_HEIGHT}mm`}
       edgePadding="0mm"
     >
       <subpanel
@@ -103,42 +118,43 @@ export const CladPanel = ({
         <BreadboardClad routingDisabled markHeadersNoConnect />
       </subpanel>
       <subpanel
-        name="XiaoCladRow"
+        name="Clad32x32Slot"
         layoutMode="grid"
         row={1}
-        width={`${CLAD_PANEL_XIAO_ROW_WIDTH}mm`}
-        height={`${XIAO_CLAD_HEIGHT}mm`}
-        pcbX={CLAD_PANEL_XIAO_ROW_CENTER_X}
-        pcbY={CLAD_PANEL_STANDARD_XIAO_CENTER_Y}
-        boardGap={`${CLAD_PANEL_BOARD_GAP}mm`}
+        width={`${CLAD_32X32_WIDTH}mm`}
+        height={`${CLAD_32X32_HEIGHT}mm`}
+        pcbX={CLAD_PANEL_SQUARE_COLUMN_CENTER_X}
+        pcbY={CLAD_PANEL_32X32_CENTER_Y}
         edgePadding="0mm"
       >
-        {Array.from({ length: CLAD_PANEL_XIAO_COUNT }, (_, index) => (
-          <XiaoCladWithPinHeaders
-            key={`xiao-clad-${index + 1}`}
-            routingDisabled
-            markHeadersNoConnect
-          />
-        ))}
+        <Clad32x32 routingDisabled />
       </subpanel>
       <subpanel
-        name="PerforatedXiaoCladRow"
+        name="StandardXiaoCladSlot"
         layoutMode="grid"
         row={1}
-        width={`${CLAD_PANEL_XIAO_ROW_WIDTH}mm`}
+        width={`${XIAO_CLAD_WIDTH}mm`}
         height={`${XIAO_CLAD_HEIGHT}mm`}
-        pcbX={CLAD_PANEL_XIAO_ROW_CENTER_X}
-        pcbY={CLAD_PANEL_PERFORATED_XIAO_CENTER_Y}
-        boardGap={`${CLAD_PANEL_BOARD_GAP}mm`}
+        pcbX={CLAD_PANEL_XIAO_CENTER_XS[0]}
+        pcbY={CLAD_PANEL_XIAO_CENTER_Y}
         edgePadding="0mm"
       >
-        {Array.from({ length: CLAD_PANEL_XIAO_COUNT }, (_, index) => (
-          <XiaoCladWithPerforatedPinHeaders
-            key={`perforated-xiao-clad-${index + 1}`}
-            routingDisabled
-            markHeadersNoConnect
-          />
-        ))}
+        <XiaoCladWithPinHeaders routingDisabled markHeadersNoConnect />
+      </subpanel>
+      <subpanel
+        name="PerforatedXiaoCladSlot"
+        layoutMode="grid"
+        row={1}
+        width={`${XIAO_CLAD_WIDTH}mm`}
+        height={`${XIAO_CLAD_HEIGHT}mm`}
+        pcbX={CLAD_PANEL_XIAO_CENTER_XS[1]}
+        pcbY={CLAD_PANEL_XIAO_CENTER_Y}
+        edgePadding="0mm"
+      >
+        <XiaoCladWithPerforatedPinHeaders
+          routingDisabled
+          markHeadersNoConnect
+        />
       </subpanel>
       <subpanel
         name="FeatherCladSlot"
@@ -147,7 +163,7 @@ export const CladPanel = ({
         width={`${FEATHER_CLAD_WIDTH}mm`}
         height={`${FEATHER_CLAD_HEIGHT}mm`}
         pcbX={CLAD_PANEL_FEATHER_CENTER_X}
-        pcbY={CLAD_PANEL_FEATHER_CENTER_Y}
+        pcbY={CLAD_PANEL_LOWER_REGION_CENTER_Y}
         edgePadding="0mm"
       >
         <FeatherCladWithPinHeaders routingDisabled markHeadersNoConnect />
@@ -158,7 +174,7 @@ export const CladPanel = ({
       layoutMode="grid"
       row={2}
       width={`${Math.max(ARDUINO_SHIELD_CLAD_WIDTH, BOOSTERPACK_CLAD_WIDTH)}mm`}
-      height={`${CLAD_PANEL_COLUMN_HEIGHT}mm`}
+      height={`${CLAD_PANEL_LARGE_COLUMN_HEIGHT}mm`}
       boardGap={`${CLAD_PANEL_BOARD_GAP}mm`}
       edgePadding="0mm"
     >

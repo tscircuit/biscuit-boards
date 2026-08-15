@@ -12,7 +12,7 @@ export const CLAD_32X32_VIA_PAD_DIAMETER = 0.6
 export const CLAD_32X32_VIA_SPACING = 1.3
 export const CLAD_32X32_VIA_ARM_INNER_OFFSET = 7.8
 export const CLAD_32X32_VIA_ARM_OUTER_OFFSET = 14.3
-export const CLAD_32X32_VIA_ARM_WIDTH = 2.6
+export const CLAD_32X32_VIA_ARM_WIDTH = 1.3
 export const CLAD_32X32_EDGE_CONNECTOR_OPENING =
   CLAD_32X32_VIA_ARM_INNER_OFFSET * 2
 
@@ -74,7 +74,7 @@ const createCornerViaPositions = (
   )
 }
 
-/** Four three-via-wide L-shaped fields leave every side midpoint open. */
+/** Four two-via-wide L-shaped fields leave every side midpoint open. */
 export const CLAD_32X32_VIA_POSITIONS = (
   [
     [-1, -1],
