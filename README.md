@@ -229,6 +229,25 @@ bun run build:xiao-stm32-usb
 bun run snapshot:xiao-stm32-usb
 ```
 
+## SparkFun MicroMod form-factor clad
+
+[`MicroModClad`](./lib/micromod-clad.tsx) adapts the XIAO clad's two-column
+prefabricated-via layout to SparkFun's 22 mm x 22 mm MicroMod processor-card
+form factor. The 0.8 mm board includes the official offset retention notch and
+the staggered M.2 E-key card-edge pattern: contacts 1-23 and 32-75 use 0.5 mm
+pitch, 0.35 mm-wide fingers, and separate top/bottom copper. Contact aliases
+follow SparkFun's MicroMod processor interface v1.0 while remaining
+independently routable.
+
+The bare clad preview and checked-in PCB snapshot are in
+[`examples/micromod-clad.tsx`](./examples/micromod-clad.tsx).
+
+```sh
+bun run build:micromod-clad
+bun run snapshot:micromod-clad
+bun test tests/micromod-clad.test.tsx
+```
+
 ## Breadboard clad
 
 [`BreadboardClad`](./lib/breadboard-clad.tsx) is a laser-routable 75 mm x
