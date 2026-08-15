@@ -109,8 +109,8 @@ and the Arduino UNO R3 shield at the upper-right. The 32 mm square clad replaces
 one standard and one perforated XIAO below the breadboard; the remaining
 standard and perforated XIAOs sit above it, with the Feather alongside. The TI
 BoosterPack remains at the lower-right. The resulting fabrication panel remains
-158 mm x 118 mm, with 2 mm tab-routing gaps, 3 mm edge rails, and mouse bites
-disabled by default.
+158 mm x 118 mm, with 2 mm board gaps, 3 mm edge rails, and continuous routed
+cutouts around every board. No tabs or mouse bites remain.
 
 ```sh
 bun run build:clad-panel

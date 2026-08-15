@@ -16,13 +16,14 @@ import { CLAD_32X32_HEIGHT, CLAD_32X32_WIDTH } from "../lib/Clad32x32"
 import {
   CLAD_PANEL_BOARD_GAP,
   CLAD_PANEL_EDGE_PADDING,
+  CLAD_PANEL_TAB_LENGTH,
   CLAD_PANEL_XIAO_COUNT,
   CladPanel,
 } from "../lib/CladPanel"
 import { FEATHER_CLAD_HEIGHT, FEATHER_CLAD_WIDTH } from "../lib/feather-clad"
 import { XIAO_CLAD_HEIGHT, XIAO_CLAD_WIDTH } from "../lib/xiao-clad"
 
-test("panels the 32 mm clad in place of two XIAOs without mouse bites", async () => {
+test("panels the clads with continuous cutouts and no tabs", async () => {
   const circuit = new Circuit()
   circuit.add(<CladPanel />)
   await circuit.renderUntilSettled()
@@ -111,6 +112,38 @@ test("panels the 32 mm clad in place of two XIAOs without mouse bites", async ()
   expect(circuitJson.some((element) => element.type === "pcb_cutout")).toBe(
     true,
   )
+  const panelCutouts = circuitJson.flatMap((element) =>
+    element.type === "pcb_cutout" &&
+    element.shape === "rect" &&
+    element.pcb_cutout_id.startsWith("panel_tab_")
+      ? [element]
+      : [],
+  )
+  expect(CLAD_PANEL_TAB_LENGTH).toBe(0)
+  expect(panelCutouts.length).toBeGreaterThan(0)
+  expect(panelCutouts.length % 2).toBe(0)
+
+  for (let index = 0; index < panelCutouts.length; index += 2) {
+    const firstCutout = panelCutouts[index]!
+    const secondCutout = panelCutouts[index + 1]!
+    const rotation = firstCutout.rotation ?? 0
+    const angle = (rotation * Math.PI) / 180
+    const deltaX = secondCutout.center.x - firstCutout.center.x
+    const deltaY = secondCutout.center.y - firstCutout.center.y
+    const distanceAlongCut = Math.abs(
+      deltaX * Math.cos(angle) + deltaY * Math.sin(angle),
+    )
+    const distanceAcrossCut = Math.abs(
+      -deltaX * Math.sin(angle) + deltaY * Math.cos(angle),
+    )
+
+    expect(secondCutout.rotation ?? 0).toBeCloseTo(rotation, 6)
+    expect(distanceAlongCut).toBeCloseTo(
+      (firstCutout.width + secondCutout.width) / 2,
+      6,
+    )
+    expect(distanceAcrossCut).toBeCloseTo(0, 6)
+  }
   expect(
     circuitJson.some(
       (element) =>

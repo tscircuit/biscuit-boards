@@ -29,6 +29,7 @@ import { XiaoCladWithPerforatedPinHeaders } from "./xiao-clad-with-perforated-pi
 
 export const CLAD_PANEL_BOARD_GAP = 2
 export const CLAD_PANEL_EDGE_PADDING = 3
+export const CLAD_PANEL_TAB_LENGTH = 0
 export const CLAD_PANEL_TAB_WIDTH = 2
 export const CLAD_PANEL_XIAO_COUNT = 2
 
@@ -77,9 +78,9 @@ const CLAD_PANEL_FEATHER_CENTER_X =
   (CLAD_PANEL_LOWER_REGION_WIDTH - FEATHER_CLAD_WIDTH) / 2
 
 export interface CladPanelProps {
-  /** Defaults to routed tabs. */
+  /** Defaults to continuous routed cutouts around every board. */
   panelizationMethod?: PanelProps["panelizationMethod"]
-  /** Adds perforations to the routed tabs. Defaults to false. */
+  /** Re-enables perforated tabs when true. Defaults to false. */
   mouseBites?: boolean
 }
 
@@ -96,6 +97,7 @@ export const CladPanel = ({
     boardGap={`${CLAD_PANEL_BOARD_GAP}mm`}
     edgePadding={`${CLAD_PANEL_EDGE_PADDING}mm`}
     panelizationMethod={panelizationMethod}
+    tabLength={`${CLAD_PANEL_TAB_LENGTH}mm`}
     tabWidth={`${CLAD_PANEL_TAB_WIDTH}mm`}
     mouseBites={mouseBites}
   >
