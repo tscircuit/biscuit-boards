@@ -1,14 +1,34 @@
 {
-  "name": "@tsci/tscircuit.biscuit-boards",
+  "name": "biscuitboard",
   "version": "1.0.0",
-  "main": "index.tsx",
+  "description": "Prefabricated copper-clad board wrappers and fixed-via autorouting for tscircuit",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/npm.cjs",
+  "module": "./dist/npm.js",
+  "types": "./dist/npm.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/npm.d.ts",
+      "import": "./dist/npm.js",
+      "require": "./dist/npm.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tscircuit/biscuit-boards.git"
+  },
   "keywords": [
     "tscircuit"
   ],
   "scripts": {
     "dev": "tsci dev",
     "analyze:boosterpack": "bun run scripts/analyze-boosterpack-routing.tsx",
-    "build": "tsci build index.tsx",
+    "build": "tsup",
+    "build:circuit": "tsci build index.tsx",
     "build:breadboard-clad": "tsci build examples/breadboard-clad.tsx --disable-parts-engine --svgs",
     "build:clad-panel": "tsci build examples/clad-panel.tsx --disable-parts-engine --svgs",
     "build:four-board-clad-panel": "tsci build examples/four-board-clad-panel.tsx --disable-parts-engine --svgs",
@@ -58,8 +78,11 @@
     "snapshot:lightburn:update": "BUN_UPDATE_SNAPSHOTS=1 bun test tests/lightburn-export.test.tsx tests/lightburn-lens-distortion.test.tsx",
     "start": "tsci dev",
     "test": "bun test",
+    "check:package": "bun run scripts/check-npm-package.ts",
     "typecheck": "tsc --noEmit",
-    "check": "bun run typecheck && bun run test && bun run snapshot:stm32 && bun run snapshot:rp2040 && bun run snapshot:boosterpack && bun run snapshot:boosterpack-clad && bun run snapshot:arduino-shield && bun run snapshot:arduino-display && bun run snapshot:breadboard-clad && bun run snapshot:xiao-clad-with-pin-headers && bun run snapshot:xiao-clad-with-perforated-pin-headers && bun run snapshot:xiao-stm32-usb && bun run snapshot:feather-clad-with-pin-headers && bun run snapshot:clad-panel && bun run snapshot:four-board-clad-panel && bun run snapshot:xiao-pair-clad-panel && bun run build && bun run build:example && bun run build:arduino-shield && bun run build:arduino-display && bun run build:breadboard-clad && bun run build:xiao-stm32-usb && bun run build:feather-clad-with-pin-headers && bun run build:clad-panel && bun run build:four-board-clad-panel && bun run build:xiao-pair-clad-panel && bun run export:lightburn examples/stm32c071-display.tsx"
+    "prepack": "bun run build && bun run scripts/prepare-npm-package.ts",
+    "postpack": "bun run scripts/restore-npm-package.ts",
+    "check": "bun run typecheck && bun run test && bun run snapshot:stm32 && bun run snapshot:rp2040 && bun run snapshot:boosterpack && bun run snapshot:boosterpack-clad && bun run snapshot:arduino-shield && bun run snapshot:arduino-display && bun run snapshot:breadboard-clad && bun run snapshot:xiao-clad-with-pin-headers && bun run snapshot:xiao-clad-with-perforated-pin-headers && bun run snapshot:xiao-stm32-usb && bun run snapshot:feather-clad-with-pin-headers && bun run snapshot:clad-panel && bun run snapshot:four-board-clad-panel && bun run snapshot:xiao-pair-clad-panel && bun run build && bun run build:circuit && bun run build:example && bun run build:arduino-shield && bun run build:arduino-display && bun run build:breadboard-clad && bun run build:xiao-stm32-usb && bun run build:feather-clad-with-pin-headers && bun run build:clad-panel && bun run build:four-board-clad-panel && bun run build:xiao-pair-clad-panel && bun run export:lightburn examples/stm32c071-display.tsx"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.4",
@@ -67,13 +90,14 @@
     "@tscircuit/common": "0.0.56",
     "@types/bun": "^1.3.14",
     "@types/react": "19.2.18",
+    "@tscircuit/biscuit-board-autorouter": "github:tscircuit/biscuit-board-autorouter#a704ab5d6f9693924fe716710c57a7787fe943f4",
     "bun-match-svg": "0.0.15",
     "react": "19.2.0",
     "tscircuit": "0.0.2277",
+    "tsup": "^8.5.1",
     "typescript": "5.9.3"
   },
   "dependencies": {
-    "@tscircuit/biscuit-board-autorouter": "github:tscircuit/biscuit-board-autorouter#a704ab5d6f9693924fe716710c57a7787fe943f4",
     "@tscircuit/core": "0.0.1641",
     "@tscircuit/props": "0.0.617",
     "circuit-json": "0.0.464",
