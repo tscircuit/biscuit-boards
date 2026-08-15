@@ -17,6 +17,7 @@
     "build:example": "tsci build examples/stm32c071.tsx --disable-parts-engine --svgs",
     "build:xiao-stm32-usb": "tsci build examples/xiao-stm32-usb.tsx --disable-parts-engine --svgs",
     "export:lightburn": "bun run scripts/export-lightburn.tsx",
+    "export:gerbers:no-solder-mask": "bun run scripts/export-gerbers-without-solder-mask.ts",
     "export:stencil-step": "bun run scripts/export-stencil-step.ts",
     "generate:lens-calibration": "bun run scripts/generate-lens-calibration.ts",
     "setup:test-deps": "bun run --cwd node_modules/sharp install",
