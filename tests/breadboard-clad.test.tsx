@@ -14,6 +14,7 @@ import {
   BREADBOARD_CORNER_VIA_SPACING,
   BREADBOARD_CORNER_VIA_X_INNER_OFFSET,
   BREADBOARD_CORNER_VIA_X_OUTER_OFFSET,
+  BREADBOARD_CORNER_VIA_X_OUTWARD_SHIFT,
   BREADBOARD_CORNER_VIA_Y_INNER_OFFSET,
   BREADBOARD_CORNER_VIA_Y_OUTER_OFFSET,
   BREADBOARD_HEADER_HOLE_DIAMETER,
@@ -112,6 +113,7 @@ test("creates an individually routable breadboard socket grid", async () => {
 test("places two-via-wide L-shaped fields in every corner", () => {
   expect(BREADBOARD_CORNER_VIA_SPACING).toBe(1.3)
   expect(BREADBOARD_CORNER_VIA_ARM_WIDTH).toBe(1.3)
+  expect(BREADBOARD_CORNER_VIA_X_OUTWARD_SHIFT).toBe(2.6)
   expect(BREADBOARD_CORNER_VIA_POSITIONS).toHaveLength(64)
 
   for (const xSign of [-1, 1] as const) {
@@ -124,10 +126,16 @@ test("places two-via-wide L-shaped fields in every corner", () => {
       for (const via of cornerVias) {
         const localX = via.x * xSign
         const localY = via.y * ySign
+        const xOutwardShift =
+          xSign === -1 || ySign === -1
+            ? BREADBOARD_CORNER_VIA_X_OUTWARD_SHIFT
+            : 0
         expect(localX).toBeGreaterThanOrEqual(
-          BREADBOARD_CORNER_VIA_X_INNER_OFFSET,
+          BREADBOARD_CORNER_VIA_X_INNER_OFFSET + xOutwardShift,
         )
-        expect(localX).toBeLessThanOrEqual(BREADBOARD_CORNER_VIA_X_OUTER_OFFSET)
+        expect(localX).toBeLessThanOrEqual(
+          BREADBOARD_CORNER_VIA_X_OUTER_OFFSET + xOutwardShift,
+        )
         expect(localY).toBeGreaterThanOrEqual(
           BREADBOARD_CORNER_VIA_Y_INNER_OFFSET,
         )
@@ -135,6 +143,7 @@ test("places two-via-wide L-shaped fields in every corner", () => {
         expect(
           localX <=
             BREADBOARD_CORNER_VIA_X_INNER_OFFSET +
+              xOutwardShift +
               BREADBOARD_CORNER_VIA_ARM_WIDTH ||
             localY <=
               BREADBOARD_CORNER_VIA_Y_INNER_OFFSET +

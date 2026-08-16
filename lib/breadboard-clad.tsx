@@ -29,6 +29,7 @@ export const BREADBOARD_CORNER_VIA_X_INNER_OFFSET = 27
 export const BREADBOARD_CORNER_VIA_X_OUTER_OFFSET = 32.2
 export const BREADBOARD_CORNER_VIA_Y_INNER_OFFSET = 21
 export const BREADBOARD_CORNER_VIA_Y_OUTER_OFFSET = 26.2
+export const BREADBOARD_CORNER_VIA_X_OUTWARD_SHIFT = 2.6
 export const BREADBOARD_MOUNTING_HOLE_DIAMETER = 2.2
 
 const BREADBOARD_CLAD_EDGE_CLEARANCE = 0.2
@@ -127,11 +128,16 @@ const cornerViaArmAxisY = createPitchedRange(
 const createCornerViaPositions = (
   xSign: -1 | 1,
   ySign: -1 | 1,
+  xOutwardShift = 0,
 ): BreadboardCladViaPosition[] => {
-  const horizontalArm = cornerViaAxisX.flatMap((x) =>
+  const shiftedCornerViaAxisX = cornerViaAxisX.map((x) => x + xOutwardShift)
+  const shiftedCornerViaArmAxisX = cornerViaArmAxisX.map(
+    (x) => x + xOutwardShift,
+  )
+  const horizontalArm = shiftedCornerViaAxisX.flatMap((x) =>
     cornerViaArmAxisY.map((y) => ({ x: x * xSign, y: y * ySign })),
   )
-  const verticalArm = cornerViaArmAxisX.flatMap((x) =>
+  const verticalArm = shiftedCornerViaArmAxisX.flatMap((x) =>
     cornerViaAxisY.map((y) => ({ x: x * xSign, y: y * ySign })),
   )
 
@@ -153,7 +159,13 @@ export const BREADBOARD_CORNER_VIA_POSITIONS = (
     [1, -1],
     [1, 1],
   ] as const
-).flatMap(([xSign, ySign]) => createCornerViaPositions(xSign, ySign))
+).flatMap(([xSign, ySign]) =>
+  createCornerViaPositions(
+    xSign,
+    ySign,
+    xSign === -1 || ySign === -1 ? BREADBOARD_CORNER_VIA_X_OUTWARD_SHIFT : 0,
+  ),
+)
 
 /**
  * Fixed layer-change rows run through each open channel and stay clear of the
