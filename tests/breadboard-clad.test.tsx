@@ -61,6 +61,7 @@ test("creates an individually routable breadboard socket grid", async () => {
     height: BREADBOARD_CLAD_HEIGHT,
     num_layers: 2,
   })
+  expect(BREADBOARD_COLUMN_COUNT).toBe(15)
   expect(BREADBOARD_TERMINAL_HEADER_POSITIONS).toHaveLength(
     BREADBOARD_COLUMN_COUNT * 10,
   )
@@ -132,11 +133,11 @@ test("routes crossing socket nets without non-prefabricated vias", async () => {
       <trace
         name="CROSSING_ONE"
         from=".J_TERMINALS > .A1"
-        to=".J_TERMINALS > .J21"
+        to=".J_TERMINALS > .J15"
       />
       <trace
         name="CROSSING_TWO"
-        from=".J_TERMINALS > .A21"
+        from=".J_TERMINALS > .A15"
         to=".J_TERMINALS > .J1"
       />
     </BreadboardClad>,
