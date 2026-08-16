@@ -11,9 +11,6 @@ import {
   BREADBOARD_COLUMN_XS,
   BREADBOARD_HEADER_HOLE_DIAMETER,
   BREADBOARD_HEADER_PAD_DIAMETER,
-  BREADBOARD_OUTER_VERTICAL_VIA_YS,
-  BREADBOARD_OUTER_VIA_COLUMN_XS,
-  BREADBOARD_OUTER_VIA_ROW_YS,
   BREADBOARD_TERMINAL_HEADER_POSITIONS,
   BreadboardClad,
 } from "../lib/breadboard-clad"
@@ -82,10 +79,7 @@ test("creates an individually routable breadboard socket grid", async () => {
 
   expect(vias).toHaveLength(BREADBOARD_CLAD_VIA_POSITIONS.length)
   expect(vias).toHaveLength(
-    BREADBOARD_COLUMN_COUNT *
-      (BREADBOARD_CLAD_VIA_ROW_YS.length + BREADBOARD_OUTER_VIA_ROW_YS.length) +
-      BREADBOARD_OUTER_VIA_COLUMN_XS.length *
-        BREADBOARD_OUTER_VERTICAL_VIA_YS.length,
+    BREADBOARD_COLUMN_COUNT * BREADBOARD_CLAD_VIA_ROW_YS.length,
   )
   expect(new Set(vias.map(pointKey))).toEqual(
     new Set(BREADBOARD_CLAD_VIA_POSITIONS.map(pointKey)),
@@ -97,23 +91,12 @@ test("creates an individually routable breadboard socket grid", async () => {
         via.outer_diameter === BREADBOARD_CLAD_VIA_PAD_DIAMETER,
     ),
   ).toBe(true)
-  for (const rowY of [
-    ...BREADBOARD_CLAD_VIA_ROW_YS,
-    ...BREADBOARD_OUTER_VIA_ROW_YS,
-  ]) {
+  for (const rowY of BREADBOARD_CLAD_VIA_ROW_YS) {
     expect(
       vias.filter(
         (via) => via.y === rowY && BREADBOARD_COLUMN_XS.includes(via.x),
       ),
     ).toHaveLength(BREADBOARD_COLUMN_COUNT)
-  }
-  for (const columnX of BREADBOARD_OUTER_VIA_COLUMN_XS) {
-    expect(
-      vias.filter(
-        (via) =>
-          via.x === columnX && BREADBOARD_OUTER_VERTICAL_VIA_YS.includes(via.y),
-      ),
-    ).toHaveLength(BREADBOARD_OUTER_VERTICAL_VIA_YS.length)
   }
   expect(errorsAndWarnings).toEqual([])
 })

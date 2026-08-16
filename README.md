@@ -312,10 +312,9 @@ sockets are connected in groups: the consuming tscircuit design defines every
 connection, allowing the corresponding copper traces to be laser cut for a
 particular circuit.
 
-The 162 assignable prefabricated vias have 0.3 mm holes and 0.6 mm pads. A
-single 21-via row sits beyond each terminal field, while two 21-via rows run
-through the central DIP channel. A single-via-wide outer field runs beyond the
-terminal sockets on all four sides. The socket grid itself remains clear.
+The 84 assignable prefabricated vias have 0.3 mm holes and 0.6 mm pads. Two
+21-via rows sit beyond the terminal fields, while two 21-via rows run through
+the central DIP channel. The socket grid remains clear.
 `BreadboardTerminalHeaders` exposes terminal aliases such as `A1` and `J21`.
 The bare preview is in
 [`examples/breadboard-clad.tsx`](./examples/breadboard-clad.tsx).

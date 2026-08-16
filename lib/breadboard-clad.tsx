@@ -23,8 +23,6 @@ export const BREADBOARD_CLAD_VIA_ROW_YS = [
   BREADBOARD_HEADER_PITCH / 2,
   16.51,
 ] as const
-export const BREADBOARD_OUTER_VIA_ROW_YS = [-24.13, 24.13] as const
-export const BREADBOARD_OUTER_VIA_COLUMN_XS = [-27.94, 27.94] as const
 export const BREADBOARD_MOUNTING_HOLE_DIAMETER = 2.2
 
 const BREADBOARD_CLAD_EDGE_CLEARANCE = 0.2
@@ -70,11 +68,6 @@ export const BREADBOARD_COLUMN_XS = Array.from(
     ),
 )
 
-export const BREADBOARD_OUTER_VERTICAL_VIA_YS = Array.from(
-  { length: 18 },
-  (_, index) => roundCoordinate(-21.59 + index * BREADBOARD_CLAD_VIA_PITCH),
-)
-
 export const BREADBOARD_TERMINAL_ROW_YS = Object.fromEntries(
   BREADBOARD_TERMINAL_ROW_LABELS.map((label, index) => {
     const bankIndex = index < 5 ? index : index - 5
@@ -100,19 +93,12 @@ export const BREADBOARD_TERMINAL_HEADER_POSITIONS =
   ) satisfies BreadboardHeaderPosition[]
 
 /**
- * Fixed layer-change rows run through each open channel. A single-via-wide
- * outer field also runs beyond all four sides of the pin headers while staying
- * clear of the tooling holes and board edge.
+ * Fixed layer-change rows run through each open channel and stay clear of the
+ * terminal headers.
  */
 export const BREADBOARD_CLAD_VIA_POSITIONS = [
   ...BREADBOARD_CLAD_VIA_ROW_YS.flatMap((y) =>
     BREADBOARD_COLUMN_XS.map((x) => ({ x, y })),
-  ),
-  ...BREADBOARD_OUTER_VIA_ROW_YS.flatMap((y) =>
-    BREADBOARD_COLUMN_XS.map((x) => ({ x, y })),
-  ),
-  ...BREADBOARD_OUTER_VIA_COLUMN_XS.flatMap((x) =>
-    BREADBOARD_OUTER_VERTICAL_VIA_YS.map((y) => ({ x, y })),
   ),
 ] satisfies BreadboardCladViaPosition[]
 
