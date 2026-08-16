@@ -23,6 +23,12 @@ export const BREADBOARD_CLAD_VIA_ROW_YS = [
   BREADBOARD_HEADER_PITCH / 2,
   16.51,
 ] as const
+export const BREADBOARD_CORNER_VIA_SPACING = 1.3
+export const BREADBOARD_CORNER_VIA_ARM_WIDTH = 1.3
+export const BREADBOARD_CORNER_VIA_X_INNER_OFFSET = 27.94
+export const BREADBOARD_CORNER_VIA_X_OUTER_OFFSET = 33.14
+export const BREADBOARD_CORNER_VIA_Y_INNER_OFFSET = 17.81
+export const BREADBOARD_CORNER_VIA_Y_OUTER_OFFSET = 23.01
 export const BREADBOARD_MOUNTING_HOLE_DIAMETER = 2.2
 
 const BREADBOARD_CLAD_EDGE_CLEARANCE = 0.2
@@ -60,6 +66,15 @@ export interface BreadboardCladViaPosition {
 
 const roundCoordinate = (value: number) => Math.round(value * 1e6) / 1e6
 
+const createPitchedRange = (start: number, end: number) =>
+  Array.from(
+    {
+      length: Math.round((end - start) / BREADBOARD_CORNER_VIA_SPACING) + 1,
+    },
+    (_, index) =>
+      roundCoordinate(start + index * BREADBOARD_CORNER_VIA_SPACING),
+  )
+
 export const BREADBOARD_COLUMN_XS = Array.from(
   { length: BREADBOARD_COLUMN_COUNT },
   (_, index) =>
@@ -92,6 +107,54 @@ export const BREADBOARD_TERMINAL_HEADER_POSITIONS =
     })),
   ) satisfies BreadboardHeaderPosition[]
 
+const cornerViaAxisX = createPitchedRange(
+  BREADBOARD_CORNER_VIA_X_INNER_OFFSET,
+  BREADBOARD_CORNER_VIA_X_OUTER_OFFSET,
+)
+const cornerViaAxisY = createPitchedRange(
+  BREADBOARD_CORNER_VIA_Y_INNER_OFFSET,
+  BREADBOARD_CORNER_VIA_Y_OUTER_OFFSET,
+)
+const cornerViaArmAxisX = createPitchedRange(
+  BREADBOARD_CORNER_VIA_X_INNER_OFFSET,
+  BREADBOARD_CORNER_VIA_X_INNER_OFFSET + BREADBOARD_CORNER_VIA_ARM_WIDTH,
+)
+const cornerViaArmAxisY = createPitchedRange(
+  BREADBOARD_CORNER_VIA_Y_INNER_OFFSET,
+  BREADBOARD_CORNER_VIA_Y_INNER_OFFSET + BREADBOARD_CORNER_VIA_ARM_WIDTH,
+)
+
+const createCornerViaPositions = (
+  xSign: -1 | 1,
+  ySign: -1 | 1,
+): BreadboardCladViaPosition[] => {
+  const horizontalArm = cornerViaAxisX.flatMap((x) =>
+    cornerViaArmAxisY.map((y) => ({ x: x * xSign, y: y * ySign })),
+  )
+  const verticalArm = cornerViaArmAxisX.flatMap((x) =>
+    cornerViaAxisY.map((y) => ({ x: x * xSign, y: y * ySign })),
+  )
+
+  return Array.from(
+    new Map(
+      [...horizontalArm, ...verticalArm].map((point) => [
+        `${point.x},${point.y}`,
+        point,
+      ]),
+    ).values(),
+  )
+}
+
+/** Four two-via-wide L-shaped fields at the board corners. */
+export const BREADBOARD_CORNER_VIA_POSITIONS = (
+  [
+    [-1, -1],
+    [-1, 1],
+    [1, -1],
+    [1, 1],
+  ] as const
+).flatMap(([xSign, ySign]) => createCornerViaPositions(xSign, ySign))
+
 /**
  * Fixed layer-change rows run through each open channel and stay clear of the
  * terminal headers.
@@ -100,6 +163,7 @@ export const BREADBOARD_CLAD_VIA_POSITIONS = [
   ...BREADBOARD_CLAD_VIA_ROW_YS.flatMap((y) =>
     BREADBOARD_COLUMN_XS.map((x) => ({ x, y })),
   ),
+  ...BREADBOARD_CORNER_VIA_POSITIONS,
 ] satisfies BreadboardCladViaPosition[]
 
 const terminalPinLabels = Object.fromEntries(

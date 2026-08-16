@@ -9,6 +9,13 @@ import {
   BREADBOARD_CLAD_WIDTH,
   BREADBOARD_COLUMN_COUNT,
   BREADBOARD_COLUMN_XS,
+  BREADBOARD_CORNER_VIA_ARM_WIDTH,
+  BREADBOARD_CORNER_VIA_POSITIONS,
+  BREADBOARD_CORNER_VIA_SPACING,
+  BREADBOARD_CORNER_VIA_X_INNER_OFFSET,
+  BREADBOARD_CORNER_VIA_X_OUTER_OFFSET,
+  BREADBOARD_CORNER_VIA_Y_INNER_OFFSET,
+  BREADBOARD_CORNER_VIA_Y_OUTER_OFFSET,
   BREADBOARD_HEADER_HOLE_DIAMETER,
   BREADBOARD_HEADER_PAD_DIAMETER,
   BREADBOARD_TERMINAL_HEADER_POSITIONS,
@@ -79,7 +86,8 @@ test("creates an individually routable breadboard socket grid", async () => {
 
   expect(vias).toHaveLength(BREADBOARD_CLAD_VIA_POSITIONS.length)
   expect(vias).toHaveLength(
-    BREADBOARD_COLUMN_COUNT * BREADBOARD_CLAD_VIA_ROW_YS.length,
+    BREADBOARD_COLUMN_COUNT * BREADBOARD_CLAD_VIA_ROW_YS.length +
+      BREADBOARD_CORNER_VIA_POSITIONS.length,
   )
   expect(new Set(vias.map(pointKey))).toEqual(
     new Set(BREADBOARD_CLAD_VIA_POSITIONS.map(pointKey)),
@@ -99,6 +107,42 @@ test("creates an individually routable breadboard socket grid", async () => {
     ).toHaveLength(BREADBOARD_COLUMN_COUNT)
   }
   expect(errorsAndWarnings).toEqual([])
+})
+
+test("places two-via-wide L-shaped fields in every corner", () => {
+  expect(BREADBOARD_CORNER_VIA_SPACING).toBe(1.3)
+  expect(BREADBOARD_CORNER_VIA_ARM_WIDTH).toBe(1.3)
+  expect(BREADBOARD_CORNER_VIA_POSITIONS).toHaveLength(64)
+
+  for (const xSign of [-1, 1] as const) {
+    for (const ySign of [-1, 1] as const) {
+      const cornerVias = BREADBOARD_CORNER_VIA_POSITIONS.filter(
+        ({ x, y }) => Math.sign(x) === xSign && Math.sign(y) === ySign,
+      )
+      expect(cornerVias).toHaveLength(16)
+
+      for (const via of cornerVias) {
+        const localX = via.x * xSign
+        const localY = via.y * ySign
+        expect(localX).toBeGreaterThanOrEqual(
+          BREADBOARD_CORNER_VIA_X_INNER_OFFSET,
+        )
+        expect(localX).toBeLessThanOrEqual(BREADBOARD_CORNER_VIA_X_OUTER_OFFSET)
+        expect(localY).toBeGreaterThanOrEqual(
+          BREADBOARD_CORNER_VIA_Y_INNER_OFFSET,
+        )
+        expect(localY).toBeLessThanOrEqual(BREADBOARD_CORNER_VIA_Y_OUTER_OFFSET)
+        expect(
+          localX <=
+            BREADBOARD_CORNER_VIA_X_INNER_OFFSET +
+              BREADBOARD_CORNER_VIA_ARM_WIDTH ||
+            localY <=
+              BREADBOARD_CORNER_VIA_Y_INNER_OFFSET +
+                BREADBOARD_CORNER_VIA_ARM_WIDTH,
+        ).toBe(true)
+      }
+    }
+  }
 })
 
 test("routes crossing socket nets without non-prefabricated vias", async () => {
