@@ -25,6 +25,7 @@ import {
 
 const pointKey = (point: { x: number; y: number }) =>
   `${point.x.toFixed(3)},${point.y.toFixed(3)}`
+const coordinateTolerance = 0.001
 
 test("creates an individually routable breadboard socket grid", async () => {
   const circuit = new Circuit()
@@ -113,7 +114,7 @@ test("creates an individually routable breadboard socket grid", async () => {
 test("places two-via-wide L-shaped fields in every corner", () => {
   expect(BREADBOARD_CORNER_VIA_SPACING).toBe(1.3)
   expect(BREADBOARD_CORNER_VIA_ARM_WIDTH).toBe(1.3)
-  expect(BREADBOARD_CORNER_VIA_X_OUTWARD_SHIFT).toBe(2.6)
+  expect(BREADBOARD_CORNER_VIA_X_OUTWARD_SHIFT).toBe(3.9)
   expect(BREADBOARD_CORNER_VIA_POSITIONS).toHaveLength(64)
 
   for (const xSign of [-1, 1] as const) {
@@ -131,23 +132,31 @@ test("places two-via-wide L-shaped fields in every corner", () => {
             ? BREADBOARD_CORNER_VIA_X_OUTWARD_SHIFT
             : 0
         expect(localX).toBeGreaterThanOrEqual(
-          BREADBOARD_CORNER_VIA_X_INNER_OFFSET + xOutwardShift,
+          BREADBOARD_CORNER_VIA_X_INNER_OFFSET +
+            xOutwardShift -
+            coordinateTolerance,
         )
         expect(localX).toBeLessThanOrEqual(
-          BREADBOARD_CORNER_VIA_X_OUTER_OFFSET + xOutwardShift,
+          BREADBOARD_CORNER_VIA_X_OUTER_OFFSET +
+            xOutwardShift +
+            coordinateTolerance,
         )
         expect(localY).toBeGreaterThanOrEqual(
-          BREADBOARD_CORNER_VIA_Y_INNER_OFFSET,
+          BREADBOARD_CORNER_VIA_Y_INNER_OFFSET - coordinateTolerance,
         )
-        expect(localY).toBeLessThanOrEqual(BREADBOARD_CORNER_VIA_Y_OUTER_OFFSET)
+        expect(localY).toBeLessThanOrEqual(
+          BREADBOARD_CORNER_VIA_Y_OUTER_OFFSET + coordinateTolerance,
+        )
         expect(
           localX <=
             BREADBOARD_CORNER_VIA_X_INNER_OFFSET +
               xOutwardShift +
-              BREADBOARD_CORNER_VIA_ARM_WIDTH ||
+              BREADBOARD_CORNER_VIA_ARM_WIDTH +
+              coordinateTolerance ||
             localY <=
               BREADBOARD_CORNER_VIA_Y_INNER_OFFSET +
-                BREADBOARD_CORNER_VIA_ARM_WIDTH,
+                BREADBOARD_CORNER_VIA_ARM_WIDTH +
+                coordinateTolerance,
         ).toBe(true)
       }
     }

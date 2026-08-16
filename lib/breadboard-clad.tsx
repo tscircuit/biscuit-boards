@@ -29,7 +29,7 @@ export const BREADBOARD_CORNER_VIA_X_INNER_OFFSET = 27
 export const BREADBOARD_CORNER_VIA_X_OUTER_OFFSET = 32.2
 export const BREADBOARD_CORNER_VIA_Y_INNER_OFFSET = 21
 export const BREADBOARD_CORNER_VIA_Y_OUTER_OFFSET = 26.2
-export const BREADBOARD_CORNER_VIA_X_OUTWARD_SHIFT = 2.6
+export const BREADBOARD_CORNER_VIA_X_OUTWARD_SHIFT = 3.9
 export const BREADBOARD_MOUNTING_HOLE_DIAMETER = 2.2
 
 const BREADBOARD_CLAD_EDGE_CLEARANCE = 0.2
@@ -130,9 +130,11 @@ const createCornerViaPositions = (
   ySign: -1 | 1,
   xOutwardShift = 0,
 ): BreadboardCladViaPosition[] => {
-  const shiftedCornerViaAxisX = cornerViaAxisX.map((x) => x + xOutwardShift)
-  const shiftedCornerViaArmAxisX = cornerViaArmAxisX.map(
-    (x) => x + xOutwardShift,
+  const shiftedCornerViaAxisX = cornerViaAxisX.map((x) =>
+    roundCoordinate(x + xOutwardShift),
+  )
+  const shiftedCornerViaArmAxisX = cornerViaArmAxisX.map((x) =>
+    roundCoordinate(x + xOutwardShift),
   )
   const horizontalArm = shiftedCornerViaAxisX.flatMap((x) =>
     cornerViaArmAxisY.map((y) => ({ x: x * xSign, y: y * ySign })),
