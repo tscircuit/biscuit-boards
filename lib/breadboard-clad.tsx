@@ -11,7 +11,7 @@ import { createPrefabricatedViaAutorouter } from "./create-prefabricated-via-aut
 export const BREADBOARD_CLAD_WIDTH = BISCUIT_BOARD_WIDTH
 export const BREADBOARD_CLAD_HEIGHT = BISCUIT_BOARD_HEIGHT
 export const BREADBOARD_HEADER_PITCH = 2.54
-export const BREADBOARD_COLUMN_COUNT = 21
+export const BREADBOARD_COLUMN_COUNT = 15
 export const BREADBOARD_HEADER_HOLE_DIAMETER = 1
 export const BREADBOARD_HEADER_PAD_DIAMETER = 1.7
 export const BREADBOARD_CLAD_VIA_HOLE_DIAMETER = 0.3
@@ -87,7 +87,7 @@ export const BREADBOARD_TERMINAL_ROW_YS = Object.fromEntries(
   }),
 ) as Record<BreadboardTerminalRowLabel, number>
 
-/** Individually routable A1-J21 sockets in a conventional breadboard grid. */
+/** Individually routable A1-J15 sockets in a conventional breadboard grid. */
 export const BREADBOARD_TERMINAL_HEADER_POSITIONS =
   BREADBOARD_TERMINAL_ROW_LABELS.flatMap((row, rowIndex) =>
     BREADBOARD_COLUMN_XS.map((x, columnIndex) => ({
@@ -217,21 +217,21 @@ const BreadboardPowerHeaderFootprint = () => (
 export const BreadboardTerminalHeaders = (props: ConnectorProps) => (
   <connector
     pinLabels={terminalPinLabels}
-    manufacturerPartNumber="GENERIC-BREADBOARD-10X21-FEMALE-2.54MM"
+    manufacturerPartNumber="GENERIC-BREADBOARD-10X15-FEMALE-2.54MM"
     footprint={<BreadboardTerminalHeaderFootprint />}
     noSchematicRepresentation
     {...props}
   />
 )
 
-/** One 1x21 female socket rail; select it with a BREADBOARD_POWER_RAILS id. */
+/** One 1x15 female socket rail; select it with a BREADBOARD_POWER_RAILS id. */
 export const BreadboardPowerHeader = ({
   rail,
   ...props
 }: ConnectorProps & { rail: BreadboardPowerRailId }) => (
   <connector
     pinLabels={powerPinLabels}
-    manufacturerPartNumber="GENERIC-BREADBOARD-1X21-FEMALE-2.54MM"
+    manufacturerPartNumber="GENERIC-BREADBOARD-1X15-FEMALE-2.54MM"
     footprint={<BreadboardPowerHeaderFootprint />}
     noSchematicRepresentation
     pcbY={BREADBOARD_POWER_RAILS.find((candidate) => candidate.id === rail)!.y}
@@ -330,7 +330,7 @@ export const BreadboardClad = ({
       </Fragment>
     ))}
 
-    {[1, 5, 10, 15, 20, BREADBOARD_COLUMN_COUNT].map((column) => (
+    {[1, 5, 10, BREADBOARD_COLUMN_COUNT].map((column) => (
       <Fragment key={`column-label-${column}`}>
         <silkscreentext
           text={`${column}`}
