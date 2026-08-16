@@ -77,15 +77,15 @@ const CLAD_PANEL_FEATHER_CENTER_X =
   (CLAD_PANEL_LOWER_REGION_WIDTH - FEATHER_CLAD_WIDTH) / 2
 
 export interface CladPanelProps {
-  /** Defaults to routed tabs. */
+  /** Defaults to continuous routed cutouts around every board outline. */
   panelizationMethod?: PanelProps["panelizationMethod"]
-  /** Adds perforations to the routed tabs. Defaults to false. */
+  /** Adds perforations when tab routing is explicitly enabled. */
   mouseBites?: boolean
 }
 
 /** All clad variants, with the 32 mm square clad replacing two XIAOs. */
 export const CladPanel = ({
-  panelizationMethod = "tab-routing",
+  panelizationMethod = "outline_routing",
   mouseBites = false,
 }: CladPanelProps) => (
   <panel

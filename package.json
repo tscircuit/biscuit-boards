@@ -109,8 +109,8 @@
     "typescript": "5.9.3"
   },
   "dependencies": {
-    "@tscircuit/core": "0.0.1641",
-    "@tscircuit/props": "0.0.617"
+    "@tscircuit/core": "0.0.1696",
+    "@tscircuit/props": "0.0.623"
   },
   "peerDependencies": {
     "react": "^19.1.0"
@@ -119,9 +119,9 @@
     "sharp"
   ],
   "overrides": {
-    "@tscircuit/core": "0.0.1641"
+    "@tscircuit/core": "0.0.1696"
   },
   "patchedDependencies": {
-    "@tscircuit/core@0.0.1641": "patches/@tscircuit%2Fcore@0.0.1641.patch"
+    "@tscircuit/core@0.0.1696": "patches/@tscircuit%2Fcore@0.0.1696.patch"
   }
 }
