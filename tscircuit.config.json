@@ -1,6 +1,7 @@
 {
   "mainEntrypoint": "index.tsx",
   "includeBoardFiles": [
+    "examples/biscuit-board-usb-led.tsx",
     "examples/clad-panel.tsx",
     "examples/four-board-clad-panel.tsx",
     "examples/xiao-pair-clad-panel.tsx",
