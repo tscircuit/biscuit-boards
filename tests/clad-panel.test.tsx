@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
 import { Circuit } from "@tscircuit/core"
+import type { PcbCutout } from "circuit-json"
 import {
   ARDUINO_SHIELD_CLAD_HEIGHT,
   ARDUINO_SHIELD_CLAD_WIDTH,
@@ -16,20 +17,29 @@ import { CLAD_32X32_HEIGHT, CLAD_32X32_WIDTH } from "../lib/Clad32x32"
 import {
   CLAD_PANEL_BOARD_GAP,
   CLAD_PANEL_EDGE_PADDING,
+  CLAD_PANEL_TAB_WIDTH,
   CLAD_PANEL_XIAO_COUNT,
   CladPanel,
 } from "../lib/CladPanel"
 import { FEATHER_CLAD_HEIGHT, FEATHER_CLAD_WIDTH } from "../lib/feather-clad"
 import { XIAO_CLAD_HEIGHT, XIAO_CLAD_WIDTH } from "../lib/xiao-clad"
 
-test("panels the 32 mm clad in place of two XIAOs without mouse bites", async () => {
-  const circuit = new Circuit()
+test("outline routes every clad without tabs or mouse bites", async () => {
+  // This test verifies panel geometry, not placement DRC within nested boards.
+  const circuit = new Circuit({
+    platform: { placementDrcChecksDisabled: true },
+  })
   circuit.add(<CladPanel />)
   await circuit.renderUntilSettled()
 
   const circuitJson = circuit.getCircuitJson()
   const panel = circuitJson.find((element) => element.type === "pcb_panel")
   const boards = circuitJson.filter((element) => element.type === "pcb_board")
+  const outlineRoutingCutouts = circuitJson.filter(
+    (element): element is PcbCutout =>
+      element.type === "pcb_cutout" &&
+      element.pcb_cutout_id.startsWith("panel_outline_routing_cutout_"),
+  )
   const errors = circuitJson.filter((element) => element.type.endsWith("error"))
 
   expect(panel).toMatchObject({
@@ -108,9 +118,27 @@ test("panels the 32 mm clad in place of two XIAOs without mouse bites", async ()
   expect(boards[5]!.center.y).toBe(-28.5)
   expect(boards[6]!.center.x).toBeCloseTo(38.5, 6)
   expect(boards[6]!.center.y).toBe(28.5)
-  expect(circuitJson.some((element) => element.type === "pcb_cutout")).toBe(
-    true,
-  )
+  expect(boards.every((board) => (board.outline?.length ?? 0) > 2)).toBe(true)
+  expect(outlineRoutingCutouts.length).toBeGreaterThan(boards.length)
+  expect(
+    outlineRoutingCutouts.every(
+      (cutout) =>
+        cutout.shape === "rect" &&
+        cutout.height === CLAD_PANEL_TAB_WIDTH &&
+        cutout.pcb_panel_id !== undefined &&
+        cutout.pcb_board_id !== undefined,
+    ),
+  ).toBe(true)
+  expect(
+    new Set(outlineRoutingCutouts.map((cutout) => cutout.pcb_board_id)),
+  ).toEqual(new Set(boards.map((board) => board.pcb_board_id)))
+  expect(
+    circuitJson.some(
+      (element) =>
+        element.type === "pcb_cutout" &&
+        element.pcb_cutout_id.startsWith("panel_tab_"),
+    ),
+  ).toBe(false)
   expect(
     circuitJson.some(
       (element) =>
