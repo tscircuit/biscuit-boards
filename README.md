@@ -307,18 +307,17 @@ bun test tests/feather-clad.test.tsx
 [`BreadboardClad`](./lib/breadboard-clad.tsx) is a laser-routable 75 mm x
 55 mm plug-in prototyping board. It provides 210 individually routable female
 header sockets labeled A1 through J21, with the standard 2.54 mm terminal pitch
-and a 7.62 mm DIP channel. Four 21-pin power/header rails run along the top and
-bottom. Unlike a solderless breadboard, none of these sockets are connected in
-groups: the consuming tscircuit design defines every connection, allowing the
-corresponding copper traces to be laser cut for a particular circuit.
+and a 7.62 mm DIP channel. Unlike a solderless breadboard, none of these
+sockets are connected in groups: the consuming tscircuit design defines every
+connection, allowing the corresponding copper traces to be laser cut for a
+particular circuit.
 
 The 162 assignable prefabricated vias have 0.3 mm holes and 0.6 mm pads. A
-single 21-via row sits between each power-header pair and its neighboring
-terminal field, while two 21-via rows run through the central DIP channel. A
-single-via-wide outer field runs beyond the headers on all four sides. The
-socket grids themselves remain clear.
-`BreadboardTerminalHeaders` exposes terminal aliases such as `A1` and `J21`;
-`BreadboardPowerHeader` exposes `COL1` through `COL21`. The bare preview is in
+single 21-via row sits beyond each terminal field, while two 21-via rows run
+through the central DIP channel. A single-via-wide outer field runs beyond the
+terminal sockets on all four sides. The socket grid itself remains clear.
+`BreadboardTerminalHeaders` exposes terminal aliases such as `A1` and `J21`.
+The bare preview is in
 [`examples/breadboard-clad.tsx`](./examples/breadboard-clad.tsx).
 
 ```sh

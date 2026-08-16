@@ -14,7 +14,6 @@ import {
   BREADBOARD_OUTER_VERTICAL_VIA_YS,
   BREADBOARD_OUTER_VIA_COLUMN_XS,
   BREADBOARD_OUTER_VIA_ROW_YS,
-  BREADBOARD_POWER_HEADER_POSITIONS,
   BREADBOARD_TERMINAL_HEADER_POSITIONS,
   BreadboardClad,
 } from "../lib/breadboard-clad"
@@ -51,11 +50,6 @@ test("creates an individually routable breadboard socket grid", async () => {
     (element) =>
       element.type.endsWith("error") || element.type.endsWith("warning"),
   )
-  const expectedHeaderPositions = [
-    ...BREADBOARD_TERMINAL_HEADER_POSITIONS,
-    ...BREADBOARD_POWER_HEADER_POSITIONS,
-  ]
-
   expect(board).toMatchObject({
     width: BREADBOARD_CLAD_WIDTH,
     height: BREADBOARD_CLAD_HEIGHT,
@@ -64,12 +58,9 @@ test("creates an individually routable breadboard socket grid", async () => {
   expect(BREADBOARD_TERMINAL_HEADER_POSITIONS).toHaveLength(
     BREADBOARD_COLUMN_COUNT * 10,
   )
-  expect(BREADBOARD_POWER_HEADER_POSITIONS).toHaveLength(
-    BREADBOARD_COLUMN_COUNT * 4,
-  )
-  expect(platedHoles).toHaveLength(expectedHeaderPositions.length)
+  expect(platedHoles).toHaveLength(BREADBOARD_TERMINAL_HEADER_POSITIONS.length)
   expect(new Set(platedHoles.map(pointKey))).toEqual(
-    new Set(expectedHeaderPositions.map(pointKey)),
+    new Set(BREADBOARD_TERMINAL_HEADER_POSITIONS.map(pointKey)),
   )
   expect(
     platedHoles.every(
@@ -84,7 +75,9 @@ test("creates an individually routable breadboard socket grid", async () => {
             hole.rect_pad_height === BREADBOARD_HEADER_PAD_DIAMETER)),
     ),
   ).toBe(true)
-  expect(headerSourcePorts).toHaveLength(expectedHeaderPositions.length)
+  expect(headerSourcePorts).toHaveLength(
+    BREADBOARD_TERMINAL_HEADER_POSITIONS.length,
+  )
   expect(headerSourcePorts.every((port) => port.do_not_connect)).toBe(true)
 
   expect(vias).toHaveLength(BREADBOARD_CLAD_VIA_POSITIONS.length)

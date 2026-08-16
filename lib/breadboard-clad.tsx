@@ -99,28 +99,6 @@ export const BREADBOARD_TERMINAL_HEADER_POSITIONS =
     })),
   ) satisfies BreadboardHeaderPosition[]
 
-export const BREADBOARD_POWER_RAILS = [
-  { id: "topPositive", label: "+", y: 21.59 },
-  { id: "topNegative", label: "-", y: 19.05 },
-  { id: "bottomPositive", label: "+", y: -19.05 },
-  { id: "bottomNegative", label: "-", y: -21.59 },
-] as const
-
-export type BreadboardPowerRailId =
-  (typeof BREADBOARD_POWER_RAILS)[number]["id"]
-
-export const BREADBOARD_POWER_HEADER_POSITIONS = BREADBOARD_POWER_RAILS.flatMap(
-  (rail) =>
-    BREADBOARD_COLUMN_XS.map((x, columnIndex) => ({
-      rail: rail.id,
-      pin: columnIndex + 1,
-      label: `${rail.id}${columnIndex + 1}`,
-      column: columnIndex + 1,
-      x,
-      y: rail.y,
-    })),
-)
-
 /**
  * Fixed layer-change rows run through each open channel. A single-via-wide
  * outer field also runs beyond all four sides of the pin headers while staying
@@ -145,17 +123,9 @@ const terminalPinLabels = Object.fromEntries(
   ]),
 )
 
-const powerPinLabels = Object.fromEntries(
-  BREADBOARD_COLUMN_XS.map((_, index) => [
-    `pin${index + 1}`,
-    [`COL${index + 1}`],
-  ]),
-)
-
 const terminalPinNames = BREADBOARD_TERMINAL_HEADER_POSITIONS.map(
   (position) => `pin${position.pin}`,
 )
-const powerPinNames = BREADBOARD_COLUMN_XS.map((_, index) => `pin${index + 1}`)
 
 const BreadboardTerminalHeaderFootprint = () => (
   <footprint insertionDirection="from_above">
@@ -186,33 +156,6 @@ const BreadboardTerminalHeaderFootprint = () => (
   </footprint>
 )
 
-const BreadboardPowerHeaderFootprint = () => (
-  <footprint insertionDirection="from_above">
-    {BREADBOARD_COLUMN_XS.map((x, index) => (
-      <Fragment key={`power-pin-${index + 1}`}>
-        {index === 0 ? (
-          <platedhole
-            portHints={[`pin${index + 1}`]}
-            shape="circular_hole_with_rect_pad"
-            holeDiameter={`${BREADBOARD_HEADER_HOLE_DIAMETER}mm`}
-            rectPadWidth={`${BREADBOARD_HEADER_PAD_DIAMETER}mm`}
-            rectPadHeight={`${BREADBOARD_HEADER_PAD_DIAMETER}mm`}
-            pcbX={x}
-          />
-        ) : (
-          <platedhole
-            portHints={[`pin${index + 1}`]}
-            shape="circle"
-            holeDiameter={`${BREADBOARD_HEADER_HOLE_DIAMETER}mm`}
-            outerDiameter={`${BREADBOARD_HEADER_PAD_DIAMETER}mm`}
-            pcbX={x}
-          />
-        )}
-      </Fragment>
-    ))}
-  </footprint>
-)
-
 /** One connector exposing every terminal socket by its breadboard name. */
 export const BreadboardTerminalHeaders = (props: ConnectorProps) => (
   <connector
@@ -220,21 +163,6 @@ export const BreadboardTerminalHeaders = (props: ConnectorProps) => (
     manufacturerPartNumber="GENERIC-BREADBOARD-10X21-FEMALE-2.54MM"
     footprint={<BreadboardTerminalHeaderFootprint />}
     noSchematicRepresentation
-    {...props}
-  />
-)
-
-/** One 1x21 female socket rail; select it with a BREADBOARD_POWER_RAILS id. */
-export const BreadboardPowerHeader = ({
-  rail,
-  ...props
-}: ConnectorProps & { rail: BreadboardPowerRailId }) => (
-  <connector
-    pinLabels={powerPinLabels}
-    manufacturerPartNumber="GENERIC-BREADBOARD-1X21-FEMALE-2.54MM"
-    footprint={<BreadboardPowerHeaderFootprint />}
-    noSchematicRepresentation
-    pcbY={BREADBOARD_POWER_RAILS.find((candidate) => candidate.id === rail)!.y}
     {...props}
   />
 )
@@ -251,10 +179,6 @@ export interface BreadboardCladProps {
   /** Per-header no-connect overrides for partially populated designs. */
   headerNoConnects?: {
     terminals?: string[]
-    topPositive?: string[]
-    topNegative?: string[]
-    bottomPositive?: string[]
-    bottomNegative?: string[]
   }
 }
 
@@ -316,19 +240,6 @@ export const BreadboardClad = ({
         (markHeadersNoConnect ? terminalPinNames : undefined)
       }
     />
-
-    {BREADBOARD_POWER_RAILS.map((rail) => (
-      <Fragment key={rail.id}>
-        <BreadboardPowerHeader
-          rail={rail.id}
-          name={`J_${rail.id.replace(/([A-Z])/g, "_$1").toUpperCase()}`}
-          noConnect={
-            headerNoConnects?.[rail.id] ??
-            (markHeadersNoConnect ? powerPinNames : undefined)
-          }
-        />
-      </Fragment>
-    ))}
 
     {[1, 5, 10, 15, 20, BREADBOARD_COLUMN_COUNT].map((column) => (
       <Fragment key={`column-label-${column}`}>

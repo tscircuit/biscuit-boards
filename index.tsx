@@ -77,8 +77,6 @@ export {
   BREADBOARD_OUTER_VERTICAL_VIA_YS,
   BREADBOARD_OUTER_VIA_COLUMN_XS,
   BREADBOARD_OUTER_VIA_ROW_YS,
-  BREADBOARD_POWER_HEADER_POSITIONS,
-  BREADBOARD_POWER_RAILS,
   BREADBOARD_TERMINAL_HEADER_POSITIONS,
   BREADBOARD_TERMINAL_ROW_LABELS,
   BREADBOARD_TERMINAL_ROW_YS,
@@ -86,8 +84,6 @@ export {
   type BreadboardCladProps,
   type BreadboardCladViaPosition,
   type BreadboardHeaderPosition,
-  BreadboardPowerHeader,
-  type BreadboardPowerRailId,
   BreadboardTerminalHeaders,
   type BreadboardTerminalRowLabel,
 } from "./lib/breadboard-clad"
