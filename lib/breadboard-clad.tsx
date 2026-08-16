@@ -23,8 +23,13 @@ export const BREADBOARD_CLAD_VIA_ROW_YS = [
   BREADBOARD_HEADER_PITCH / 2,
   16.51,
 ] as const
-export const BREADBOARD_OUTER_VIA_ROW_YS = [-24.13, 24.13] as const
-export const BREADBOARD_OUTER_VIA_COLUMN_XS = [-27.94, 27.94] as const
+export const BREADBOARD_CORNER_VIA_SPACING = 1.3
+export const BREADBOARD_CORNER_VIA_ARM_WIDTH = 1.3
+export const BREADBOARD_CORNER_VIA_X_INNER_OFFSET = 27
+export const BREADBOARD_CORNER_VIA_X_OUTER_OFFSET = 32.2
+export const BREADBOARD_CORNER_VIA_Y_INNER_OFFSET = 21
+export const BREADBOARD_CORNER_VIA_Y_OUTER_OFFSET = 26.2
+export const BREADBOARD_CORNER_VIA_X_OUTWARD_SHIFT = 3.9
 export const BREADBOARD_MOUNTING_HOLE_DIAMETER = 2.2
 
 const BREADBOARD_CLAD_EDGE_CLEARANCE = 0.2
@@ -62,17 +67,21 @@ export interface BreadboardCladViaPosition {
 
 const roundCoordinate = (value: number) => Math.round(value * 1e6) / 1e6
 
+const createPitchedRange = (start: number, end: number) =>
+  Array.from(
+    {
+      length: Math.round((end - start) / BREADBOARD_CORNER_VIA_SPACING) + 1,
+    },
+    (_, index) =>
+      roundCoordinate(start + index * BREADBOARD_CORNER_VIA_SPACING),
+  )
+
 export const BREADBOARD_COLUMN_XS = Array.from(
   { length: BREADBOARD_COLUMN_COUNT },
   (_, index) =>
     roundCoordinate(
       (index - (BREADBOARD_COLUMN_COUNT - 1) / 2) * BREADBOARD_HEADER_PITCH,
     ),
-)
-
-export const BREADBOARD_OUTER_VERTICAL_VIA_YS = Array.from(
-  { length: 18 },
-  (_, index) => roundCoordinate(-21.59 + index * BREADBOARD_CLAD_VIA_PITCH),
 )
 
 export const BREADBOARD_TERMINAL_ROW_YS = Object.fromEntries(
@@ -99,43 +108,76 @@ export const BREADBOARD_TERMINAL_HEADER_POSITIONS =
     })),
   ) satisfies BreadboardHeaderPosition[]
 
-export const BREADBOARD_POWER_RAILS = [
-  { id: "topPositive", label: "+", y: 21.59 },
-  { id: "topNegative", label: "-", y: 19.05 },
-  { id: "bottomPositive", label: "+", y: -19.05 },
-  { id: "bottomNegative", label: "-", y: -21.59 },
-] as const
+const cornerViaAxisX = createPitchedRange(
+  BREADBOARD_CORNER_VIA_X_INNER_OFFSET,
+  BREADBOARD_CORNER_VIA_X_OUTER_OFFSET,
+)
+const cornerViaAxisY = createPitchedRange(
+  BREADBOARD_CORNER_VIA_Y_INNER_OFFSET,
+  BREADBOARD_CORNER_VIA_Y_OUTER_OFFSET,
+)
+const cornerViaArmAxisX = createPitchedRange(
+  BREADBOARD_CORNER_VIA_X_INNER_OFFSET,
+  BREADBOARD_CORNER_VIA_X_INNER_OFFSET + BREADBOARD_CORNER_VIA_ARM_WIDTH,
+)
+const cornerViaArmAxisY = createPitchedRange(
+  BREADBOARD_CORNER_VIA_Y_INNER_OFFSET,
+  BREADBOARD_CORNER_VIA_Y_INNER_OFFSET + BREADBOARD_CORNER_VIA_ARM_WIDTH,
+)
 
-export type BreadboardPowerRailId =
-  (typeof BREADBOARD_POWER_RAILS)[number]["id"]
+const createCornerViaPositions = (
+  xSign: -1 | 1,
+  ySign: -1 | 1,
+  xOutwardShift = 0,
+): BreadboardCladViaPosition[] => {
+  const shiftedCornerViaAxisX = cornerViaAxisX.map((x) =>
+    roundCoordinate(x + xOutwardShift),
+  )
+  const shiftedCornerViaArmAxisX = cornerViaArmAxisX.map((x) =>
+    roundCoordinate(x + xOutwardShift),
+  )
+  const horizontalArm = shiftedCornerViaAxisX.flatMap((x) =>
+    cornerViaArmAxisY.map((y) => ({ x: x * xSign, y: y * ySign })),
+  )
+  const verticalArm = shiftedCornerViaArmAxisX.flatMap((x) =>
+    cornerViaAxisY.map((y) => ({ x: x * xSign, y: y * ySign })),
+  )
 
-export const BREADBOARD_POWER_HEADER_POSITIONS = BREADBOARD_POWER_RAILS.flatMap(
-  (rail) =>
-    BREADBOARD_COLUMN_XS.map((x, columnIndex) => ({
-      rail: rail.id,
-      pin: columnIndex + 1,
-      label: `${rail.id}${columnIndex + 1}`,
-      column: columnIndex + 1,
-      x,
-      y: rail.y,
-    })),
+  return Array.from(
+    new Map(
+      [...horizontalArm, ...verticalArm].map((point) => [
+        `${point.x},${point.y}`,
+        point,
+      ]),
+    ).values(),
+  )
+}
+
+/** Four two-via-wide L-shaped fields at the board corners. */
+export const BREADBOARD_CORNER_VIA_POSITIONS = (
+  [
+    [-1, -1],
+    [-1, 1],
+    [1, -1],
+    [1, 1],
+  ] as const
+).flatMap(([xSign, ySign]) =>
+  createCornerViaPositions(
+    xSign,
+    ySign,
+    xSign === -1 || ySign === -1 ? BREADBOARD_CORNER_VIA_X_OUTWARD_SHIFT : 0,
+  ),
 )
 
 /**
- * Fixed layer-change rows run through each open channel. A single-via-wide
- * outer field also runs beyond all four sides of the pin headers while staying
- * clear of the tooling holes and board edge.
+ * Fixed layer-change rows run through each open channel and stay clear of the
+ * terminal headers.
  */
 export const BREADBOARD_CLAD_VIA_POSITIONS = [
   ...BREADBOARD_CLAD_VIA_ROW_YS.flatMap((y) =>
     BREADBOARD_COLUMN_XS.map((x) => ({ x, y })),
   ),
-  ...BREADBOARD_OUTER_VIA_ROW_YS.flatMap((y) =>
-    BREADBOARD_COLUMN_XS.map((x) => ({ x, y })),
-  ),
-  ...BREADBOARD_OUTER_VIA_COLUMN_XS.flatMap((x) =>
-    BREADBOARD_OUTER_VERTICAL_VIA_YS.map((y) => ({ x, y })),
-  ),
+  ...BREADBOARD_CORNER_VIA_POSITIONS,
 ] satisfies BreadboardCladViaPosition[]
 
 const terminalPinLabels = Object.fromEntries(
@@ -145,17 +187,9 @@ const terminalPinLabels = Object.fromEntries(
   ]),
 )
 
-const powerPinLabels = Object.fromEntries(
-  BREADBOARD_COLUMN_XS.map((_, index) => [
-    `pin${index + 1}`,
-    [`COL${index + 1}`],
-  ]),
-)
-
 const terminalPinNames = BREADBOARD_TERMINAL_HEADER_POSITIONS.map(
   (position) => `pin${position.pin}`,
 )
-const powerPinNames = BREADBOARD_COLUMN_XS.map((_, index) => `pin${index + 1}`)
 
 const BreadboardTerminalHeaderFootprint = () => (
   <footprint insertionDirection="from_above">
@@ -186,33 +220,6 @@ const BreadboardTerminalHeaderFootprint = () => (
   </footprint>
 )
 
-const BreadboardPowerHeaderFootprint = () => (
-  <footprint insertionDirection="from_above">
-    {BREADBOARD_COLUMN_XS.map((x, index) => (
-      <Fragment key={`power-pin-${index + 1}`}>
-        {index === 0 ? (
-          <platedhole
-            portHints={[`pin${index + 1}`]}
-            shape="circular_hole_with_rect_pad"
-            holeDiameter={`${BREADBOARD_HEADER_HOLE_DIAMETER}mm`}
-            rectPadWidth={`${BREADBOARD_HEADER_PAD_DIAMETER}mm`}
-            rectPadHeight={`${BREADBOARD_HEADER_PAD_DIAMETER}mm`}
-            pcbX={x}
-          />
-        ) : (
-          <platedhole
-            portHints={[`pin${index + 1}`]}
-            shape="circle"
-            holeDiameter={`${BREADBOARD_HEADER_HOLE_DIAMETER}mm`}
-            outerDiameter={`${BREADBOARD_HEADER_PAD_DIAMETER}mm`}
-            pcbX={x}
-          />
-        )}
-      </Fragment>
-    ))}
-  </footprint>
-)
-
 /** One connector exposing every terminal socket by its breadboard name. */
 export const BreadboardTerminalHeaders = (props: ConnectorProps) => (
   <connector
@@ -220,21 +227,6 @@ export const BreadboardTerminalHeaders = (props: ConnectorProps) => (
     manufacturerPartNumber="GENERIC-BREADBOARD-10X21-FEMALE-2.54MM"
     footprint={<BreadboardTerminalHeaderFootprint />}
     noSchematicRepresentation
-    {...props}
-  />
-)
-
-/** One 1x21 female socket rail; select it with a BREADBOARD_POWER_RAILS id. */
-export const BreadboardPowerHeader = ({
-  rail,
-  ...props
-}: ConnectorProps & { rail: BreadboardPowerRailId }) => (
-  <connector
-    pinLabels={powerPinLabels}
-    manufacturerPartNumber="GENERIC-BREADBOARD-1X21-FEMALE-2.54MM"
-    footprint={<BreadboardPowerHeaderFootprint />}
-    noSchematicRepresentation
-    pcbY={BREADBOARD_POWER_RAILS.find((candidate) => candidate.id === rail)!.y}
     {...props}
   />
 )
@@ -251,10 +243,6 @@ export interface BreadboardCladProps {
   /** Per-header no-connect overrides for partially populated designs. */
   headerNoConnects?: {
     terminals?: string[]
-    topPositive?: string[]
-    topNegative?: string[]
-    bottomPositive?: string[]
-    bottomNegative?: string[]
   }
 }
 
@@ -316,19 +304,6 @@ export const BreadboardClad = ({
         (markHeadersNoConnect ? terminalPinNames : undefined)
       }
     />
-
-    {BREADBOARD_POWER_RAILS.map((rail) => (
-      <Fragment key={rail.id}>
-        <BreadboardPowerHeader
-          rail={rail.id}
-          name={`J_${rail.id.replace(/([A-Z])/g, "_$1").toUpperCase()}`}
-          noConnect={
-            headerNoConnects?.[rail.id] ??
-            (markHeadersNoConnect ? powerPinNames : undefined)
-          }
-        />
-      </Fragment>
-    ))}
 
     {[1, 5, 10, 15, 20, BREADBOARD_COLUMN_COUNT].map((column) => (
       <Fragment key={`column-label-${column}`}>

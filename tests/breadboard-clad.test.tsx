@@ -9,18 +9,23 @@ import {
   BREADBOARD_CLAD_WIDTH,
   BREADBOARD_COLUMN_COUNT,
   BREADBOARD_COLUMN_XS,
+  BREADBOARD_CORNER_VIA_ARM_WIDTH,
+  BREADBOARD_CORNER_VIA_POSITIONS,
+  BREADBOARD_CORNER_VIA_SPACING,
+  BREADBOARD_CORNER_VIA_X_INNER_OFFSET,
+  BREADBOARD_CORNER_VIA_X_OUTER_OFFSET,
+  BREADBOARD_CORNER_VIA_X_OUTWARD_SHIFT,
+  BREADBOARD_CORNER_VIA_Y_INNER_OFFSET,
+  BREADBOARD_CORNER_VIA_Y_OUTER_OFFSET,
   BREADBOARD_HEADER_HOLE_DIAMETER,
   BREADBOARD_HEADER_PAD_DIAMETER,
-  BREADBOARD_OUTER_VERTICAL_VIA_YS,
-  BREADBOARD_OUTER_VIA_COLUMN_XS,
-  BREADBOARD_OUTER_VIA_ROW_YS,
-  BREADBOARD_POWER_HEADER_POSITIONS,
   BREADBOARD_TERMINAL_HEADER_POSITIONS,
   BreadboardClad,
 } from "../lib/breadboard-clad"
 
 const pointKey = (point: { x: number; y: number }) =>
   `${point.x.toFixed(3)},${point.y.toFixed(3)}`
+const coordinateTolerance = 0.001
 
 test("creates an individually routable breadboard socket grid", async () => {
   const circuit = new Circuit()
@@ -51,11 +56,6 @@ test("creates an individually routable breadboard socket grid", async () => {
     (element) =>
       element.type.endsWith("error") || element.type.endsWith("warning"),
   )
-  const expectedHeaderPositions = [
-    ...BREADBOARD_TERMINAL_HEADER_POSITIONS,
-    ...BREADBOARD_POWER_HEADER_POSITIONS,
-  ]
-
   expect(board).toMatchObject({
     width: BREADBOARD_CLAD_WIDTH,
     height: BREADBOARD_CLAD_HEIGHT,
@@ -64,12 +64,9 @@ test("creates an individually routable breadboard socket grid", async () => {
   expect(BREADBOARD_TERMINAL_HEADER_POSITIONS).toHaveLength(
     BREADBOARD_COLUMN_COUNT * 10,
   )
-  expect(BREADBOARD_POWER_HEADER_POSITIONS).toHaveLength(
-    BREADBOARD_COLUMN_COUNT * 4,
-  )
-  expect(platedHoles).toHaveLength(expectedHeaderPositions.length)
+  expect(platedHoles).toHaveLength(BREADBOARD_TERMINAL_HEADER_POSITIONS.length)
   expect(new Set(platedHoles.map(pointKey))).toEqual(
-    new Set(expectedHeaderPositions.map(pointKey)),
+    new Set(BREADBOARD_TERMINAL_HEADER_POSITIONS.map(pointKey)),
   )
   expect(
     platedHoles.every(
@@ -84,15 +81,15 @@ test("creates an individually routable breadboard socket grid", async () => {
             hole.rect_pad_height === BREADBOARD_HEADER_PAD_DIAMETER)),
     ),
   ).toBe(true)
-  expect(headerSourcePorts).toHaveLength(expectedHeaderPositions.length)
+  expect(headerSourcePorts).toHaveLength(
+    BREADBOARD_TERMINAL_HEADER_POSITIONS.length,
+  )
   expect(headerSourcePorts.every((port) => port.do_not_connect)).toBe(true)
 
   expect(vias).toHaveLength(BREADBOARD_CLAD_VIA_POSITIONS.length)
   expect(vias).toHaveLength(
-    BREADBOARD_COLUMN_COUNT *
-      (BREADBOARD_CLAD_VIA_ROW_YS.length + BREADBOARD_OUTER_VIA_ROW_YS.length) +
-      BREADBOARD_OUTER_VIA_COLUMN_XS.length *
-        BREADBOARD_OUTER_VERTICAL_VIA_YS.length,
+    BREADBOARD_COLUMN_COUNT * BREADBOARD_CLAD_VIA_ROW_YS.length +
+      BREADBOARD_CORNER_VIA_POSITIONS.length,
   )
   expect(new Set(vias.map(pointKey))).toEqual(
     new Set(BREADBOARD_CLAD_VIA_POSITIONS.map(pointKey)),
@@ -104,25 +101,66 @@ test("creates an individually routable breadboard socket grid", async () => {
         via.outer_diameter === BREADBOARD_CLAD_VIA_PAD_DIAMETER,
     ),
   ).toBe(true)
-  for (const rowY of [
-    ...BREADBOARD_CLAD_VIA_ROW_YS,
-    ...BREADBOARD_OUTER_VIA_ROW_YS,
-  ]) {
+  for (const rowY of BREADBOARD_CLAD_VIA_ROW_YS) {
     expect(
       vias.filter(
         (via) => via.y === rowY && BREADBOARD_COLUMN_XS.includes(via.x),
       ),
     ).toHaveLength(BREADBOARD_COLUMN_COUNT)
   }
-  for (const columnX of BREADBOARD_OUTER_VIA_COLUMN_XS) {
-    expect(
-      vias.filter(
-        (via) =>
-          via.x === columnX && BREADBOARD_OUTER_VERTICAL_VIA_YS.includes(via.y),
-      ),
-    ).toHaveLength(BREADBOARD_OUTER_VERTICAL_VIA_YS.length)
-  }
   expect(errorsAndWarnings).toEqual([])
+})
+
+test("places two-via-wide L-shaped fields in every corner", () => {
+  expect(BREADBOARD_CORNER_VIA_SPACING).toBe(1.3)
+  expect(BREADBOARD_CORNER_VIA_ARM_WIDTH).toBe(1.3)
+  expect(BREADBOARD_CORNER_VIA_X_OUTWARD_SHIFT).toBe(3.9)
+  expect(BREADBOARD_CORNER_VIA_POSITIONS).toHaveLength(64)
+
+  for (const xSign of [-1, 1] as const) {
+    for (const ySign of [-1, 1] as const) {
+      const cornerVias = BREADBOARD_CORNER_VIA_POSITIONS.filter(
+        ({ x, y }) => Math.sign(x) === xSign && Math.sign(y) === ySign,
+      )
+      expect(cornerVias).toHaveLength(16)
+
+      for (const via of cornerVias) {
+        const localX = via.x * xSign
+        const localY = via.y * ySign
+        const xOutwardShift =
+          xSign === -1 || ySign === -1
+            ? BREADBOARD_CORNER_VIA_X_OUTWARD_SHIFT
+            : 0
+        expect(localX).toBeGreaterThanOrEqual(
+          BREADBOARD_CORNER_VIA_X_INNER_OFFSET +
+            xOutwardShift -
+            coordinateTolerance,
+        )
+        expect(localX).toBeLessThanOrEqual(
+          BREADBOARD_CORNER_VIA_X_OUTER_OFFSET +
+            xOutwardShift +
+            coordinateTolerance,
+        )
+        expect(localY).toBeGreaterThanOrEqual(
+          BREADBOARD_CORNER_VIA_Y_INNER_OFFSET - coordinateTolerance,
+        )
+        expect(localY).toBeLessThanOrEqual(
+          BREADBOARD_CORNER_VIA_Y_OUTER_OFFSET + coordinateTolerance,
+        )
+        expect(
+          localX <=
+            BREADBOARD_CORNER_VIA_X_INNER_OFFSET +
+              xOutwardShift +
+              BREADBOARD_CORNER_VIA_ARM_WIDTH +
+              coordinateTolerance ||
+            localY <=
+              BREADBOARD_CORNER_VIA_Y_INNER_OFFSET +
+                BREADBOARD_CORNER_VIA_ARM_WIDTH +
+                coordinateTolerance,
+        ).toBe(true)
+      }
+    }
+  }
 })
 
 test("routes crossing socket nets without non-prefabricated vias", async () => {
