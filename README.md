@@ -26,7 +26,18 @@ bun run export:gerbers examples/breadboard-clad.tsx
 The archive defaults to `dist/gerbers/<board-name>.zip`. Pass a second argument
 to choose another ZIP path. As a fabrication postprocessing step, every board
 receives full top and bottom copper pours and the front and back solder-mask
-layers are removed. The source TSX is not modified.
+layers are removed. The source TSX is not modified. The exporter also accepts a
+built `circuit.json` file, which the site build uses to avoid rendering twice.
+
+Build the static circuit site and downloadable Gerbers for every circuit with:
+
+```sh
+bun run build:site
+```
+
+The site is written to `dist/`. Its Gerber download index is available at
+`/gerbers/`, with individual archives such as
+`/gerbers/examples/clad-panel.zip`.
 
 `BiscuitBoard` owns the fixed 75 mm x 55 mm outline, mounting holes, and
 assignable prefabricated vias. Copper pours are intentionally disabled. Its
