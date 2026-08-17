@@ -50,7 +50,7 @@ for await (const circuitJsonPath of circuitJsonGlob.scan({
     circuitJsonPath,
     gerberPath,
   ])
-  gerberLinks.push({ circuitName, href: `./${circuitName}.zip` })
+  gerberLinks.push({ circuitName, href: `/gerbers/${circuitName}.zip` })
 }
 
 gerberLinks.sort((a, b) => a.circuitName.localeCompare(b.circuitName))
