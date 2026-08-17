@@ -28,6 +28,7 @@
     "dev": "tsci dev",
     "analyze:boosterpack": "bun run scripts/analyze-boosterpack-routing.tsx",
     "build": "tsup",
+    "build:site": "bun run scripts/build-site.ts",
     "build:circuit": "tsci build index.tsx",
     "build:breadboard-clad": "tsci build examples/breadboard-clad.tsx --disable-parts-engine --svgs",
     "build:clad-32x32": "tsci build examples/clad-32x32.tsx --disable-parts-engine --svgs",

@@ -9,7 +9,9 @@ import { addFullCopperPours } from "./lib/add-full-copper-pours"
 
 const circuitFileArgument = Bun.argv[2]
 if (!circuitFileArgument) {
-  console.error("Usage: bun run export:gerbers <circuit-file.tsx> [output.zip]")
+  console.error(
+    "Usage: bun run export:gerbers <circuit-file.tsx|circuit.json> [output.zip]",
+  )
   process.exit(1)
 }
 
@@ -47,25 +49,31 @@ const temporaryCircuitPath = resolve(
 const tsciPath = resolve(import.meta.dir, "../node_modules/.bin/tsci")
 
 try {
-  const circuitModule = (await import(pathToFileURL(circuitFilePath).href)) as {
-    default?: unknown
-  }
-  const circuitExport = circuitModule.default
-  const circuitElement =
-    typeof circuitExport === "function"
-      ? createElement(circuitExport as ComponentType)
-      : circuitExport
-  if (!isValidElement(circuitElement)) {
-    throw new Error(
-      `Circuit file must default-export a React component or element: ${circuitFilePath}`,
-    )
-  }
+  let circuitJson: CircuitJson
+  if (extname(circuitFilePath).toLowerCase() === ".json") {
+    circuitJson = (await circuitFile.json()) as CircuitJson
+  } else {
+    const circuitModule = (await import(
+      pathToFileURL(circuitFilePath).href
+    )) as {
+      default?: unknown
+    }
+    const circuitExport = circuitModule.default
+    const circuitElement =
+      typeof circuitExport === "function"
+        ? createElement(circuitExport as ComponentType)
+        : circuitExport
+    if (!isValidElement(circuitElement)) {
+      throw new Error(
+        `Circuit file must default-export a React component or element: ${circuitFilePath}`,
+      )
+    }
 
-  const circuit = new Circuit()
-  circuit.add(circuitElement)
-  await circuit.renderUntilSettled()
-
-  const circuitJson = circuit.getCircuitJson() as CircuitJson
+    const circuit = new Circuit()
+    circuit.add(circuitElement)
+    await circuit.renderUntilSettled()
+    circuitJson = circuit.getCircuitJson() as CircuitJson
+  }
   const pcbBoardCount = circuitJson.filter(
     (element) => element.type === "pcb_board",
   ).length
