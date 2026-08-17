@@ -107,7 +107,7 @@ test("uses the UNO R3 connector and BiscuitBoard mounting-hole geometry", async 
   expect(headerPortIds).toHaveLength(38)
   expect(doNotConnectHeaderPortIds).toHaveLength(38)
   expect(vias).toHaveLength(ARDUINO_SHIELD_CLAD_VIA_POSITIONS.length)
-  expect(vias).toHaveLength(262)
+  expect(vias).toHaveLength(226)
   expect(
     vias.every(
       (via) => via.hole_diameter === ARDUINO_SHIELD_CLAD_VIA_HOLE_DIAMETER,
@@ -124,7 +124,7 @@ test("uses the UNO R3 connector and BiscuitBoard mounting-hole geometry", async 
   expect(errorsAndWarnings).toEqual([])
 })
 
-test("preserves the non-grid UNO digital-header gap and clustered via field", async () => {
+test("preserves the UNO header gap and uses central and corner via fields", async () => {
   const circuit = new Circuit()
   circuit.add(<ArduinoShieldClad routingDisabled markHeadersNoConnect />)
   await circuit.renderUntilSettled()
@@ -140,14 +140,29 @@ test("preserves the non-grid UNO digital-header gap and clustered via field", as
     .slice(1)
     .map((x, index) => x - topHeaderXs[index])
     .filter((gap) => Math.abs(gap - 2.54) > 0.001)
-  const leftEdgeVias = ARDUINO_SHIELD_CLAD_VIA_POSITIONS.filter(
-    (via) => via.x <= -25.5,
-  )
-  const rightEdgeVias = ARDUINO_SHIELD_CLAD_VIA_POSITIONS.filter(
-    (via) => via.x === 34.5,
-  )
-  const shiftedCentralVias = ARDUINO_SHIELD_CLAD_VIA_POSITIONS.filter(
+  const centralVias = ARDUINO_SHIELD_CLAD_VIA_POSITIONS.filter(
     (via) => via.x >= -19 && via.x <= -3 && via.y >= -6 && via.y <= 6,
+  )
+  const cornerVias = ARDUINO_SHIELD_CLAD_VIA_POSITIONS.filter(
+    (via) => !centralVias.includes(via),
+  )
+  const corners = [
+    cornerVias.filter((via) => via.x < 0 && via.y > 0),
+    cornerVias.filter((via) => via.x < 0 && via.y < 0),
+    cornerVias.filter((via) => via.x > 0 && via.y > 0),
+    cornerVias.filter((via) => via.x > 0 && via.y < 0),
+  ]
+  const upperRightMountingHoleClearance = Math.min(
+    ...corners[2]!.flatMap((via) =>
+      ARDUINO_SHIELD_MOUNTING_HOLE_POSITIONS.filter(
+        (hole) => hole.x > 0 && hole.y > 0,
+      ).map(
+        (hole) =>
+          Math.hypot(via.x - hole.x, via.y - hole.y) -
+          ARDUINO_SHIELD_MOUNTING_HOLE_DIAMETER / 2 -
+          ARDUINO_SHIELD_CLAD_VIA_OUTER_DIAMETER / 2,
+      ),
+    ),
   )
 
   expect(nonPitchGaps).toHaveLength(1)
@@ -164,20 +179,30 @@ test("preserves the non-grid UNO digital-header gap and clustered via field", as
       ),
     ),
   ).toBeGreaterThan(4)
-  expect(leftEdgeVias).toHaveLength(56)
-  expect(rightEdgeVias).toHaveLength(20)
-  expect(rightEdgeVias.some((via) => via.y === -3.5)).toBe(false)
-  expect(rightEdgeVias.some((via) => via.y === 3.5)).toBe(false)
-  expect(shiftedCentralVias).toHaveLength(130)
+  expect(centralVias).toHaveLength(130)
+  expect(cornerVias).toHaveLength(96)
+  expect(corners.map((corner) => corner.length)).toEqual([27, 27, 15, 27])
+  expect(new Set(corners[2]!.map((via) => via.y)).size).toBe(3)
+  expect(upperRightMountingHoleClearance).toBeCloseTo(1.3, 2)
+  expect(new Set(ARDUINO_SHIELD_CLAD_VIA_POSITIONS.map(pointKey)).size).toBe(
+    226,
+  )
   expect(
-    shiftedCentralVias.some(
+    centralVias.some(
       (via) =>
         Math.abs(via.x - (-19 + ARDUINO_SHIELD_CLAD_VIA_SPACING)) < 0.001,
     ),
   ).toBe(true)
   expect(
-    ARDUINO_SHIELD_CLAD_VIA_POSITIONS.some(
-      (via) => via.x >= 18 && via.x <= 22 && via.y >= -4 && via.y <= 4,
+    Math.min(
+      ...cornerVias.flatMap((via) =>
+        ARDUINO_SHIELD_MOUNTING_HOLE_POSITIONS.map(
+          (hole) =>
+            Math.hypot(via.x - hole.x, via.y - hole.y) -
+            ARDUINO_SHIELD_MOUNTING_HOLE_DIAMETER / 2 -
+            ARDUINO_SHIELD_CLAD_VIA_OUTER_DIAMETER / 2,
+        ),
+      ),
     ),
-  ).toBe(false)
+  ).toBeGreaterThanOrEqual(1.3)
 })
