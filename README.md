@@ -20,11 +20,13 @@ export default () => (
 Generate a Gerber ZIP without the front or back solder-mask layers with:
 
 ```sh
-bun run export:gerbers:no-solder-mask examples/breadboard-clad.tsx
+bun run export:gerbers examples/breadboard-clad.tsx
 ```
 
 The archive defaults to `dist/gerbers/<board-name>.zip`. Pass a second argument
-to choose another ZIP path.
+to choose another ZIP path. As a fabrication postprocessing step, every board
+receives full top and bottom copper pours and the front and back solder-mask
+layers are removed. The source TSX is not modified.
 
 `BiscuitBoard` owns the fixed 75 mm x 55 mm outline, mounting holes, and
 assignable prefabricated vias. Copper pours are intentionally disabled. Its
