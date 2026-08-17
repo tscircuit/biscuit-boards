@@ -217,11 +217,13 @@ upper-right clad hole clears the D0-D7 header. Relative placement remains
 official UNO R3 geometry for the 1x8 power header, 1x6 analog header, 1x8
 D0-D7 header, 1x10 R3 digital/AREF/I2C header, and 2x3 ICSP socket.
 
-The 262 assignable fixed vias use 0.3 mm drills, 0.6 mm copper pads, and 1.3 mm
-center-to-center pitch. The clustered layout has upper- and lower-left edge
-fields, two inset left fields, a central routing field spanning -19 to -3 mm,
-and split right-edge rails. The area immediately left of ICSP, the header rows, and
-the original clad mounting holes remain open. The bare template and its
+The 226 assignable fixed vias use 0.3 mm drills, 0.6 mm copper pads, and 1.3 mm
+center-to-center pitch. A 130-via central routing field spanning -19 to -3 mm
+is retained. Three corners use compact three-via-wide L-shaped fields; the
+upper-right uses one three-row horizontal arm parallel to its two mounting
+holes and lowered around the crowded UNO header region. The area immediately
+left of ICSP, the header rows, and the original clad mounting holes remain
+open. The bare template and its
 checked-in PCB snapshot are in
 [`examples/arduino-shield-clad.tsx`](./examples/arduino-shield-clad.tsx).
 

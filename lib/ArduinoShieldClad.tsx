@@ -68,7 +68,9 @@ interface ViaCandidateZone {
 
 const rangeInclusive = (start: number, end: number, increment: number) =>
   Array.from(
-    { length: Math.max(0, Math.floor((end - start) / increment) + 1) },
+    {
+      length: Math.max(0, Math.floor((end - start) / increment + 1e-9) + 1),
+    },
     (_, index) => Math.round((start + index * increment) * 1e6) / 1e6,
   )
 
@@ -80,39 +82,42 @@ const createViaZone = (
   )
 
 /**
- * Clustered fixed-via field arranged around the UNO shield connectors. The
- * main header rows remain clear and the right side is split around the two UNO
- * mounting/ICSP regions.
+ * A large central routing field plus three compact, three-via-wide L-shaped
+ * corner fields. The upper-right field is a single horizontal arm, parallel
+ * to the two mounting holes and lowered to clear the UNO digital header.
  */
 export const ARDUINO_SHIELD_CLAD_VIA_CANDIDATE_ZONES = [
+  // Upper-left horizontal and vertical arms.
   {
-    minX: -33.5,
-    maxX: -25.5,
-    minY: 17.5,
-    maxY: 21.5,
+    minX: -36.1,
+    maxX: -29.6,
+    minY: 19.7,
+    maxY: 22.3,
     spacing: ARDUINO_SHIELD_CLAD_VIA_SPACING,
   },
   {
-    minX: -33.5,
-    maxX: -25.5,
-    minY: -21.5,
-    maxY: -17.5,
+    minX: -32.2,
+    maxX: -29.6,
+    minY: 19.7,
+    maxY: 26.2,
+    spacing: ARDUINO_SHIELD_CLAD_VIA_SPACING,
+  },
+  // Lower-left horizontal and vertical arms.
+  {
+    minX: -36.1,
+    maxX: -29.6,
+    minY: -22.3,
+    maxY: -19.7,
     spacing: ARDUINO_SHIELD_CLAD_VIA_SPACING,
   },
   {
-    minX: -21.5,
-    maxX: -13.5,
-    minY: 13.5,
-    maxY: 17.5,
+    minX: -32.2,
+    maxX: -29.6,
+    minY: -26.2,
+    maxY: -19.7,
     spacing: ARDUINO_SHIELD_CLAD_VIA_SPACING,
   },
-  {
-    minX: -21.5,
-    maxX: -13.5,
-    minY: -17.5,
-    maxY: -13.5,
-    spacing: ARDUINO_SHIELD_CLAD_VIA_SPACING,
-  },
+  // Preserve the large central routing field exactly.
   {
     minX: -19,
     maxX: -3,
@@ -120,18 +125,27 @@ export const ARDUINO_SHIELD_CLAD_VIA_CANDIDATE_ZONES = [
     maxY: 6,
     spacing: ARDUINO_SHIELD_CLAD_VIA_SPACING,
   },
+  // Upper-right horizontal arm, parallel to the two mounting holes.
   {
-    minX: 34.5,
-    maxX: 34.5,
-    minY: -19.5,
-    maxY: -7.5,
+    minX: 30.9,
+    maxX: 36.1,
+    minY: 19.7,
+    maxY: 22.3,
+    spacing: ARDUINO_SHIELD_CLAD_VIA_SPACING,
+  },
+  // Lower-right horizontal and vertical arms.
+  {
+    minX: 29.6,
+    maxX: 36.1,
+    minY: -22.3,
+    maxY: -19.7,
     spacing: ARDUINO_SHIELD_CLAD_VIA_SPACING,
   },
   {
-    minX: 34.5,
-    maxX: 34.5,
-    minY: 7.5,
-    maxY: 19.5,
+    minX: 29.6,
+    maxX: 32.2,
+    minY: -26.2,
+    maxY: -19.7,
     spacing: ARDUINO_SHIELD_CLAD_VIA_SPACING,
   },
 ] as const satisfies readonly ViaCandidateZone[]
@@ -476,7 +490,9 @@ export const ArduinoShieldClad = ({
     />
 
     {ARDUINO_SHIELD_CLAD_VIA_CANDIDATE_ZONES.map((zone) => (
-      <Fragment key={`arduino-via-zone-${zone.minX}-${zone.minY}`}>
+      <Fragment
+        key={`arduino-via-zone-${zone.minX}-${zone.maxX}-${zone.minY}-${zone.maxY}`}
+      >
         <pcbnoterect
           color="blue"
           width={Math.max(0.2, zone.maxX - zone.minX)}
