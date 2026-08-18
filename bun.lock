@@ -10,6 +10,7 @@
       },
       "devDependencies": {
         "@biomejs/biome": "^2.3.4",
+        "@resvg/resvg-js": "2.6.2",
         "@tscircuit/biscuit-board-autorouter": "github:tscircuit/biscuit-board-autorouter#a704ab5d6f9693924fe716710c57a7787fe943f4",
         "@tscircuit/checks": "0.0.151",
         "@tscircuit/common": "0.0.56",
@@ -19,6 +20,7 @@
         "bun-match-svg": "0.0.15",
         "circuit-json": "0.0.464",
         "circuit-json-to-lbrn": "0.0.88",
+        "circuit-to-svg": "0.0.400",
         "lbrnts": "0.0.22",
         "manifold-3d": "^3.5.1",
         "manifold-to-step": "^0.0.4",

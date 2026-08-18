@@ -1,5 +1,10 @@
-import { mkdir } from "node:fs/promises"
+import { mkdir, mkdtemp, rm } from "node:fs/promises"
+import { tmpdir } from "node:os"
 import { dirname, relative, resolve } from "node:path"
+import { Resvg } from "@resvg/resvg-js"
+import type { CircuitJson } from "circuit-json"
+import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
+import { extractIndividualBoardCircuits } from "./lib/extract-individual-board-circuits"
 
 const workingDirectory = process.cwd()
 const distDirectory = resolve(workingDirectory, "dist")
@@ -36,28 +41,114 @@ await runCommand([tsciPath, "build", "--site"])
 await mkdir(gerberDirectory, { recursive: true })
 
 const circuitJsonGlob = new Bun.Glob("**/circuit.json")
-const gerberLinks: Array<{ circuitName: string; href: string }> = []
+const circuitDownloads: Array<{
+  boards: Array<{
+    gerberHref: string
+    screenshotHref: string
+    title: string
+  }>
+  circuitName: string
+  gerberHref: string
+}> = []
+const temporaryDirectory = await mkdtemp(
+  resolve(tmpdir(), "biscuit-board-site-"),
+)
 
-for await (const circuitJsonPath of circuitJsonGlob.scan({
-  cwd: distDirectory,
-  absolute: true,
-})) {
-  const circuitName = relative(distDirectory, dirname(circuitJsonPath))
-  const gerberPath = resolve(gerberDirectory, `${circuitName}.zip`)
-  await runCommand([
-    process.execPath,
-    gerberExporterPath,
-    circuitJsonPath,
-    gerberPath,
-  ])
-  gerberLinks.push({ circuitName, href: `/gerbers/${circuitName}.zip` })
+try {
+  for await (const circuitJsonPath of circuitJsonGlob.scan({
+    cwd: distDirectory,
+    absolute: true,
+  })) {
+    const circuitName = relative(distDirectory, dirname(circuitJsonPath))
+    const gerberPath = resolve(gerberDirectory, `${circuitName}.zip`)
+    await runCommand([
+      process.execPath,
+      gerberExporterPath,
+      circuitJsonPath,
+      gerberPath,
+    ])
+
+    const circuitJson = (await Bun.file(circuitJsonPath).json()) as CircuitJson
+    const individualBoards = extractIndividualBoardCircuits(circuitJson)
+    const boardDownloads: (typeof circuitDownloads)[number]["boards"] = []
+
+    if (individualBoards.length > 1) {
+      for (const individualBoard of individualBoards) {
+        const relativeBoardPath = `${circuitName}/boards/${individualBoard.fileStem}`
+        const boardCircuitJsonPath = resolve(
+          temporaryDirectory,
+          `${relativeBoardPath}.circuit.json`,
+        )
+        const boardGerberPath = resolve(
+          gerberDirectory,
+          `${relativeBoardPath}.zip`,
+        )
+        const boardScreenshotPath = resolve(
+          gerberDirectory,
+          `${relativeBoardPath}.png`,
+        )
+        await mkdir(dirname(boardCircuitJsonPath), { recursive: true })
+        await Bun.write(
+          boardCircuitJsonPath,
+          JSON.stringify(individualBoard.circuitJson),
+        )
+        await runCommand([
+          process.execPath,
+          gerberExporterPath,
+          boardCircuitJsonPath,
+          boardGerberPath,
+        ])
+
+        const pcbSvg = convertCircuitJsonToPcbSvg(individualBoard.circuitJson, {
+          backgroundColor: "#111827",
+          matchBoardAspectRatio: true,
+          showPcbNotes: false,
+          width: 1200,
+        })
+        await mkdir(dirname(boardScreenshotPath), { recursive: true })
+        const boardScreenshot = new Resvg(pcbSvg).render().asPng()
+        await Bun.write(boardScreenshotPath, boardScreenshot)
+
+        boardDownloads.push({
+          title: individualBoard.title,
+          gerberHref: `/gerbers/${relativeBoardPath}.zip`,
+          screenshotHref: `/gerbers/${relativeBoardPath}.png`,
+        })
+      }
+    }
+
+    circuitDownloads.push({
+      boards: boardDownloads,
+      circuitName,
+      gerberHref: `/gerbers/${circuitName}.zip`,
+    })
+  }
+} finally {
+  await rm(temporaryDirectory, { force: true, recursive: true })
 }
 
-gerberLinks.sort((a, b) => a.circuitName.localeCompare(b.circuitName))
-const gerberListItems = gerberLinks
+circuitDownloads.sort((a, b) => a.circuitName.localeCompare(b.circuitName))
+const gerberListItems = circuitDownloads
   .map(
-    ({ circuitName, href }) =>
-      `<li><a href="${escapeHtml(href)}">${escapeHtml(circuitName)}</a></li>`,
+    ({ boards, circuitName, gerberHref }) => `<li>
+      <h2>${escapeHtml(circuitName)}</h2>
+      <p><a href="${escapeHtml(gerberHref)}">Download ${
+        boards.length > 0 ? "panel" : "board"
+      } Gerbers</a></p>
+      ${
+        boards.length > 0
+          ? `<div class="boards">${boards
+              .map(
+                ({ gerberHref, screenshotHref, title }) => `<article>
+                  <img src="${escapeHtml(screenshotHref)}" alt="${escapeHtml(title)} PCB preview" loading="lazy">
+                  <h3>${escapeHtml(title)}</h3>
+                  <a href="${escapeHtml(gerberHref)}">Download board Gerbers</a>
+                </article>`,
+              )
+              .join("\n")}</div>`
+          : ""
+      }
+    </li>`,
   )
   .join("\n")
 
@@ -69,11 +160,23 @@ await Bun.write(
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Biscuit Board Gerbers</title>
+    <style>
+      :root { color-scheme: dark; font-family: system-ui, sans-serif; }
+      body { background: #030712; color: #f9fafb; margin: 0; }
+      main { margin: 0 auto; max-width: 1200px; padding: 2rem; }
+      a { color: #7dd3fc; }
+      ul { list-style: none; padding: 0; }
+      li { border-top: 1px solid #374151; padding: 1.5rem 0; }
+      .boards { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+      article { background: #111827; border: 1px solid #374151; border-radius: .5rem; padding: 1rem; }
+      article img { aspect-ratio: 4 / 3; background: #111827; display: block; object-fit: contain; width: 100%; }
+      h2, h3 { overflow-wrap: anywhere; }
+    </style>
   </head>
   <body>
     <main>
       <h1>Biscuit Board Gerbers</h1>
-      <p>Fabrication ZIPs with top and bottom copper pours and no solder mask.</p>
+      <p>Fabrication ZIPs with top and bottom copper pours and no solder mask. Panels also include a Gerber ZIP and PCB preview for every individual board.</p>
       <ul>${gerberListItems}</ul>
     </main>
   </body>
@@ -81,4 +184,10 @@ await Bun.write(
 `,
 )
 
-console.log(`Gerber downloads available at /gerbers/ (${gerberLinks.length})`)
+const individualBoardCount = circuitDownloads.reduce(
+  (total, circuit) => total + circuit.boards.length,
+  0,
+)
+console.log(
+  `Gerber downloads available at /gerbers/ (${circuitDownloads.length} circuits, ${individualBoardCount} individual panel boards)`,
+)
