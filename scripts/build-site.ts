@@ -4,6 +4,7 @@ import { dirname, relative, resolve } from "node:path"
 import { Resvg } from "@resvg/resvg-js"
 import type { CircuitJson } from "circuit-json"
 import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
+import { addFullCopperPours } from "./lib/add-full-copper-pours"
 import { extractIndividualBoardCircuits } from "./lib/extract-individual-board-circuits"
 
 const workingDirectory = process.cwd()
@@ -74,6 +75,9 @@ try {
 
     if (individualBoards.length > 1) {
       for (const individualBoard of individualBoards) {
+        const fabricationCircuitJson = addFullCopperPours(
+          individualBoard.circuitJson,
+        )
         const relativeBoardPath = `${circuitName}/boards/${individualBoard.fileStem}`
         const boardCircuitJsonPath = resolve(
           temporaryDirectory,
@@ -90,7 +94,7 @@ try {
         await mkdir(dirname(boardCircuitJsonPath), { recursive: true })
         await Bun.write(
           boardCircuitJsonPath,
-          JSON.stringify(individualBoard.circuitJson),
+          JSON.stringify(fabricationCircuitJson),
         )
         await runCommand([
           process.execPath,
@@ -99,7 +103,7 @@ try {
           boardGerberPath,
         ])
 
-        const pcbSvg = convertCircuitJsonToPcbSvg(individualBoard.circuitJson, {
+        const pcbSvg = convertCircuitJsonToPcbSvg(fabricationCircuitJson, {
           backgroundColor: "#111827",
           matchBoardAspectRatio: true,
           showPcbNotes: false,

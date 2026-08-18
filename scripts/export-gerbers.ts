@@ -3,9 +3,10 @@ import { tmpdir } from "node:os"
 import { basename, dirname, extname, isAbsolute, resolve } from "node:path"
 import { pathToFileURL } from "node:url"
 import { Circuit } from "@tscircuit/core"
-import type { CircuitJson } from "circuit-json"
+import type { CircuitJson, PcbBoard } from "circuit-json"
 import { type ComponentType, createElement, isValidElement } from "react"
 import { addFullCopperPours } from "./lib/add-full-copper-pours"
+import { getBoardsMissingFullCopperRegions } from "./lib/verify-full-copper-gerber"
 
 const circuitFileArgument = Bun.argv[2]
 if (!circuitFileArgument) {
@@ -74,9 +75,9 @@ try {
     await circuit.renderUntilSettled()
     circuitJson = circuit.getCircuitJson() as CircuitJson
   }
-  const pcbBoardCount = circuitJson.filter(
-    (element) => element.type === "pcb_board",
-  ).length
+  const pcbBoards = circuitJson.filter(
+    (element): element is PcbBoard => element.type === "pcb_board",
+  )
   const fabricationCircuitJson = addFullCopperPours(circuitJson)
   await Bun.write(temporaryCircuitPath, JSON.stringify(fabricationCircuitJson))
 
@@ -112,7 +113,6 @@ try {
     )
   }
 
-  let copperRegionCount = 0
   for (const layer of ["F_Cu.gbr", "B_Cu.gbr"]) {
     const inspectProcess = Bun.spawn(
       ["unzip", "-p", temporaryArchivePath, layer],
@@ -122,15 +122,20 @@ try {
     if ((await inspectProcess.exited) !== 0) {
       throw new Error(`Could not inspect ${layer} in ${temporaryArchivePath}`)
     }
-    copperRegionCount += gerber.match(/^G36\*$/gm)?.length ?? 0
-  }
-  if (copperRegionCount < pcbBoardCount * 2) {
-    throw new Error(
-      `Expected at least ${pcbBoardCount * 2} filled Gerber regions, found ${copperRegionCount}`,
+    const missingFullCopperBoards = getBoardsMissingFullCopperRegions(
+      gerber,
+      pcbBoards,
     )
+    if (missingFullCopperBoards.length > 0) {
+      throw new Error(
+        `${layer} does not contain board-outline-sized solid copper for: ${missingFullCopperBoards
+          .map((pcbBoard) => pcbBoard.pcb_board_id)
+          .join(", ")}`,
+      )
+    }
   }
   console.log(
-    `Verified top and bottom copper pours for ${pcbBoardCount} board(s)`,
+    `Verified full-board top and bottom copper for ${pcbBoards.length} board(s)`,
   )
 
   await mkdir(dirname(outputPath), { recursive: true })

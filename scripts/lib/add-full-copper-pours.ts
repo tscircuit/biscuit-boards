@@ -5,7 +5,7 @@ import type {
   Point,
 } from "circuit-json"
 
-const getBoardOutline = (pcbBoard: PcbBoard): Point[] => {
+export const getBoardOutline = (pcbBoard: PcbBoard): Point[] => {
   if (pcbBoard.outline && pcbBoard.outline.length >= 3) {
     return pcbBoard.outline
   }
