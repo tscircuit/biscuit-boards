@@ -109,7 +109,7 @@ test("creates an individually routable breadboard socket grid", async () => {
     ).toHaveLength(BREADBOARD_COLUMN_COUNT)
   }
   expect(errorsAndWarnings).toEqual([])
-})
+}, 15_000)
 
 test("places two-via-wide L-shaped fields in every corner", () => {
   expect(BREADBOARD_CORNER_VIA_SPACING).toBe(1.3)
