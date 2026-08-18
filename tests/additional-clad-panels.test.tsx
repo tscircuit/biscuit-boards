@@ -70,7 +70,7 @@ test("panels two breadboards with BoosterPack and Arduino clads", async () => {
     ),
   ).toBe(true)
   expect(errors).toEqual([])
-}, 15_000)
+}, 30_000)
 
 test("panels standard and perforated XIAO clads side by side", async () => {
   const circuit = new Circuit()

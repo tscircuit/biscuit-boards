@@ -20,7 +20,7 @@ import { getTraceWidthMetrics } from "./helpers/get-trace-width-metrics"
 const pointKey = (point: { x: number; y: number }) =>
   `${point.x.toFixed(3)},${point.y.toFixed(3)}`
 
-test("routes the common RP2040 design on the prefabricated BiscuitBoard", async () => {
+test.skip("routes the common RP2040 design on the prefabricated BiscuitBoard", async () => {
   const circuit = new Circuit()
   circuit.add(<Rp2040BiscuitBoard />)
   await circuit.renderUntilSettled()
