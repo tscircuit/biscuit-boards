@@ -6,7 +6,7 @@ const expectedExports = [
   "BiscuitBoard",
   "BoosterPackClad",
   "BreadboardClad",
-  "Clad40x40",
+  "Clad32x32",
   "FeatherCladWithPinHeaders",
   "XiaoCladWithPerforatedPinHeaders",
   "XiaoCladWithPinHeaders",
