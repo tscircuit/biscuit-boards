@@ -71,6 +71,27 @@ denser [`examples/rp2040.tsx`](./examples/rp2040.tsx) example uses the RP2040
 module from `@tsci/seveibar.common` and is also checked in with solved PCB and
 schematic snapshots.
 
+## Pre-routed breadboard clad with 0.8 mm vias
+
+[`BreadboardClad08mmVias`](./lib/breadboard-clad-0.8mm-vias.tsx) retains the
+75 mm x 55 mm breadboard-clad outline and 10 x 21 socket grid while adding the
+standard breadboard connectivity in copper. For every numbered column, A-E
+form one five-socket terminal strip and F-J form the other. Each strip reaches
+a trace-only breakout on both its inner and outer side.
+
+The 32 vias are separate from the breadboard strips and sit in four 2 x 4
+corner fields. Every via has its own copper breakout stub. The vias use 0.8 mm
+finished holes and 0.9 mm pads on a 3 mm pitch, leaving 2.1 mm between pad
+edges and 2.2 mm between drill edges. The bare routed preview and checked-in
+PCB snapshot are in
+[`examples/breadboard-clad-0.8mm-vias.tsx`](./examples/breadboard-clad-0.8mm-vias.tsx).
+
+```sh
+bun run build:breadboard-clad-0.8mm-vias
+bun run snapshot:breadboard-clad-0.8mm-vias
+bun test tests/breadboard-clad-0.8mm-vias.test.tsx
+```
+
 ## 40 mm square clad
 
 [`Clad40x40`](./lib/Clad40x40.tsx) is a two-layer 40 mm x 40 mm clad without

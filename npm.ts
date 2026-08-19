@@ -6,6 +6,7 @@ export {
   createBiscuitBoardAutorouter,
 } from "./lib/biscuit-board-autorouter"
 export * from "./lib/breadboard-clad"
+export * from "./lib/breadboard-clad-0.8mm-vias"
 export * from "./lib/Clad32x32"
 export * from "./lib/create-prefabricated-via-autorouter"
 export * from "./lib/feather-clad"
