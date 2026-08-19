@@ -1,16 +1,20 @@
 import { expect, test } from "bun:test"
 import { Circuit } from "@tscircuit/core"
+import { BISCUIT_BOARD_MOUNTING_HOLE_POSITIONS } from "../lib/BiscuitBoard"
 import {
   BREADBOARD_CLAD_HEIGHT,
   BREADBOARD_CLAD_WIDTH,
   BREADBOARD_COLUMN_COUNT,
+  BREADBOARD_MOUNTING_HOLE_DIAMETER,
   BREADBOARD_TERMINAL_HEADER_POSITIONS,
 } from "../lib/breadboard-clad"
 import {
   BREADBOARD_08MM_BOTTOM_BANK_ROWS,
+  BREADBOARD_08MM_BREAKOUT_TO_MOUNTING_HOLE_CLEARANCE,
   BREADBOARD_08MM_BREAKOUT_TRACE_WIDTH,
   BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET,
   BREADBOARD_08MM_CORNER_VIA_ARM_WIDTH,
+  BREADBOARD_08MM_CORNER_VIA_LONG_SIDE_COLUMNS,
   BREADBOARD_08MM_CORNER_VIA_SPACING,
   BREADBOARD_08MM_CORNER_VIA_X_INNER_OFFSET,
   BREADBOARD_08MM_CORNER_VIA_X_OUTER_OFFSET,
@@ -30,6 +34,31 @@ import {
 const coordinateTolerance = 1e-6
 const pointKey = (point: { x: number; y: number }) =>
   `${point.x.toFixed(3)},${point.y.toFixed(3)}`
+
+const getPointToSegmentDistance = (
+  point: { x: number; y: number },
+  start: { x: number; y: number },
+  end: { x: number; y: number },
+) => {
+  const dx = end.x - start.x
+  const dy = end.y - start.y
+  const lengthSquared = dx * dx + dy * dy
+  const projection =
+    lengthSquared === 0
+      ? 0
+      : Math.max(
+          0,
+          Math.min(
+            1,
+            ((point.x - start.x) * dx + (point.y - start.y) * dy) /
+              lengthSquared,
+          ),
+        )
+  return Math.hypot(
+    point.x - (start.x + projection * dx),
+    point.y - (start.y + projection * dy),
+  )
+}
 
 const getMinimumEdgeSpacing = (
   points: Array<{ x: number; y: number }>,
@@ -100,7 +129,7 @@ test("places separately broken-out 0.8 mm vias in four woven L fields", async ()
       BREADBOARD_08MM_MIN_VIA_EDGE_SPACING,
   })
   expect(platedHoles).toHaveLength(BREADBOARD_TERMINAL_HEADER_POSITIONS.length)
-  expect(vias).toHaveLength(32)
+  expect(vias).toHaveLength(48)
   expect(vias).toHaveLength(BREADBOARD_08MM_VIA_POSITIONS.length)
   expect(new Set(vias.map(pointKey))).toEqual(
     new Set(BREADBOARD_08MM_VIA_POSITIONS.map(pointKey)),
@@ -125,15 +154,16 @@ test("places separately broken-out 0.8 mm vias in four woven L fields", async ()
     const cornerVias = BREADBOARD_08MM_VIA_POSITIONS.filter(
       (via) => via.corner === corner,
     )
-    expect(cornerVias).toHaveLength(8)
-    expect(cornerVias.filter((via) => via.arm === "horizontal")).toHaveLength(6)
+    expect(cornerVias).toHaveLength(12)
+    expect(cornerVias.filter((via) => via.arm === "horizontal")).toHaveLength(
+      10,
+    )
     expect(cornerVias.filter((via) => via.arm === "vertical")).toHaveLength(2)
-    expect(
-      cornerVias.filter((via) => via.breakoutStyle === "woven"),
-    ).toHaveLength(4)
-    expect(
-      cornerVias.filter((via) => via.breakoutStyle === "direct"),
-    ).toHaveLength(4)
+    expect(new Set(cornerVias.map((via) => via.x))).toHaveLength(
+      BREADBOARD_08MM_CORNER_VIA_LONG_SIDE_COLUMNS,
+    )
+    expect(cornerVias.some((via) => via.breakoutStyle === "woven")).toBe(true)
+    expect(cornerVias.some((via) => via.breakoutStyle === "direct")).toBe(true)
 
     const xSign = corner.includes("left") ? -1 : 1
     const ySign = corner.includes("bottom") ? -1 : 1
@@ -169,22 +199,50 @@ test("places separately broken-out 0.8 mm vias in four woven L fields", async ()
               coordinateTolerance,
       ).toBe(true)
 
-      if (via.arm === "horizontal") {
-        expect(via.breakoutEnd.y * ySign).toBeLessThan(localY)
+      if (via.breakoutSide === "long_side") {
+        expect(via.breakoutEnd.y * ySign).toBeGreaterThan(localY)
       } else {
-        expect(via.breakoutEnd.x * xSign).toBeLessThan(localX)
+        expect(via.breakoutEnd.x * xSign).toBeGreaterThan(localX)
       }
 
       if (via.breakoutStyle === "woven") {
         const weavePoint = via.breakoutRoute[0]!
-        expect(localX - weavePoint.x * xSign).toBe(
-          BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET,
-        )
-        expect(localY - weavePoint.y * ySign).toBe(
-          BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET,
-        )
+        if (via.breakoutSide === "long_side") {
+          expect(weavePoint.x * xSign).toBeLessThan(localX)
+          expect(weavePoint.y * ySign).toBeGreaterThan(localY)
+        } else {
+          expect(weavePoint.x * xSign).toBeGreaterThan(localX)
+          expect(localY - weavePoint.y * ySign).toBe(
+            BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET,
+          )
+        }
       }
     }
+  }
+
+  expect(
+    new Set(
+      BREADBOARD_08MM_VIA_POSITIONS.map((via) => pointKey(via.breakoutEnd)),
+    ),
+  ).toHaveLength(BREADBOARD_08MM_VIA_POSITIONS.length)
+
+  for (const via of BREADBOARD_08MM_VIA_POSITIONS) {
+    const route = [via, ...via.breakoutRoute, via.breakoutEnd]
+    const minimumMountingHoleClearance = Math.min(
+      ...BISCUIT_BOARD_MOUNTING_HOLE_POSITIONS.flatMap((hole) =>
+        route
+          .slice(0, -1)
+          .map(
+            (point, index) =>
+              getPointToSegmentDistance(hole, point, route[index + 1]!) -
+              BREADBOARD_MOUNTING_HOLE_DIAMETER / 2 -
+              BREADBOARD_08MM_BREAKOUT_TRACE_WIDTH / 2,
+          ),
+      ),
+    )
+    expect(minimumMountingHoleClearance).toBeGreaterThanOrEqual(
+      BREADBOARD_08MM_BREAKOUT_TO_MOUNTING_HOLE_CLEARANCE - coordinateTolerance,
+    )
   }
 
   const minimumPadEdgeSpacing = getMinimumEdgeSpacing(

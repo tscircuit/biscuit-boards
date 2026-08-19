@@ -21,13 +21,18 @@ export const BREADBOARD_08MM_BREAKOUT_TRACE_WIDTH = 0.3
 export const BREADBOARD_08MM_BREAKOUT_PAD_DIAMETER = 0.3
 export const BREADBOARD_08MM_CORNER_VIA_SPACING = 3
 export const BREADBOARD_08MM_CORNER_VIA_ARM_WIDTH = 3
-export const BREADBOARD_08MM_CORNER_VIA_X_INNER_OFFSET = 25
+export const BREADBOARD_08MM_CORNER_VIA_LONG_SIDE_COLUMNS = 5
 export const BREADBOARD_08MM_CORNER_VIA_X_OUTER_OFFSET = 31
+export const BREADBOARD_08MM_CORNER_VIA_X_INNER_OFFSET =
+  BREADBOARD_08MM_CORNER_VIA_X_OUTER_OFFSET -
+  (BREADBOARD_08MM_CORNER_VIA_LONG_SIDE_COLUMNS - 1) *
+    BREADBOARD_08MM_CORNER_VIA_SPACING
 export const BREADBOARD_08MM_CORNER_VIA_Y_INNER_OFFSET = 19
 export const BREADBOARD_08MM_CORNER_VIA_Y_OUTER_OFFSET = 25
 export const BREADBOARD_08MM_CORNER_VIA_X_OUTWARD_SHIFT = 3
 export const BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET = 1.5
 export const BREADBOARD_08MM_VIA_BREAKOUT_LENGTH = 1.4
+export const BREADBOARD_08MM_BREAKOUT_TO_MOUNTING_HOLE_CLEARANCE = 1
 export const BREADBOARD_08MM_ROW_BREAKOUT_LENGTH = 1.2
 
 const BREADBOARD_08MM_CLAD_EDGE_CLEARANCE = 0.2
@@ -56,11 +61,13 @@ export type Breadboard08mmViaCorner =
 
 export type Breadboard08mmViaArm = "horizontal" | "vertical"
 export type Breadboard08mmViaBreakoutStyle = "direct" | "woven"
+export type Breadboard08mmViaBreakoutSide = "long_side" | "short_side"
 
 export interface Breadboard08mmViaPosition {
   name: string
   corner: Breadboard08mmViaCorner
   arm: Breadboard08mmViaArm
+  breakoutSide: Breadboard08mmViaBreakoutSide
   breakoutStyle: Breadboard08mmViaBreakoutStyle
   x: number
   y: number
@@ -114,6 +121,43 @@ interface LocalCornerPoint {
   y: number
 }
 
+interface LocalCornerVia extends LocalCornerPoint {
+  nameSuffix: string
+  arm: Breadboard08mmViaArm
+}
+
+interface LocalCornerBreakout {
+  side: Breadboard08mmViaBreakoutSide
+  style: Breadboard08mmViaBreakoutStyle
+  route: LocalCornerPoint[]
+  end: LocalCornerPoint
+}
+
+const getPointToSegmentDistance = (
+  point: LocalCornerPoint,
+  start: LocalCornerPoint,
+  end: LocalCornerPoint,
+) => {
+  const dx = end.x - start.x
+  const dy = end.y - start.y
+  const lengthSquared = dx * dx + dy * dy
+  const projection =
+    lengthSquared === 0
+      ? 0
+      : Math.max(
+          0,
+          Math.min(
+            1,
+            ((point.x - start.x) * dx + (point.y - start.y) * dy) /
+              lengthSquared,
+          ),
+        )
+  return Math.hypot(
+    point.x - (start.x + projection * dx),
+    point.y - (start.y + projection * dy),
+  )
+}
+
 const createCornerViaPositions = (
   corner: Breadboard08mmViaCorner,
   xSign: -1 | 1,
@@ -133,72 +177,143 @@ const createCornerViaPositions = (
   const shiftedCornerViaArmAxisX = cornerViaArmAxisX.map((x) =>
     roundCoordinate(x + xOutwardShift),
   )
-  const horizontalArm = shiftedCornerViaAxisX.flatMap((x, xIndex) =>
-    cornerViaArmAxisY.map((y, yIndex): Breadboard08mmViaPosition => {
-      const isOpenSideVia = yIndex === 0
-      const needsWeave = !isOpenSideVia
-      const weaveX = x - BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET
-      const breakoutY =
-        BREADBOARD_08MM_CORNER_VIA_Y_INNER_OFFSET -
-        BREADBOARD_08MM_VIA_BREAKOUT_LENGTH
-
-      return {
-        name: `V_${corner.toUpperCase()}_H${xIndex + 1}_${isOpenSideVia ? "OPEN" : "RECESSED"}`,
-        corner,
-        arm: "horizontal",
-        breakoutStyle: needsWeave ? "woven" : "direct",
-        ...toBoardPoint({ x, y }),
-        breakoutRoute: needsWeave
-          ? [
-              toBoardPoint({
-                x: weaveX,
-                y: y - BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET,
-              }),
-            ]
-          : [],
-        breakoutEnd: toBoardPoint({
-          x: needsWeave ? weaveX : x,
-          y: breakoutY,
-        }),
-      }
-    }),
-  )
   const verticalExtensionY = BREADBOARD_08MM_CORNER_VIA_Y_OUTER_OFFSET
-  const verticalArmExtension = shiftedCornerViaArmAxisX.map(
-    (x, xIndex): Breadboard08mmViaPosition => {
-      const isOpenSideVia = xIndex === 0
-      const needsWeave = !isOpenSideVia
-      const openSideX =
-        BREADBOARD_08MM_CORNER_VIA_X_INNER_OFFSET + xOutwardShift
-      const breakoutX = openSideX - BREADBOARD_08MM_VIA_BREAKOUT_LENGTH
-      const weaveY = verticalExtensionY - BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET
+  const localVias: LocalCornerVia[] = [
+    ...shiftedCornerViaAxisX.flatMap((x, xIndex) =>
+      cornerViaArmAxisY.map((y, yIndex) => ({
+        nameSuffix: `H${xIndex + 1}_${yIndex === 0 ? "INNER" : "OUTER"}`,
+        arm: "horizontal" as const,
+        x,
+        y,
+      })),
+    ),
+    ...shiftedCornerViaArmAxisX.map((x, xIndex) => ({
+      nameSuffix: `V3_${xIndex === 0 ? "INNER" : "OUTER"}`,
+      arm: "vertical" as const,
+      x,
+      y: verticalExtensionY,
+    })),
+  ]
 
-      return {
-        name: `V_${corner.toUpperCase()}_V3_${isOpenSideVia ? "OPEN" : "RECESSED"}`,
-        corner,
-        arm: "vertical",
-        breakoutStyle: needsWeave ? "woven" : "direct",
-        ...toBoardPoint({ x, y: verticalExtensionY }),
-        breakoutRoute: needsWeave
-          ? [
-              toBoardPoint({
-                x: x - BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET,
-                y: weaveY,
-              }),
-            ]
-          : [],
-        breakoutEnd: toBoardPoint({
-          x: breakoutX,
-          y: needsWeave ? weaveY : verticalExtensionY,
-        }),
+  const createBreakout = (
+    via: LocalCornerVia,
+    side: Breadboard08mmViaBreakoutSide,
+  ): LocalCornerBreakout => {
+    if (side === "long_side") {
+      const sameColumnVias = localVias.filter(
+        (candidate) => candidate.x === via.x,
+      )
+      const blockers = localVias.filter(
+        (candidate) => candidate.x === via.x && candidate.y > via.y,
+      )
+      if (blockers.length === 0) {
+        return {
+          side,
+          style: "direct",
+          route: [],
+          end: { x: via.x, y: via.y + BREADBOARD_08MM_VIA_BREAKOUT_LENGTH },
+        }
       }
-    },
-  )
+      const weaveX =
+        via.x -
+        (BREADBOARD_08MM_CORNER_VIA_SPACING * blockers.length) /
+          sameColumnVias.length
+      return {
+        side,
+        style: "woven",
+        route: [
+          {
+            x: weaveX,
+            y: via.y + BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET,
+          },
+        ],
+        end: {
+          x: weaveX,
+          y:
+            Math.max(...blockers.map((blocker) => blocker.y)) +
+            BREADBOARD_08MM_VIA_BREAKOUT_LENGTH,
+        },
+      }
+    }
 
-  return [...horizontalArm, ...verticalArmExtension]
+    const blockers = localVias.filter(
+      (candidate) => candidate.y === via.y && candidate.x > via.x,
+    )
+    if (blockers.length === 0) {
+      return {
+        side,
+        style: "direct",
+        route: [],
+        end: { x: via.x + BREADBOARD_08MM_VIA_BREAKOUT_LENGTH, y: via.y },
+      }
+    }
+    const weaveY = via.y - BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET
+    return {
+      side,
+      style: "woven",
+      route: [
+        {
+          x: via.x + BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET,
+          y: weaveY,
+        },
+      ],
+      end: {
+        x:
+          Math.max(...blockers.map((blocker) => blocker.x)) +
+          BREADBOARD_08MM_VIA_BREAKOUT_LENGTH,
+        y: weaveY,
+      },
+    }
+  }
+
+  const approachesMountingHole = (
+    via: LocalCornerVia,
+    breakout: LocalCornerBreakout,
+  ) => {
+    const route = [via, ...breakout.route, breakout.end].map(toBoardPoint)
+    const minimumCenterlineDistance = Math.min(
+      ...BISCUIT_BOARD_MOUNTING_HOLE_POSITIONS.flatMap((hole) =>
+        route
+          .slice(0, -1)
+          .map((point, index) =>
+            getPointToSegmentDistance(hole, point, route[index + 1]!),
+          ),
+      ),
+    )
+    return (
+      minimumCenterlineDistance -
+        BREADBOARD_MOUNTING_HOLE_DIAMETER / 2 -
+        BREADBOARD_08MM_BREAKOUT_TRACE_WIDTH / 2 <
+      BREADBOARD_08MM_BREAKOUT_TO_MOUNTING_HOLE_CLEARANCE
+    )
+  }
+
+  return localVias.map((via): Breadboard08mmViaPosition => {
+    const longSideDistance = BREADBOARD_CLAD_HEIGHT / 2 - via.y
+    const shortSideDistance = BREADBOARD_CLAD_WIDTH / 2 - via.x
+    const preferredSide =
+      longSideDistance <= shortSideDistance ? "long_side" : "short_side"
+    const alternateSide =
+      preferredSide === "long_side" ? "short_side" : "long_side"
+    const preferredBreakout = createBreakout(via, preferredSide)
+    const breakout = approachesMountingHole(via, preferredBreakout)
+      ? createBreakout(via, alternateSide)
+      : preferredBreakout
+
+    return {
+      name: `V_${corner.toUpperCase()}_${via.nameSuffix}`,
+      corner,
+      arm: via.arm,
+      breakoutSide: breakout.side,
+      breakoutStyle: breakout.style,
+      ...toBoardPoint(via),
+      breakoutRoute: breakout.route.map(toBoardPoint),
+      breakoutEnd: toBoardPoint(breakout.end),
+    }
+  })
 }
 
-/** Four independent two-via-wide L-shaped fields at the board corners. */
+/** Four independent two-via-wide L fields with five long-side columns. */
 export const BREADBOARD_08MM_VIA_POSITIONS = (
   [
     ["top_left", -1, 1],
