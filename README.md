@@ -389,7 +389,7 @@ exactly without triangle boundaries or nearest-neighbor membership changes.
 
 The control points and affine baseline are generated from
 [`lib/coordinate_map/via-coordinate-map.csv`](./lib/coordinate_map/via-coordinate-map.csv)
-with `bun run generate:lens-calibration`. The current CSV fit uses all 51 points
+with `bun run generate:lens-calibration`. The current CSV fit uses all 56 points
 and has effectively zero residual at those calibration coordinates. Every
 control point participates in the weighted blend, so the correction remains
 continuous inside and outside the measured region as more CSV rows are added.
