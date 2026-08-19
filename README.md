@@ -118,6 +118,35 @@ bun run snapshot:clad-32x32
 bun test tests/clad-32x32.test.tsx
 ```
 
+## BiscuitBoard STM32 stepper controller
+
+[`Stm32StepperBiscuitBoard`](./examples/stm32-stepper-biscuit-board.tsx) is a
+complete controller for one bipolar stepper motor on the 75 mm x 55 mm
+BiscuitBoard. It combines an STM32C071FBP6 with the bare Analog
+Devices/Trinamic `TMC5130A-TA` 48-TQFP-EP IC, a 6–18 V motor-power input, an
+onboard 3.3 V regulator, the driver's charge-pump and regulator capacitors, two
+0.22 ohm winding-current sense resistors, a four-wire JST-PH motor output, and
+the five-wire `J_SWD` programming connector used by the other STM32 examples.
+The 18 V board limit comes from the LDK320 regulator even though the TMC5130A
+motor supply itself supports a wider range.
+
+The driver is strapped for STEP/DIR plus SPI operation. PA6 is STEP, PA5 is
+DIR, and PA8 drives the active-low driver-enable input. SPI uses PA4 for CS,
+PA7 for SCK, PA12 for MOSI, and PB3 for MISO. Firmware must configure the
+TMC5130A current and motion registers before enabling the motor. With 0.22 ohm
+sense resistors, the full-scale setting is approximately 0.96 A RMS; configure
+IRUN and IHOLD for the connected motor rather than assuming full scale is safe.
+Its routing changes layers only through BiscuitBoard's 51 existing vias and
+does not add manufacturing vias, matching the drill-free laser workflow.
+Because the fixed board cannot add the thermal-via array recommended under the
+TMC5130A exposed pad, validate temperature at the intended motor current and
+derate the board as needed.
+
+```sh
+bun run build:stm32-stepper-biscuit
+bun test tests/stm32-stepper-biscuit-board.test.tsx
+```
+
 ## Combined clad panel
 
 [`CladPanel`](./lib/CladPanel.tsx) places the breadboard clad at the upper-left

@@ -1,6 +1,8 @@
 # Dependencies
 node_modules/
 
+.tscircuit/
+
 # Build output
 dist/
 build/
