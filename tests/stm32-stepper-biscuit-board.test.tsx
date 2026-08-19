@@ -25,12 +25,26 @@ test("routes the STM32 stepper controller on BiscuitBoard", async () => {
     (element) =>
       element.type === "source_component" && element.name === "U_DRIVER",
   )
+  const motorConnector = circuitJson.find(
+    (element) =>
+      element.type === "source_component" && element.name === "J_MOTOR",
+  )
+  const powerConnector = circuitJson.find(
+    (element) =>
+      element.type === "source_component" && element.name === "J_PWR",
+  )
   const allowedViaPositions = new Set(BISCUIT_BOARD_VIA_POSITIONS.map(pointKey))
 
   expect(errors).toEqual([])
   expect(board).toMatchObject({ width: 75, height: 55, num_layers: 2 })
   expect(driver).toMatchObject({
     manufacturer_part_number: "TMC5130A-TA",
+  })
+  expect(motorConnector).toMatchObject({
+    manufacturer_part_number: "10129380-904001ALF",
+  })
+  expect(powerConnector).toMatchObject({
+    manufacturer_part_number: "54-00164",
   })
   for (const name of ["U_MCU", "U_DRIVER", "J_SWD", "J_MOTOR", "J_PWR"]) {
     expect(componentNames.has(name)).toBe(true)

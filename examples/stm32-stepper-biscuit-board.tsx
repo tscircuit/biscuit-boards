@@ -11,6 +11,7 @@ export const Stm32StepperBiscuitBoard = (
   <BiscuitBoard
     minTraceWidth={0.1}
     nominalTraceWidth={0.2}
+    autorouterEdgeClearance={0.7}
     autorouterOptions={{
       routeOrder: "adaptive",
       gridClearance: 0.1,
