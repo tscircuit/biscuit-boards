@@ -186,6 +186,10 @@ export {
   XiaoPinHeaders,
 } from "./lib/xiao-clad"
 export {
+  XiaoCladWithPinHeaders08mmVias,
+  type XiaoCladWithPinHeaders08mmViasProps,
+} from "./lib/xiao-clad-0.8mm-vias"
+export {
   XIAO_PERFORATED_HEADER_PAD_HEIGHT,
   XIAO_PERFORATED_HEADER_PAD_WIDTH,
   XIAO_PERFORATION_HOLE_DIAMETER,
@@ -194,6 +198,10 @@ export {
   type XiaoCladWithPerforatedPinHeadersProps,
   XiaoPerforatedPinHeaders,
 } from "./lib/xiao-clad-with-perforated-pin-headers"
+export {
+  XiaoCladWithPerforatedPinHeaders08mmVias,
+  type XiaoCladWithPerforatedPinHeaders08mmViasProps,
+} from "./lib/xiao-clad-with-perforated-pin-headers-0.8mm-vias"
 export {
   XIAO_PAIR_CLAD_PANEL_BOARD_GAP,
   XIAO_PAIR_CLAD_PANEL_EDGE_PADDING,

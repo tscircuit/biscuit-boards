@@ -19,12 +19,20 @@ import {
   XiaoCladWithPinHeaders,
 } from "../lib/xiao-clad"
 import {
+  XIAO_CLAD_VIA_HOLE_DIAMETER as XIAO_CLAD_08MM_VIA_HOLE_DIAMETER,
+  XIAO_CLAD_VIA_PAD_DIAMETER as XIAO_CLAD_08MM_VIA_PAD_DIAMETER,
+  XIAO_CLAD_VIA_POSITIONS as XIAO_CLAD_08MM_VIA_POSITIONS,
+  XIAO_CLAD_VIA_SPACING as XIAO_CLAD_08MM_VIA_SPACING,
+  XiaoCladWithPinHeaders08mmVias,
+} from "../lib/xiao-clad-0.8mm-vias"
+import {
   XIAO_PERFORATED_HEADER_PAD_HEIGHT,
   XIAO_PERFORATED_HEADER_PAD_WIDTH,
   XIAO_PERFORATION_HOLE_DIAMETER,
   XIAO_PERFORATION_POSITIONS,
   XiaoCladWithPerforatedPinHeaders,
 } from "../lib/xiao-clad-with-perforated-pin-headers"
+import { XiaoCladWithPerforatedPinHeaders08mmVias } from "../lib/xiao-clad-with-perforated-pin-headers-0.8mm-vias"
 
 const pointKey = (point: { x: number; y: number }) =>
   `${point.x.toFixed(3)},${point.y.toFixed(3)}`
@@ -195,6 +203,52 @@ test("adds perforations to both XIAO pin-header side edges", async () => {
     new Set(XIAO_HEADER_POSITIONS.map(pointKey)),
   )
   expect(errorsAndWarnings).toEqual([])
+})
+
+test("uses 0.8 mm vias in both large-via XIAO clad variants", async () => {
+  const variants = [
+    <XiaoCladWithPinHeaders08mmVias
+      key="standard"
+      routingDisabled
+      markHeadersNoConnect
+    />,
+    <XiaoCladWithPerforatedPinHeaders08mmVias
+      key="perforated"
+      routingDisabled
+      markHeadersNoConnect
+    />,
+  ]
+
+  expect(XIAO_CLAD_08MM_VIA_HOLE_DIAMETER).toBe(0.8)
+  expect(XIAO_CLAD_08MM_VIA_PAD_DIAMETER).toBe(0.9)
+  expect(XIAO_CLAD_08MM_VIA_SPACING).toBe(2)
+  expect(XIAO_CLAD_08MM_VIA_POSITIONS).toHaveLength(18)
+
+  for (const variant of variants) {
+    const circuit = new Circuit()
+    circuit.add(variant)
+    await circuit.renderUntilSettled()
+
+    const circuitJson = circuit.getCircuitJson()
+    const vias = circuitJson.filter((element) => element.type === "pcb_via")
+    const errorsAndWarnings = circuitJson.filter(
+      (element) =>
+        element.type.endsWith("error") || element.type.endsWith("warning"),
+    )
+
+    expect(vias).toHaveLength(XIAO_CLAD_08MM_VIA_POSITIONS.length)
+    expect(new Set(vias.map(pointKey))).toEqual(
+      new Set(XIAO_CLAD_08MM_VIA_POSITIONS.map(pointKey)),
+    )
+    expect(
+      vias.every(
+        (via) =>
+          via.hole_diameter === XIAO_CLAD_08MM_VIA_HOLE_DIAMETER &&
+          via.outer_diameter === XIAO_CLAD_08MM_VIA_PAD_DIAMETER,
+      ),
+    ).toBe(true)
+    expect(errorsAndWarnings).toEqual([])
+  }
 })
 
 test("routes STM32 USB through only the fixed XIAO via field", async () => {
