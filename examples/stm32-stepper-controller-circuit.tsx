@@ -5,6 +5,13 @@ import { S5B_PH_SM4_TB, STM32C071FBP6 } from "./stm32c071-parts"
 const gnd = { displayName: "GND", schDisplayLabel: "GND" } as const
 const vm = { displayName: "VM (6-18V)", schDisplayLabel: "VM" } as const
 const v3v3 = { displayName: "3V3", schDisplayLabel: "3V3" } as const
+const schSections = {
+  power: "power",
+  control: "control",
+  debug: "debug",
+  driver: "driver",
+  motor: "motor",
+} as const
 
 const tmc5130Pins = {
   pin1: ["TST_MODE"],
@@ -266,11 +273,31 @@ export const Stm32StepperControllerCircuit = () => {
       <net name="VM" isPowerNet />
       <net name="V3V3" isPowerNet />
 
-      <PowerConnector name="J_PWR" noConnect={["SWITCH"]} {...at(p.power)} />
-      <MotorConnector name="J_MOTOR" {...at(p.motor)} />
-      <S5B_PH_SM4_TB name="J_SWD" {...at(p.swd)} />
+      <schematicsection name={schSections.power} displayName="Power Input" />
+      <schematicsection name={schSections.control} displayName="MCU Control" />
+      <schematicsection name={schSections.debug} displayName="SWD Debug" />
+      <schematicsection name={schSections.driver} displayName="Motor Driver" />
+      <schematicsection name={schSections.motor} displayName="Motor Output" />
+
+      <PowerConnector
+        name="J_PWR"
+        schSectionName={schSections.power}
+        noConnect={["SWITCH"]}
+        {...at(p.power)}
+      />
+      <MotorConnector
+        name="J_MOTOR"
+        schSectionName={schSections.motor}
+        {...at(p.motor)}
+      />
+      <S5B_PH_SM4_TB
+        name="J_SWD"
+        schSectionName={schSections.debug}
+        {...at(p.swd)}
+      />
       <STM32C071FBP6
         name="U_MCU"
+        schSectionName={schSections.control}
         {...at(p.mcu)}
         noConnect={[
           "PB7",
@@ -285,6 +312,7 @@ export const Stm32StepperControllerCircuit = () => {
       />
       <TMC5130A_TA
         name="U_DRIVER"
+        schSectionName={schSections.driver}
         {...at(p.driver)}
         noConnect={[
           "DNC1",
@@ -302,88 +330,107 @@ export const Stm32StepperControllerCircuit = () => {
           "AIN_IREF",
         ]}
       />
-      <LDK320M33R name="U_REG" {...at(p.reg)} noConnect={["NC"]} />
+      <LDK320M33R
+        name="U_REG"
+        schSectionName={schSections.power}
+        {...at(p.reg)}
+        noConnect={["NC"]}
+      />
 
       <capacitor
         name="C_REG_IN"
+        schSectionName={schSections.power}
         capacitance="1uF"
         footprint="0603"
         {...at(p.regIn)}
       />
       <capacitor
         name="C_REG_OUT"
+        schSectionName={schSections.power}
         capacitance="1uF"
         footprint="0603"
         {...at(p.regOut)}
       />
       <capacitor
         name="C_MCU"
+        schSectionName={schSections.control}
         capacitance="100nF"
         footprint="0603"
         {...at(p.mcuCap)}
       />
       <capacitor
         name="C_VM_BULK"
+        schSectionName={schSections.driver}
         capacitance="100uF"
         footprint="1210"
         {...at(p.vmBulk)}
       />
       <capacitor
         name="C_VM"
+        schSectionName={schSections.driver}
         capacitance="100nF"
         footprint="0603"
         {...at(p.vmDec)}
       />
       <capacitor
         name="C_5VOUT"
+        schSectionName={schSections.driver}
         capacitance="4.7uF"
         footprint="0805"
         {...at(p.fiveV)}
       />
       <resistor
         name="R_VCC"
+        schSectionName={schSections.driver}
         resistance="2.2ohm"
         footprint="0603"
         {...at(p.vccRes)}
       />
       <capacitor
         name="C_VCC"
+        schSectionName={schSections.driver}
         capacitance="470nF"
         footprint="0603"
         {...at(p.vccCap)}
       />
       <capacitor
         name="C_CP"
+        schSectionName={schSections.driver}
         capacitance="22nF"
         footprint="0603"
         {...at(p.chargePump)}
       />
       <capacitor
         name="C_VCP"
+        schSectionName={schSections.driver}
         capacitance="100nF"
         footprint="0603"
         {...at(p.vcp)}
       />
       <capacitor
         name="C_VSA"
+        schSectionName={schSections.driver}
         capacitance="100nF"
         footprint="0603"
         {...at(p.vsa)}
       />
       <capacitor
         name="C_VIO"
+        schSectionName={schSections.driver}
         capacitance="100nF"
         footprint="0603"
         {...at(p.vio)}
       />
       <resistor
         name="R_SENSE_A"
+        schSectionName={schSections.driver}
         resistance="0.22ohm"
         footprint="1206"
         {...at(p.senseA)}
       />
       <resistor
         name="R_SENSE_B"
+        schSectionName={schSections.driver}
         resistance="0.22ohm"
         footprint="1206"
         {...at(p.senseB)}
