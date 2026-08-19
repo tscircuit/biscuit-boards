@@ -1,4 +1,5 @@
 import type { ChipProps, ConnectorProps } from "@tscircuit/props"
+import { Fragment } from "react"
 import { BiscuitBoard, type BiscuitBoardProps } from "../lib/BiscuitBoard"
 
 const rp2040Pins = {
@@ -127,6 +128,223 @@ const To18_2Footprint = () => (
   </footprint>
 )
 
+const Crystal3225Footprint = () => (
+  <footprint>
+    <smtpad
+      portHints={["pin1", "left"]}
+      shape="rect"
+      width="1.2mm"
+      height="1.4mm"
+      pcbX={-1.1}
+      pcbY={-0.85}
+    />
+    <smtpad
+      portHints={["pin2"]}
+      shape="rect"
+      width="1.2mm"
+      height="1.4mm"
+      pcbX={1.1}
+      pcbY={-0.85}
+    />
+    <smtpad
+      portHints={["pin3", "right"]}
+      shape="rect"
+      width="1.2mm"
+      height="1.4mm"
+      pcbX={1.1}
+      pcbY={0.85}
+    />
+    <smtpad
+      portHints={["pin4"]}
+      shape="rect"
+      width="1.2mm"
+      height="1.4mm"
+      pcbX={-1.1}
+      pcbY={0.85}
+    />
+    <silkscreenrect width="3.5mm" height="2.9mm" />
+  </footprint>
+)
+
+const Rp2040CrystalClock = () => (
+  <>
+    <crystal
+      name="Y1"
+      frequency="12MHz"
+      loadCapacitance="12pF"
+      manufacturerPartNumber="X322512MSB4SI"
+      supplierPartNumbers={{ jlcpcb: ["C9002"] }}
+      pinVariant="four_pin"
+      footprint={<Crystal3225Footprint />}
+      pcbX={19.5}
+      pcbY={2}
+      connections={{
+        pin1: "net.XIN",
+        pin2: "net.GND",
+        pin3: "net.XOUT",
+        pin4: "net.GND",
+      }}
+    />
+    <capacitor
+      name="C_XIN"
+      capacitance="18pF"
+      footprint="0603"
+      pcbX={22}
+      pcbY={-1}
+      pcbRotation={90}
+      connections={{ pin1: "net.XIN", pin2: "net.GND" }}
+    />
+    <capacitor
+      name="C_XOUT"
+      capacitance="18pF"
+      footprint="0603"
+      pcbX={17}
+      pcbY={5}
+      pcbRotation={270}
+      connections={{ pin1: "net.XOUT", pin2: "net.GND" }}
+    />
+  </>
+)
+
+const W25q16UsOn8Footprint = () => {
+  const pads = [
+    { pin: 1, x: -1.1, y: 0.75 },
+    { pin: 2, x: -1.1, y: 0.25 },
+    { pin: 3, x: -1.1, y: -0.25 },
+    { pin: 4, x: -1.1, y: -0.75 },
+    { pin: 5, x: 1.1, y: -0.75 },
+    { pin: 6, x: 1.1, y: -0.25 },
+    { pin: 7, x: 1.1, y: 0.25 },
+    { pin: 8, x: 1.1, y: 0.75 },
+  ]
+
+  return (
+    <footprint>
+      {pads.map(({ pin, x, y }) => (
+        <Fragment key={pin}>
+          <smtpad
+            portHints={[`pin${pin}`]}
+            shape="rect"
+            width="0.6mm"
+            height="0.35mm"
+            pcbX={x}
+            pcbY={y}
+          />
+        </Fragment>
+      ))}
+      <silkscreenrect width="3mm" height="2mm" />
+      <silkscreencircle pcbX={-1.25} pcbY={1.15} radius="0.18mm" />
+    </footprint>
+  )
+}
+
+const Rp2040UsbFlashSupport = () => (
+  <>
+    <resistor
+      name="R_USB_DM"
+      resistance="27"
+      footprint="0603"
+      pcbX={3}
+      pcbY={6.5}
+      connections={{ pin1: "net.USB_DM_CONN", pin2: "net.USB_DM_MCU" }}
+    />
+    <resistor
+      name="R_USB_DP"
+      resistance="27"
+      footprint="0603"
+      pcbX={3}
+      pcbY={4.5}
+      connections={{ pin1: "net.USB_DP_CONN", pin2: "net.USB_DP_MCU" }}
+    />
+
+    <chip
+      name="U_FLASH"
+      pinLabels={{
+        pin1: ["CS"],
+        pin2: ["DO", "IO1"],
+        pin3: ["WP", "IO2"],
+        pin4: ["GND"],
+        pin5: ["DI", "IO0"],
+        pin6: ["CLK"],
+        pin7: ["HOLD", "IO3"],
+        pin8: ["VCC"],
+      }}
+      manufacturerPartNumber="W25Q16JVUXIQ"
+      footprint={<W25q16UsOn8Footprint />}
+      pcbX={1}
+      pcbY={0.15}
+      pcbRotation={180}
+      connections={{
+        CS: "net.QSPI_SS",
+        IO1: "net.QSPI_SD1",
+        IO2: "net.QSPI_SD2",
+        GND: "net.GND",
+        IO0: "net.QSPI_SD0",
+        CLK: "net.QSPI_SCLK",
+        IO3: "net.QSPI_SD3",
+        VCC: "net.V3V3",
+      }}
+    />
+    <capacitor
+      name="C_FLASH"
+      capacitance="100nF"
+      footprint="0603"
+      pcbX={1}
+      pcbY={-1.8}
+      pcbRotation={90}
+      connections={{ pin1: "net.V3V3", pin2: "net.GND" }}
+    />
+    <resistor
+      name="R_POWER_LED"
+      resistance="1k"
+      footprint="0603"
+      pcbX={25}
+      pcbY={10}
+      connections={{ pin1: "net.V3V3", pin2: "net.POWER_LED_A" }}
+    />
+    <led
+      name="D_POWER"
+      color="green"
+      footprint="0603"
+      manufacturerPartNumber="GENERIC-0603-GREEN-LED"
+      pcbX={29}
+      pcbY={10}
+      connections={{ anode: "net.POWER_LED_A", cathode: "net.GND" }}
+    />
+    <resistor
+      name="R_USER_LED"
+      resistance="1k"
+      footprint="0603"
+      pcbX={25}
+      pcbY={5}
+      connections={{ pin1: "net.USER_LED", pin2: "net.USER_LED_A" }}
+    />
+    <led
+      name="D_USER"
+      color="blue"
+      footprint="0603"
+      manufacturerPartNumber="GENERIC-0603-BLUE-LED"
+      pcbX={29}
+      pcbY={5}
+      connections={{ anode: "net.USER_LED_A", cathode: "net.GND" }}
+    />
+    <silkscreentext
+      text="POWER"
+      fontSize="0.8mm"
+      pcbX={27}
+      pcbY={11.8}
+      layer="top"
+    />
+    <silkscreentext
+      text="GPIO25"
+      fontSize="0.8mm"
+      pcbX={27}
+      pcbY={6.8}
+      layer="top"
+    />
+  </>
+)
+
 const PhotodiodeTransimpedanceAmplifier = () => (
   <>
     <diode
@@ -162,15 +380,15 @@ const PhotodiodeTransimpedanceAmplifier = () => (
       footprint="0603"
       pcbX={14}
       pcbY={-16}
-      connections={{ pin1: "net.PD_SUM", pin2: "net.PD_ADC" }}
+      connections={{ pin1: "net.PD_ADC", pin2: "net.PD_SUM" }}
     />
     <capacitor
       name="C_TIA"
       capacitance="15pF"
       footprint="0603"
       pcbX={14}
-      pcbY={-23}
-      connections={{ pin1: "net.PD_SUM", pin2: "net.PD_ADC" }}
+      pcbY={-20}
+      connections={{ pin1: "net.PD_ADC", pin2: "net.PD_SUM" }}
     />
 
     <resistor
@@ -211,9 +429,13 @@ const PhotodiodeTransimpedanceAmplifier = () => (
   </>
 )
 
-const Rp2040UsbSupport = () => (
+const Rp2040UsbSupport = ({
+  withCrystal = false,
+}: {
+  withCrystal?: boolean
+}) => (
   <>
-    {/* With no precision clock, USB is intentionally power-only. */}
+    {/* The crystal variant also connects USB data for ROM BOOTSEL flashing. */}
     <SmdUsbC
       name="J_USB"
       pcbX={-33}
@@ -228,15 +450,19 @@ const Rp2040UsbSupport = () => (
         "SBU2",
         "GND_B",
         "VBUS_B",
-        "DP_A",
-        "DP_B",
-        "DN_A",
-        "DN_B",
+        ...(withCrystal ? [] : (["DP_A", "DP_B", "DN_A", "DN_B"] as const)),
       ]}
       connections={{
-        VBUS_A: "net.VBUS",
         CC1: "net.CC1",
         CC2: "net.CC2",
+        ...(withCrystal
+          ? {
+              DP_A: "net.USB_DP_CONN",
+              DP_B: "net.USB_DP_CONN",
+              DN_A: "net.USB_DM_CONN",
+              DN_B: "net.USB_DM_CONN",
+            }
+          : undefined),
       }}
     />
     <resistor
@@ -253,7 +479,17 @@ const Rp2040UsbSupport = () => (
       to=".J_USB > .GND_A"
       thickness="0.1mm"
       pcbPathRelativeTo=".R_USB_GND > .pin1"
-      pcbPath={[".R_USB_GND > .pin1", { x: 0, y: -3.8 }, ".J_USB > .GND_A"]}
+      pcbPath={[".R_USB_GND > .pin1", { x: -1.2, y: -3.8 }, ".J_USB > .GND_A"]}
+    />
+    <trace
+      name="USB_VBUS"
+      from=".J_USB > .VBUS_A"
+      to=".U_REG > .VIN"
+      pcbRouteHints={[
+        { x: -27.5, y: 1.5 },
+        { x: -20, y: 1.5 },
+        { x: -20, y: 8 },
+      ]}
     />
     <trace
       name="USB_CC1_GND_TO_INPUT_CAP"
@@ -295,10 +531,18 @@ const Rp2040UsbSupport = () => (
       pcbRotation={180}
       connections={{
         VIN: "net.VBUS",
-        EN: "net.VBUS",
         GND: "net.GND",
         VOUT: "net.V3V3",
       }}
+    />
+    <trace
+      name="REGULATOR_ENABLE"
+      from=".U_REG > .VIN"
+      to=".U_REG > .EN"
+      pcbRouteHints={[
+        { x: -22.5, y: 9.05 },
+        { x: -22.5, y: 10.95 },
+      ]}
     />
     <capacitor
       name="C_REG_IN"
@@ -332,18 +576,20 @@ const Rp2040UsbSupport = () => (
       pcbY={2}
       pcbRotation={90}
       noConnect={[
-        "XIN",
-        "XOUT",
-        "USB_DM",
-        "USB_DP",
+        ...(withCrystal ? [] : (["XIN", "XOUT"] as const)),
+        ...(withCrystal ? [] : (["USB_DM", "USB_DP"] as const)),
         "SWCLK",
         "SWD",
-        "QSPI_SS",
-        "QSPI_SCLK",
-        "QSPI_SD0",
-        "QSPI_SD1",
-        "QSPI_SD2",
-        "QSPI_SD3",
+        ...(withCrystal
+          ? []
+          : ([
+              "QSPI_SS",
+              "QSPI_SCLK",
+              "QSPI_SD0",
+              "QSPI_SD1",
+              "QSPI_SD2",
+              "QSPI_SD3",
+            ] as const)),
       ]}
       connections={{
         IOVDD1: "net.V3V3",
@@ -362,8 +608,24 @@ const Rp2040UsbSupport = () => (
         GND: "net.GND",
         RUN: "net.RUN",
         GPIO26_ADC0: "net.PD_ADC",
+        GPIO25: "net.USER_LED",
+        ...(withCrystal ? { XIN: "net.XIN", XOUT: "net.XOUT" } : undefined),
+        ...(withCrystal
+          ? {
+              USB_DM: "net.USB_DM_MCU",
+              USB_DP: "net.USB_DP_MCU",
+              QSPI_SS: "net.QSPI_SS",
+              QSPI_SCLK: "net.QSPI_SCLK",
+              QSPI_SD0: "net.QSPI_SD0",
+              QSPI_SD1: "net.QSPI_SD1",
+              QSPI_SD2: "net.QSPI_SD2",
+              QSPI_SD3: "net.QSPI_SD3",
+            }
+          : undefined),
       }}
     />
+    {withCrystal && <Rp2040CrystalClock />}
+    {withCrystal && <Rp2040UsbFlashSupport />}
     <resistor
       name="R_RUN"
       resistance="10k"
@@ -391,16 +653,19 @@ const Rp2040UsbSupport = () => (
   </>
 )
 
-export const Rp2040PhotodiodeBiscuitBoard = (
-  props: Pick<
-    BiscuitBoardProps,
-    | "autorouter"
-    | "autorouterOptions"
-    | "minTraceWidth"
-    | "nominalTraceWidth"
-    | "routingDisabled"
-  > = {},
-) => (
+export type Rp2040PhotodiodeBiscuitBoardProps = Pick<
+  BiscuitBoardProps,
+  | "autorouter"
+  | "autorouterOptions"
+  | "minTraceWidth"
+  | "nominalTraceWidth"
+  | "routingDisabled"
+>
+
+export const Rp2040PhotodiodeBiscuitBoardBase = ({
+  withCrystal = false,
+  ...props
+}: Rp2040PhotodiodeBiscuitBoardProps & { withCrystal?: boolean } = {}) => (
   <BiscuitBoard
     {...props}
     minTraceWidth={props.minTraceWidth ?? 0.1}
@@ -408,17 +673,21 @@ export const Rp2040PhotodiodeBiscuitBoard = (
     autorouterOptions={{
       gridClearance: 0.1,
       expandTraces: true,
-      maxBlockersPerSearch: 256,
+      maxBlockersPerSearch: 1_024,
       maxRipsPerRoute: 1_000,
       maxTotalRips: 10_000,
       maxSearchStates: 2_000_000,
-      routeOrder: "signal_longest_first",
+      routeOrder: "input",
       ...props.autorouterOptions,
     }}
   >
-    <Rp2040UsbSupport />
+    <Rp2040UsbSupport withCrystal={withCrystal} />
     <PhotodiodeTransimpedanceAmplifier />
   </BiscuitBoard>
 )
+
+export const Rp2040PhotodiodeBiscuitBoard = (
+  props: Rp2040PhotodiodeBiscuitBoardProps = {},
+) => <Rp2040PhotodiodeBiscuitBoardBase {...props} />
 
 export default Rp2040PhotodiodeBiscuitBoard
