@@ -9,7 +9,14 @@ import {
 import {
   BREADBOARD_08MM_BOTTOM_BANK_ROWS,
   BREADBOARD_08MM_BREAKOUT_TRACE_WIDTH,
+  BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET,
+  BREADBOARD_08MM_CORNER_VIA_ARM_WIDTH,
   BREADBOARD_08MM_CORNER_VIA_SPACING,
+  BREADBOARD_08MM_CORNER_VIA_X_INNER_OFFSET,
+  BREADBOARD_08MM_CORNER_VIA_X_OUTER_OFFSET,
+  BREADBOARD_08MM_CORNER_VIA_X_OUTWARD_SHIFT,
+  BREADBOARD_08MM_CORNER_VIA_Y_INNER_OFFSET,
+  BREADBOARD_08MM_CORNER_VIA_Y_OUTER_OFFSET,
   BREADBOARD_08MM_MIN_VIA_EDGE_SPACING,
   BREADBOARD_08MM_ROW_BREAKOUTS,
   BREADBOARD_08MM_ROW_CONNECTIONS,
@@ -47,7 +54,7 @@ const renderedBreadboardCircuitJson = (async () => {
   return circuit.getCircuitJson()
 })()
 
-test("places separately broken-out 0.8 mm vias in the four corners", async () => {
+test("places separately broken-out 0.8 mm vias in four woven L fields", async () => {
   const circuitJson = await renderedBreadboardCircuitJson
   const board = circuitJson.find((element) => element.type === "pcb_board")
   const platedHoles = circuitJson.filter(
@@ -104,8 +111,8 @@ test("places separately broken-out 0.8 mm vias in the four corners", async () =>
         via.hole_diameter === BREADBOARD_08MM_VIA_HOLE_DIAMETER &&
         via.outer_diameter === BREADBOARD_08MM_VIA_PAD_DIAMETER &&
         via.source_trace_id !== undefined &&
-        Math.abs(via.x) >= 28 &&
-        Math.abs(via.y) >= 13,
+        Math.abs(via.x) >= BREADBOARD_08MM_CORNER_VIA_X_INNER_OFFSET &&
+        Math.abs(via.y) >= BREADBOARD_08MM_CORNER_VIA_Y_INNER_OFFSET,
     ),
   ).toBe(true)
 
@@ -119,6 +126,59 @@ test("places separately broken-out 0.8 mm vias in the four corners", async () =>
       (via) => via.corner === corner,
     )
     expect(cornerVias).toHaveLength(8)
+    expect(cornerVias.filter((via) => via.arm === "horizontal")).toHaveLength(6)
+    expect(cornerVias.filter((via) => via.arm === "vertical")).toHaveLength(2)
+    expect(
+      cornerVias.filter((via) => via.breakoutStyle === "woven"),
+    ).toHaveLength(4)
+    expect(
+      cornerVias.filter((via) => via.breakoutStyle === "direct"),
+    ).toHaveLength(4)
+
+    const xSign = corner.includes("left") ? -1 : 1
+    const ySign = corner.includes("bottom") ? -1 : 1
+    const xOutwardShift =
+      xSign === -1 || ySign === -1
+        ? BREADBOARD_08MM_CORNER_VIA_X_OUTWARD_SHIFT
+        : 0
+
+    for (const via of cornerVias) {
+      const localX = via.x * xSign
+      const localY = via.y * ySign
+      expect(localX).toBeGreaterThanOrEqual(
+        BREADBOARD_08MM_CORNER_VIA_X_INNER_OFFSET + xOutwardShift,
+      )
+      expect(localX).toBeLessThanOrEqual(
+        BREADBOARD_08MM_CORNER_VIA_X_OUTER_OFFSET + xOutwardShift,
+      )
+      expect(localY).toBeGreaterThanOrEqual(
+        BREADBOARD_08MM_CORNER_VIA_Y_INNER_OFFSET,
+      )
+      expect(localY).toBeLessThanOrEqual(
+        BREADBOARD_08MM_CORNER_VIA_Y_OUTER_OFFSET,
+      )
+      expect(
+        localX <=
+          BREADBOARD_08MM_CORNER_VIA_X_INNER_OFFSET +
+            xOutwardShift +
+            BREADBOARD_08MM_CORNER_VIA_ARM_WIDTH +
+            coordinateTolerance ||
+          localY <=
+            BREADBOARD_08MM_CORNER_VIA_Y_INNER_OFFSET +
+              BREADBOARD_08MM_CORNER_VIA_ARM_WIDTH +
+              coordinateTolerance,
+      ).toBe(true)
+
+      if (via.breakoutStyle === "woven") {
+        const weavePoint = via.breakoutRoute[0]!
+        expect(weavePoint.x * xSign - localX).toBe(
+          BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET,
+        )
+        expect(weavePoint.y * ySign - localY).toBe(
+          BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET,
+        )
+      }
+    }
   }
 
   const minimumPadEdgeSpacing = getMinimumEdgeSpacing(
@@ -130,6 +190,10 @@ test("places separately broken-out 0.8 mm vias in the four corners", async () =>
     BREADBOARD_08MM_VIA_HOLE_DIAMETER,
   )
   expect(BREADBOARD_08MM_CORNER_VIA_SPACING).toBe(3)
+  expect(BREADBOARD_08MM_CORNER_VIA_ARM_WIDTH).toBe(3)
+  expect(BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET).toBe(
+    BREADBOARD_08MM_CORNER_VIA_SPACING / 2,
+  )
   expect(minimumPadEdgeSpacing).toBeGreaterThanOrEqual(
     BREADBOARD_08MM_MIN_VIA_EDGE_SPACING - coordinateTolerance,
   )
@@ -159,6 +223,14 @@ test("places separately broken-out 0.8 mm vias in the four corners", async () =>
       ? []
       : [new Set([pointKey(wirePoints[0]!), pointKey(wirePoints.at(-1)!)])]
   })
+  const tracePointSets = traces.flatMap((trace) => {
+    const wirePoints = trace.route.filter(
+      (point) => point.route_type === "wire",
+    )
+    return wirePoints.length === 0
+      ? []
+      : [new Set(wirePoints.map((point) => pointKey(point)))]
+  })
   expect(
     BREADBOARD_08MM_VIA_POSITIONS.every((via) =>
       traceEndpointPairs.some(
@@ -167,6 +239,26 @@ test("places separately broken-out 0.8 mm vias in the four corners", async () =>
           endpoints.has(pointKey(via.breakoutEnd)),
       ),
     ),
+  ).toBe(true)
+  expect(
+    BREADBOARD_08MM_VIA_POSITIONS.every((via) =>
+      tracePointSets.some(
+        (points) =>
+          points.has(pointKey(via)) &&
+          points.has(pointKey(via.breakoutEnd)) &&
+          via.breakoutRoute.every((point) => points.has(pointKey(point))),
+      ),
+    ),
+  ).toBe(true)
+  expect(
+    BREADBOARD_08MM_VIA_POSITIONS.filter(
+      (via) => via.breakoutStyle === "woven",
+    ).every((via) => via.breakoutRoute.length === 1),
+  ).toBe(true)
+  expect(
+    BREADBOARD_08MM_VIA_POSITIONS.filter(
+      (via) => via.breakoutStyle === "direct",
+    ).every((via) => via.breakoutRoute.length === 0),
   ).toBe(true)
 
   const headerPositionKeys = new Set(
