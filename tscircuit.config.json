@@ -18,7 +18,8 @@
     "examples/stm32c071.tsx",
     "examples/stm32c071-display-boosterpack.tsx",
     "examples/rp2040.tsx",
-    "examples/stm32-stepper-biscuit-board.tsx"
+    "examples/stm32-stepper-biscuit-board.tsx",
+    "examples/rp2040-photodiode-crystal-buttons.tsx"
   ],
   "siteDefaultComponentPath": "examples/stm32c071.tsx"
 }
