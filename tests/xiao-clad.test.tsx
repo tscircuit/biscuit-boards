@@ -221,8 +221,8 @@ test("uses 0.8 mm vias in both large-via XIAO clad variants", async () => {
 
   expect(XIAO_CLAD_08MM_VIA_HOLE_DIAMETER).toBe(0.8)
   expect(XIAO_CLAD_08MM_VIA_PAD_DIAMETER).toBe(0.9)
-  expect(XIAO_CLAD_08MM_VIA_SPACING).toBe(2)
-  expect(XIAO_CLAD_08MM_VIA_POSITIONS).toHaveLength(18)
+  expect(XIAO_CLAD_08MM_VIA_SPACING).toBe(3)
+  expect(XIAO_CLAD_08MM_VIA_POSITIONS).toHaveLength(12)
 
   for (const variant of variants) {
     const circuit = new Circuit()
