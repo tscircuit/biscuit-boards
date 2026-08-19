@@ -1,0 +1,29 @@
+import { BiscuitBoard, type BiscuitBoardProps } from "../lib/BiscuitBoard"
+import { Stm32StepperControllerCircuit } from "./stm32-stepper-controller-circuit"
+
+/** STM32 + TMC5130A controller for one bipolar stepper motor. */
+export const Stm32StepperBiscuitBoard = (
+  props: Pick<
+    BiscuitBoardProps,
+    "autorouter" | "autorouterOptions" | "routingDisabled"
+  > = {},
+) => (
+  <BiscuitBoard
+    minTraceWidth={0.1}
+    nominalTraceWidth={0.2}
+    autorouterOptions={{
+      routeOrder: "adaptive",
+      gridClearance: 0.1,
+      maxBlockersPerSearch: 512,
+      maxRipsPerRoute: 1_024,
+      maxTotalRips: 50_000,
+      maxSearchStates: 10_000_000,
+      ...props.autorouterOptions,
+    }}
+    {...props}
+  >
+    <Stm32StepperControllerCircuit />
+  </BiscuitBoard>
+)
+
+export default () => <Stm32StepperBiscuitBoard />
