@@ -46,7 +46,15 @@ test("routes the STM32 stepper controller on BiscuitBoard", async () => {
   expect(powerConnector).toMatchObject({
     manufacturer_part_number: "54-00164",
   })
-  for (const name of ["U_MCU", "U_DRIVER", "J_SWD", "J_MOTOR", "J_PWR"]) {
+  for (const name of [
+    "U_MCU",
+    "U_DRIVER",
+    "J_SWD",
+    "J_MOTOR",
+    "J_PWR",
+    "R_PWR_LED",
+    "D_PWR",
+  ]) {
     expect(componentNames.has(name)).toBe(true)
   }
   expect(traces.length).toBeGreaterThan(35)

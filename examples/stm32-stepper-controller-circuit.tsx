@@ -11,6 +11,7 @@ const schSections = {
   debug: "debug",
   driver: "driver",
   motor: "motor",
+  status: "status",
 } as const
 
 const tmc5130Pins = {
@@ -265,6 +266,8 @@ export const Stm32StepperControllerCircuit = () => {
     vio: [-7.930625160416103, 10.046173457029411, 180],
     senseA: [4.256867497564862, 15.361935192258315, 0],
     senseB: [13.01988086050558, -3.475845118657247, 0],
+    powerLedResistor: [-8, 14, 0],
+    powerLed: [-12, 14, 0],
   }
   const at = (v: number[]) => ({ pcbX: v[0], pcbY: v[1], pcbRotation: v[2] })
 
@@ -278,6 +281,7 @@ export const Stm32StepperControllerCircuit = () => {
       <schematicsection name={schSections.debug} displayName="SWD Debug" />
       <schematicsection name={schSections.driver} displayName="Motor Driver" />
       <schematicsection name={schSections.motor} displayName="Motor Output" />
+      <schematicsection name={schSections.status} displayName="Power Status" />
 
       <PowerConnector
         name="J_PWR"
@@ -435,6 +439,22 @@ export const Stm32StepperControllerCircuit = () => {
         footprint="1206"
         {...at(p.senseB)}
       />
+      <resistor
+        name="R_PWR_LED"
+        schSectionName={schSections.status}
+        resistance="1k"
+        footprint="0603"
+        manufacturerPartNumber="GENERIC-0603-1K"
+        {...at(p.powerLedResistor)}
+      />
+      <led
+        name="D_PWR"
+        schSectionName={schSections.status}
+        color="green"
+        footprint="0603"
+        manufacturerPartNumber="GENERIC-0603-GREEN-LED"
+        {...at(p.powerLed)}
+      />
 
       <silkscreentext
         text="6-18V"
@@ -454,6 +474,12 @@ export const Stm32StepperControllerCircuit = () => {
         pcbX={p.swd[0]}
         pcbY={-16.7}
         fontSize="0.7mm"
+      />
+      <silkscreentext
+        text="POWER"
+        pcbX={(p.powerLedResistor[0] + p.powerLed[0]) / 2}
+        pcbY={p.powerLed[1] + 1.8}
+        fontSize="0.65mm"
       />
 
       <trace from=".J_PWR > .VM" to="net.VM" {...vm} />
@@ -521,6 +547,23 @@ export const Stm32StepperControllerCircuit = () => {
       <trace from=".R_SENSE_A > .pin2" to="net.GND" width="0.2mm" {...gnd} />
       <trace from=".U_DRIVER > .BRB" to=".R_SENSE_B > .pin1" width="0.3mm" />
       <trace from=".R_SENSE_B > .pin2" to="net.GND" width="0.2mm" {...gnd} />
+      <trace
+        name="PWR_LED_3V3"
+        from="net.V3V3"
+        to=".R_PWR_LED > .pin1"
+        {...v3v3}
+      />
+      <trace
+        name="PWR_LED_ANODE"
+        from=".R_PWR_LED > .pin2"
+        to=".D_PWR > .anode"
+      />
+      <trace
+        name="PWR_LED_GND"
+        from=".D_PWR > .cathode"
+        to="net.GND"
+        {...gnd}
+      />
       <trace
         name="MOTOR_A1"
         from=".U_DRIVER > .OA1"
