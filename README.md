@@ -81,10 +81,11 @@ a trace-only breakout on both its inner and outer side.
 
 The 32 vias are separate from the breadboard strips and sit in four
 two-via-wide L-shaped corner fields. Every via has its own copper breakout;
-outer vias exit directly while inner vias weave through the 3 mm gaps in the
-outer row. The vias use 0.8 mm finished holes and 0.9 mm pads on a 3 mm pitch,
-leaving 2.1 mm between pad edges and 2.2 mm between drill edges. The bare
-routed preview and checked-in PCB snapshot are in
+vias nearest the open board interior exit directly, while the recessed
+mounting-hole-side vias weave inward through the 3 mm gaps. The vias use
+0.8 mm finished holes and 0.9 mm pads on a 3 mm pitch, leaving 2.1 mm between
+pad edges and 2.2 mm between drill edges. The bare routed preview and
+checked-in PCB snapshot are in
 [`examples/breadboard-clad-0.8mm-vias.tsx`](./examples/breadboard-clad-0.8mm-vias.tsx).
 
 ```sh

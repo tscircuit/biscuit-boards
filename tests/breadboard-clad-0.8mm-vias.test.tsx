@@ -169,12 +169,18 @@ test("places separately broken-out 0.8 mm vias in four woven L fields", async ()
               coordinateTolerance,
       ).toBe(true)
 
+      if (via.arm === "horizontal") {
+        expect(via.breakoutEnd.y * ySign).toBeLessThan(localY)
+      } else {
+        expect(via.breakoutEnd.x * xSign).toBeLessThan(localX)
+      }
+
       if (via.breakoutStyle === "woven") {
         const weavePoint = via.breakoutRoute[0]!
-        expect(weavePoint.x * xSign - localX).toBe(
+        expect(localX - weavePoint.x * xSign).toBe(
           BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET,
         )
-        expect(weavePoint.y * ySign - localY).toBe(
+        expect(localY - weavePoint.y * ySign).toBe(
           BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET,
         )
       }

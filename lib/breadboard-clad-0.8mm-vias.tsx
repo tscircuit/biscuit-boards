@@ -135,29 +135,29 @@ const createCornerViaPositions = (
   )
   const horizontalArm = shiftedCornerViaAxisX.flatMap((x, xIndex) =>
     cornerViaArmAxisY.map((y, yIndex): Breadboard08mmViaPosition => {
-      const isInnerVia = yIndex === 0
-      const weaveX = x + BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET
+      const isOpenSideVia = yIndex === 0
+      const needsWeave = !isOpenSideVia
+      const weaveX = x - BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET
       const breakoutY =
-        BREADBOARD_08MM_CORNER_VIA_Y_INNER_OFFSET +
-        BREADBOARD_08MM_CORNER_VIA_ARM_WIDTH +
+        BREADBOARD_08MM_CORNER_VIA_Y_INNER_OFFSET -
         BREADBOARD_08MM_VIA_BREAKOUT_LENGTH
 
       return {
-        name: `V_${corner.toUpperCase()}_H${xIndex + 1}_${isInnerVia ? "INNER" : "OUTER"}`,
+        name: `V_${corner.toUpperCase()}_H${xIndex + 1}_${isOpenSideVia ? "OPEN" : "RECESSED"}`,
         corner,
         arm: "horizontal",
-        breakoutStyle: isInnerVia ? "woven" : "direct",
+        breakoutStyle: needsWeave ? "woven" : "direct",
         ...toBoardPoint({ x, y }),
-        breakoutRoute: isInnerVia
+        breakoutRoute: needsWeave
           ? [
               toBoardPoint({
                 x: weaveX,
-                y: y + BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET,
+                y: y - BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET,
               }),
             ]
           : [],
         breakoutEnd: toBoardPoint({
-          x: isInnerVia ? weaveX : x,
+          x: needsWeave ? weaveX : x,
           y: breakoutY,
         }),
       }
@@ -166,31 +166,30 @@ const createCornerViaPositions = (
   const verticalExtensionY = BREADBOARD_08MM_CORNER_VIA_Y_OUTER_OFFSET
   const verticalArmExtension = shiftedCornerViaArmAxisX.map(
     (x, xIndex): Breadboard08mmViaPosition => {
-      const isInnerVia = xIndex === 0
-      const outerArmX =
-        BREADBOARD_08MM_CORNER_VIA_X_INNER_OFFSET +
-        xOutwardShift +
-        BREADBOARD_08MM_CORNER_VIA_ARM_WIDTH
-      const breakoutX = outerArmX + BREADBOARD_08MM_VIA_BREAKOUT_LENGTH
-      const weaveY = verticalExtensionY + BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET
+      const isOpenSideVia = xIndex === 0
+      const needsWeave = !isOpenSideVia
+      const openSideX =
+        BREADBOARD_08MM_CORNER_VIA_X_INNER_OFFSET + xOutwardShift
+      const breakoutX = openSideX - BREADBOARD_08MM_VIA_BREAKOUT_LENGTH
+      const weaveY = verticalExtensionY - BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET
 
       return {
-        name: `V_${corner.toUpperCase()}_V3_${isInnerVia ? "INNER" : "OUTER"}`,
+        name: `V_${corner.toUpperCase()}_V3_${isOpenSideVia ? "OPEN" : "RECESSED"}`,
         corner,
         arm: "vertical",
-        breakoutStyle: isInnerVia ? "woven" : "direct",
+        breakoutStyle: needsWeave ? "woven" : "direct",
         ...toBoardPoint({ x, y: verticalExtensionY }),
-        breakoutRoute: isInnerVia
+        breakoutRoute: needsWeave
           ? [
               toBoardPoint({
-                x: x + BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET,
+                x: x - BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET,
                 y: weaveY,
               }),
             ]
           : [],
         breakoutEnd: toBoardPoint({
           x: breakoutX,
-          y: isInnerVia ? weaveY : verticalExtensionY,
+          y: needsWeave ? weaveY : verticalExtensionY,
         }),
       }
     },
