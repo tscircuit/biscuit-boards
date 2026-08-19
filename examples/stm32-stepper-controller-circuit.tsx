@@ -210,6 +210,7 @@ const Tensility5400164Footprint = () => (
     <hole pcbX="-2.35mm" diameter="1.6mm" />
     <hole pcbX="2.15mm" diameter="1.8mm" />
     <silkscreenrect width="14.7mm" height="9mm" />
+    <courtyardrect width="15.7mm" height="10mm" />
   </footprint>
 )
 
@@ -266,8 +267,8 @@ export const Stm32StepperControllerCircuit = () => {
     vio: [-7.930625160416103, 10.046173457029411, 180],
     senseA: [4.256867497564862, 15.361935192258315, 0],
     senseB: [13.01988086050558, -3.475845118657247, 0],
-    powerLedResistor: [-8, 14, 0],
-    powerLed: [-12, 14, 0],
+    powerLedResistor: [-8, 12, 0],
+    powerLed: [-12, 12, 0],
   }
   const at = (v: number[]) => ({ pcbX: v[0], pcbY: v[1], pcbRotation: v[2] })
 
@@ -477,8 +478,9 @@ export const Stm32StepperControllerCircuit = () => {
       />
       <silkscreentext
         text="POWER"
-        pcbX={(p.powerLedResistor[0] + p.powerLed[0]) / 2}
-        pcbY={p.powerLed[1] + 1.8}
+        pcbX={p.powerLed[0] - 3}
+        pcbY={p.powerLed[1] - 0.5}
+        pcbRotation={90}
         fontSize="0.65mm"
       />
 

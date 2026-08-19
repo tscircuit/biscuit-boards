@@ -33,6 +33,34 @@ test("routes the STM32 stepper controller on BiscuitBoard", async () => {
     (element) =>
       element.type === "source_component" && element.name === "J_PWR",
   )
+  const powerLed = circuitJson.find(
+    (element) =>
+      element.type === "source_component" && element.name === "D_PWR",
+  )
+  const powerLedResistor = circuitJson.find(
+    (element) =>
+      element.type === "source_component" && element.name === "R_PWR_LED",
+  )
+  const powerConnectorPcb = circuitJson.find(
+    (element) =>
+      element.type === "pcb_component" &&
+      element.source_component_id === powerConnector?.source_component_id,
+  )
+  const powerLedPcb = circuitJson.find(
+    (element) =>
+      element.type === "pcb_component" &&
+      element.source_component_id === powerLed?.source_component_id,
+  )
+  const powerLedResistorPcb = circuitJson.find(
+    (element) =>
+      element.type === "pcb_component" &&
+      element.source_component_id === powerLedResistor?.source_component_id,
+  )
+  const powerConnectorBody = circuitJson.find(
+    (element) =>
+      element.type === "pcb_silkscreen_rect" &&
+      element.pcb_component_id === powerConnectorPcb?.pcb_component_id,
+  )
   const allowedViaPositions = new Set(BISCUIT_BOARD_VIA_POSITIONS.map(pointKey))
 
   expect(errors).toEqual([])
@@ -46,6 +74,20 @@ test("routes the STM32 stepper controller on BiscuitBoard", async () => {
   expect(powerConnector).toMatchObject({
     manufacturer_part_number: "54-00164",
   })
+  if (
+    powerConnectorBody?.type !== "pcb_silkscreen_rect" ||
+    powerLedPcb?.type !== "pcb_component" ||
+    powerLedResistorPcb?.type !== "pcb_component"
+  ) {
+    throw new Error("Power indicator or barrel jack body is missing")
+  }
+  const barrelJackBodyBottom =
+    powerConnectorBody.center.y - powerConnectorBody.height / 2
+  for (const indicatorComponent of [powerLedPcb, powerLedResistorPcb]) {
+    expect(
+      indicatorComponent.center.y + indicatorComponent.height / 2,
+    ).toBeLessThan(barrelJackBodyBottom - 0.5)
+  }
   for (const name of [
     "U_MCU",
     "U_DRIVER",
