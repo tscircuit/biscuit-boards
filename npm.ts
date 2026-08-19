@@ -19,3 +19,7 @@ export {
   XiaoCladWithPerforatedPinHeaders08mmVias,
   type XiaoCladWithPerforatedPinHeaders08mmViasProps,
 } from "./lib/xiao-clad-with-perforated-pin-headers-0.8mm-vias"
+export {
+  XiaoPairCladPanel08mmVias,
+  type XiaoPairCladPanel08mmViasProps,
+} from "./lib/xiao-pair-clad-panel-0.8mm-vias"

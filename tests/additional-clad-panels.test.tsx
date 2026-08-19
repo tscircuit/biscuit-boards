@@ -24,6 +24,7 @@ import {
   XIAO_PAIR_CLAD_PANEL_EDGE_PADDING,
   XiaoPairCladPanel,
 } from "../lib/xiao-pair-clad-panel"
+import { XiaoPairCladPanel08mmVias } from "../lib/xiao-pair-clad-panel-0.8mm-vias"
 
 test("panels two breadboards with BoosterPack and Arduino clads", async () => {
   const circuit = new Circuit()
@@ -103,5 +104,20 @@ test("panels standard and perforated XIAO clads side by side", async () => {
       (cutout) => cutout.radius * 2 === XIAO_PERFORATION_HOLE_DIAMETER,
     ),
   ).toBe(true)
+  expect(errors).toEqual([])
+}, 15_000)
+
+test("panels standard and perforated 0.8 mm XIAO clads", async () => {
+  const circuit = new Circuit()
+  circuit.add(<XiaoPairCladPanel08mmVias />)
+  await circuit.renderUntilSettled()
+
+  const circuitJson = circuit.getCircuitJson()
+  const boards = circuitJson.filter((element) => element.type === "pcb_board")
+  const vias = circuitJson.filter((element) => element.type === "pcb_via")
+  const errors = circuitJson.filter((element) => element.type.endsWith("error"))
+
+  expect(boards).toHaveLength(2)
+  expect(vias).toHaveLength(24)
   expect(errors).toEqual([])
 }, 15_000)

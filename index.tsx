@@ -209,6 +209,10 @@ export {
   XiaoPairCladPanel,
   type XiaoPairCladPanelProps,
 } from "./lib/xiao-pair-clad-panel"
+export {
+  XiaoPairCladPanel08mmVias,
+  type XiaoPairCladPanel08mmViasProps,
+} from "./lib/xiao-pair-clad-panel-0.8mm-vias"
 
 import { BiscuitBoard } from "./lib/BiscuitBoard"
 

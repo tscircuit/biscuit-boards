@@ -6,6 +6,7 @@ import {
 } from "@tscircuit/checks"
 import { Circuit } from "@tscircuit/core"
 import { XiaoStm32Usb } from "../examples/xiao-stm32-usb"
+import { XiaoStm32Usb08mmVias } from "../examples/xiao-stm32-usb-0.8mm-vias"
 import {
   XIAO_CLAD_HEIGHT,
   XIAO_CLAD_VIA_HOLE_DIAMETER,
@@ -314,4 +315,30 @@ test("routes STM32 USB through only the fixed XIAO via field", async () => {
   expect(new Set(routedPrefabVias.map(pointKey))).toEqual(
     new Set(["-5.800,3.700", "5.800,-5.400"]),
   )
+}, 30_000)
+
+test("routes STM32 USB through only the fixed 0.8 mm XIAO via field", async () => {
+  const circuit = new Circuit()
+  circuit.add(<XiaoStm32Usb08mmVias />)
+  await circuit.renderUntilSettled()
+
+  const circuitJson = circuit.getCircuitJson()
+  const errorsAndWarnings = circuitJson.filter(
+    (element) =>
+      element.type.endsWith("error") || element.type.endsWith("warning"),
+  )
+  const traces = circuitJson.filter((element) => element.type === "pcb_trace")
+  const allowedViaPositions = new Set(
+    XIAO_CLAD_08MM_VIA_POSITIONS.map(pointKey),
+  )
+  const routedPrefabVias = traces.flatMap((trace) =>
+    trace.route.filter((point) => point.route_type === "via"),
+  )
+
+  expect(errorsAndWarnings).toEqual([])
+  expect(traces).toHaveLength(16)
+  expect(routedPrefabVias).not.toHaveLength(0)
+  expect(
+    routedPrefabVias.every((via) => allowedViaPositions.has(pointKey(via))),
+  ).toBe(true)
 }, 30_000)
