@@ -170,20 +170,19 @@ const Kmr2PushButton = (props: PushButtonProps<typeof buttonPins>) => (
 // 2.54 mm lead pitch, 0.7 mm drills, and the original 1.6 x 1.2 / 1.2 mm pads.
 const To18_2Footprint = () => (
   <footprint insertionDirection="from_above">
-    <platedhole
+    <smtpad
       portHints={["pin1", "anode"]}
-      shape="circular_hole_with_rect_pad"
-      holeDiameter="0.7mm"
-      rectPadWidth="1.6mm"
-      rectPadHeight="1.2mm"
+      shape="rect"
+      width="1.2mm"
+      height="1.2mm"
       pcbX={0}
       pcbY={0}
     />
-    <platedhole
+    <smtpad
       portHints={["pin2", "cathode"]}
-      shape="circle"
-      holeDiameter="0.7mm"
-      outerDiameter="1.2mm"
+      shape="rect"
+      width="1.2mm"
+      height="1.2mm"
       pcbX={2.54}
       pcbY={0}
     />
@@ -240,8 +239,8 @@ const Rp2040CrystalClock = () => (
       supplierPartNumbers={{ jlcpcb: ["C9002"] }}
       pinVariant="four_pin"
       footprint={<Crystal3225Footprint />}
-        pcbX={13.728619449145434}
-        pcbY={1.5479474629759835}
+        pcbX={19.5}
+        pcbY={2}
       connections={{
         pin1: "net.XIN",
         pin2: "net.GND",
@@ -320,8 +319,8 @@ const Rp2040UsbFlashSupport = ({
       name="R_USB_DP"
       resistance="27"
       footprint="0603"
-        pcbX={20.96363182860926}
-        pcbY={1.9067562068786863}
+        pcbX={28}
+        pcbY={5.5}
       connections={{ pin1: "net.USB_DP_CONN", pin2: "net.USB_DP_MCU" }}
     />
 
