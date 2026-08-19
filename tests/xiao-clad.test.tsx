@@ -19,6 +19,7 @@ import {
   XiaoCladWithPinHeaders,
 } from "../lib/xiao-clad"
 import {
+  XIAO_CLAD_HEADER_CLEARANCE as XIAO_CLAD_08MM_HEADER_CLEARANCE,
   XIAO_CLAD_VIA_HOLE_DIAMETER as XIAO_CLAD_08MM_VIA_HOLE_DIAMETER,
   XIAO_CLAD_VIA_PAD_DIAMETER as XIAO_CLAD_08MM_VIA_PAD_DIAMETER,
   XIAO_CLAD_VIA_POSITIONS as XIAO_CLAD_08MM_VIA_POSITIONS,
@@ -231,6 +232,9 @@ test("uses 0.8 mm vias in both large-via XIAO clad variants", async () => {
 
     const circuitJson = circuit.getCircuitJson()
     const vias = circuitJson.filter((element) => element.type === "pcb_via")
+    const platedHoles = circuitJson.filter(
+      (element) => element.type === "pcb_plated_hole",
+    )
     const errorsAndWarnings = circuitJson.filter(
       (element) =>
         element.type.endsWith("error") || element.type.endsWith("warning"),
@@ -247,6 +251,34 @@ test("uses 0.8 mm vias in both large-via XIAO clad variants", async () => {
           via.outer_diameter === XIAO_CLAD_08MM_VIA_PAD_DIAMETER,
       ),
     ).toBe(true)
+    const viaToHeaderClearances = vias.flatMap((via) =>
+      platedHoles.map((hole) => {
+        const viaRadius = via.outer_diameter / 2
+        if (hole.shape === "circle") {
+          return (
+            Math.hypot(via.x - hole.x, via.y - hole.y) -
+            viaRadius -
+            hole.outer_diameter / 2
+          )
+        }
+        if (hole.shape !== "circular_hole_with_rect_pad") {
+          throw new Error(`Unsupported XIAO header pad shape: ${hole.shape}`)
+        }
+
+        const dx = Math.max(
+          Math.abs(via.x - hole.x) - hole.rect_pad_width / 2,
+          0,
+        )
+        const dy = Math.max(
+          Math.abs(via.y - hole.y) - hole.rect_pad_height / 2,
+          0,
+        )
+        return Math.hypot(dx, dy) - viaRadius
+      }),
+    )
+    expect(Math.min(...viaToHeaderClearances)).toBeGreaterThanOrEqual(
+      XIAO_CLAD_08MM_HEADER_CLEARANCE - 1e-6,
+    )
     expect(errorsAndWarnings).toEqual([])
   }
 })

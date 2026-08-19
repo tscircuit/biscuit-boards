@@ -13,12 +13,21 @@ export const XIAO_HEADER_PAD_DIAMETER = 1.7
 export const XIAO_CLAD_VIA_HOLE_DIAMETER = 0.8
 export const XIAO_CLAD_VIA_PAD_DIAMETER = 0.9
 export const XIAO_CLAD_VIA_SPACING = 3
+export const XIAO_CLAD_HEADER_CLEARANCE = 2
+export const XIAO_CLAD_VIA_COLUMN_X =
+  XIAO_HEADER_ROW_SPACING / 2 -
+  XIAO_HEADER_PAD_DIAMETER / 2 -
+  XIAO_CLAD_HEADER_CLEARANCE -
+  XIAO_CLAD_VIA_PAD_DIAMETER / 2
 
 const XIAO_CLAD_EDGE_CLEARANCE = 0.2
 const XIAO_CLAD_EDGE_CLEARANCE_VALIDATION_TOLERANCE = 0.001
 
 /** Two 1 x 6 via columns flanking the central component field. */
-export const XIAO_CLAD_VIA_POSITIONS = [-5.8, 5.8].flatMap((x) =>
+export const XIAO_CLAD_VIA_POSITIONS = [
+  -XIAO_CLAD_VIA_COLUMN_X,
+  XIAO_CLAD_VIA_COLUMN_X,
+].flatMap((x) =>
   Array.from({ length: 6 }, (_, index) => ({
     x,
     y: Math.round((-7.5 + index * XIAO_CLAD_VIA_SPACING) * 1e6) / 1e6,
