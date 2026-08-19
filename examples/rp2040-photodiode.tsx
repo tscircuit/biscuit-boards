@@ -1,4 +1,8 @@
-import type { ChipProps, ConnectorProps } from "@tscircuit/props"
+import type {
+  ChipProps,
+  ConnectorProps,
+  PushButtonProps,
+} from "@tscircuit/props"
 import { Fragment } from "react"
 import { BiscuitBoard, type BiscuitBoardProps } from "../lib/BiscuitBoard"
 
@@ -98,6 +102,66 @@ const SmdUsbC = (props: ConnectorProps) => (
     manufacturerPartNumber="TYPE_C_16PIN_2MD_073_"
     supplierPartNumbers={{ jlcpcb: ["C2765186"] }}
     footprint="usbcmidmount16_pinstart13"
+    {...props}
+  />
+)
+
+const buttonPins = {
+  pin1: ["A"],
+  pin2: ["A_ALT"],
+  pin3: ["B"],
+  pin4: ["B_ALT"],
+} as const
+
+const Kmr2Footprint = () => (
+  <footprint>
+    <smtpad
+      portHints={["pin1"]}
+      shape="rect"
+      width="1.2mm"
+      height="0.8mm"
+      pcbX={-1.9}
+      pcbY={-1.1}
+    />
+    <smtpad
+      portHints={["pin2"]}
+      shape="rect"
+      width="1.2mm"
+      height="0.8mm"
+      pcbX={1.9}
+      pcbY={-1.1}
+    />
+    <smtpad
+      portHints={["pin3"]}
+      shape="rect"
+      width="1.2mm"
+      height="0.8mm"
+      pcbX={-1.9}
+      pcbY={1.1}
+    />
+    <smtpad
+      portHints={["pin4"]}
+      shape="rect"
+      width="1.2mm"
+      height="0.8mm"
+      pcbX={1.9}
+      pcbY={1.1}
+    />
+    <silkscreenrect width="4.6mm" height="3.2mm" />
+    <silkscreencircle radius="0.8mm" />
+    <courtyardrect width="4.8mm" height="3.4mm" />
+  </footprint>
+)
+
+const Kmr2PushButton = (props: PushButtonProps<typeof buttonPins>) => (
+  <pushbutton
+    pinLabels={buttonPins}
+    internallyConnectedPins={[
+      ["pin1", "pin2"],
+      ["pin3", "pin4"],
+    ]}
+    manufacturerPartNumber="KMR221GLFS"
+    footprint={<Kmr2Footprint />}
     {...props}
   />
 )
@@ -238,14 +302,18 @@ const W25q16UsOn8Footprint = () => {
   )
 }
 
-const Rp2040UsbFlashSupport = () => (
+const Rp2040UsbFlashSupport = ({
+  withProgrammingButtons = false,
+}: {
+  withProgrammingButtons?: boolean
+}) => (
   <>
     <resistor
       name="R_USB_DM"
       resistance="27"
       footprint="0603"
       pcbX={3}
-      pcbY={6.5}
+      pcbY={withProgrammingButtons ? 7 : 6.5}
       connections={{ pin1: "net.USB_DM_CONN", pin2: "net.USB_DM_MCU" }}
     />
     <resistor
@@ -253,7 +321,7 @@ const Rp2040UsbFlashSupport = () => (
       resistance="27"
       footprint="0603"
       pcbX={3}
-      pcbY={4.5}
+      pcbY={withProgrammingButtons ? 4 : 4.5}
       connections={{ pin1: "net.USB_DP_CONN", pin2: "net.USB_DP_MCU" }}
     />
 
@@ -345,6 +413,46 @@ const Rp2040UsbFlashSupport = () => (
   </>
 )
 
+const Rp2040ProgrammingButtons = () => (
+  <>
+    <resistor
+      name="R_BOOTSEL"
+      resistance="1k"
+      footprint="0603"
+      pcbX={4}
+      pcbY={-2.5}
+      pcbRotation={90}
+      connections={{ pin1: "net.QSPI_SS", pin2: "net.BOOTSEL" }}
+    />
+    <Kmr2PushButton
+      name="SW_BOOTSEL"
+      pcbX={3}
+      pcbY={-6}
+      connections={{ A: "net.BOOTSEL", B: "net.GND" }}
+    />
+    <Kmr2PushButton
+      name="SW_RESET"
+      pcbX={4}
+      pcbY={15}
+      connections={{ A: "net.RUN", B: "net.GND" }}
+    />
+    <silkscreentext
+      text="BOOTSEL"
+      fontSize="0.7mm"
+      pcbX={3}
+      pcbY={-8.2}
+      layer="top"
+    />
+    <silkscreentext
+      text="RESET"
+      fontSize="0.7mm"
+      pcbX={4}
+      pcbY={17.2}
+      layer="top"
+    />
+  </>
+)
+
 const PhotodiodeTransimpedanceAmplifier = () => (
   <>
     <diode
@@ -431,8 +539,10 @@ const PhotodiodeTransimpedanceAmplifier = () => (
 
 const Rp2040UsbSupport = ({
   withCrystal = false,
+  withProgrammingButtons = false,
 }: {
   withCrystal?: boolean
+  withProgrammingButtons?: boolean
 }) => (
   <>
     {/* The crystal variant also connects USB data for ROM BOOTSEL flashing. */}
@@ -559,15 +669,27 @@ const Rp2040UsbSupport = ({
       footprint="0805"
       pcbX={-5}
       pcbY={-17}
-      pcbRotation={180}
+      pcbRotation={withProgrammingButtons ? 0 : 180}
       connections={{ pin1: "net.V3V3", pin2: "net.GND" }}
     />
     <trace
       name="USB_CC2_GND_TO_OUTPUT_CAP"
-      from=".R_CC2 > .pin2"
-      to=".C_REG_OUT > .pin2"
+      from=".C_REG_OUT > .pin2"
+      to=".R_CC2 > .pin2"
       thickness="0.1mm"
-      pcbPath={[".R_CC2 > .pin2", ".C_REG_OUT > .pin2"]}
+      pcbPathRelativeTo={
+        withProgrammingButtons ? ".C_REG_OUT > .pin2" : undefined
+      }
+      pcbPath={
+        withProgrammingButtons
+          ? [
+              ".C_REG_OUT > .pin2",
+              { x: 0.9125, y: -1.5 },
+              { x: -10.175, y: -1.5 },
+              ".R_CC2 > .pin2",
+            ]
+          : [".C_REG_OUT > .pin2", ".R_CC2 > .pin2"]
+      }
     />
 
     <Rp2040
@@ -625,7 +747,9 @@ const Rp2040UsbSupport = ({
       }}
     />
     {withCrystal && <Rp2040CrystalClock />}
-    {withCrystal && <Rp2040UsbFlashSupport />}
+    {withCrystal && (
+      <Rp2040UsbFlashSupport withProgrammingButtons={withProgrammingButtons} />
+    )}
     <resistor
       name="R_RUN"
       resistance="10k"
@@ -664,8 +788,12 @@ export type Rp2040PhotodiodeBiscuitBoardProps = Pick<
 
 export const Rp2040PhotodiodeBiscuitBoardBase = ({
   withCrystal = false,
+  withProgrammingButtons = false,
   ...props
-}: Rp2040PhotodiodeBiscuitBoardProps & { withCrystal?: boolean } = {}) => (
+}: Rp2040PhotodiodeBiscuitBoardProps & {
+  withCrystal?: boolean
+  withProgrammingButtons?: boolean
+} = {}) => (
   <BiscuitBoard
     {...props}
     minTraceWidth={props.minTraceWidth ?? 0.1}
@@ -681,7 +809,11 @@ export const Rp2040PhotodiodeBiscuitBoardBase = ({
       ...props.autorouterOptions,
     }}
   >
-    <Rp2040UsbSupport withCrystal={withCrystal} />
+    <Rp2040UsbSupport
+      withCrystal={withCrystal}
+      withProgrammingButtons={withProgrammingButtons}
+    />
+    {withCrystal && withProgrammingButtons && <Rp2040ProgrammingButtons />}
     <PhotodiodeTransimpedanceAmplifier />
   </BiscuitBoard>
 )
