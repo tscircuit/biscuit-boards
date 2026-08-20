@@ -17,11 +17,14 @@ import { createPrefabricatedViaAutorouter } from "./create-prefabricated-via-aut
 export const BREADBOARD_08MM_VIA_HOLE_DIAMETER = 0.8
 export const BREADBOARD_08MM_VIA_PAD_DIAMETER = 0.9
 export const BREADBOARD_08MM_MIN_VIA_EDGE_SPACING = 2
-export const BREADBOARD_08MM_BREAKOUT_TRACE_WIDTH = 0.3
+export const BREADBOARD_08MM_BREAKOUT_TRACE_WIDTH = 0.15
+export const BREADBOARD_08MM_ROW_TRACE_WIDTH = 0.3
 export const BREADBOARD_08MM_BREAKOUT_PAD_DIAMETER = 0.3
 export const BREADBOARD_08MM_CORNER_VIA_SPACING = 3
 export const BREADBOARD_08MM_CORNER_VIA_ARM_WIDTH = 3
+export const BREADBOARD_08MM_CORNER_VIA_ARM_X_INNER_OFFSET = 25
 export const BREADBOARD_08MM_CORNER_VIA_LONG_SIDE_COLUMNS = 5
+export const BREADBOARD_08MM_TOP_RIGHT_LONG_SIDE_COLUMNS = 6
 export const BREADBOARD_08MM_CORNER_VIA_X_OUTER_OFFSET = 31
 export const BREADBOARD_08MM_CORNER_VIA_X_INNER_OFFSET =
   BREADBOARD_08MM_CORNER_VIA_X_OUTER_OFFSET -
@@ -30,9 +33,9 @@ export const BREADBOARD_08MM_CORNER_VIA_X_INNER_OFFSET =
 export const BREADBOARD_08MM_CORNER_VIA_Y_INNER_OFFSET = 19
 export const BREADBOARD_08MM_CORNER_VIA_Y_OUTER_OFFSET = 25
 export const BREADBOARD_08MM_CORNER_VIA_X_OUTWARD_SHIFT = 3
-export const BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET = 1.5
+export const BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET = 0.8
+export const BREADBOARD_08MM_BREAKOUT_LANE_SPACING = 0.4
 export const BREADBOARD_08MM_VIA_BREAKOUT_LENGTH = 1.4
-export const BREADBOARD_08MM_BREAKOUT_TO_MOUNTING_HOLE_CLEARANCE = 1
 export const BREADBOARD_08MM_ROW_BREAKOUT_LENGTH = 1.2
 
 const BREADBOARD_08MM_CLAD_EDGE_CLEARANCE = 0.2
@@ -61,18 +64,25 @@ export type Breadboard08mmViaCorner =
 
 export type Breadboard08mmViaArm = "horizontal" | "vertical"
 export type Breadboard08mmViaBreakoutStyle = "direct" | "woven"
-export type Breadboard08mmViaBreakoutSide = "long_side" | "short_side"
+export type Breadboard08mmViaOpenAreaEdge =
+  | "toward_board_center"
+  | "toward_breadboard_rows"
+
+export interface Breadboard08mmViaBreakout {
+  openAreaEdge: Breadboard08mmViaOpenAreaEdge
+  style: Breadboard08mmViaBreakoutStyle
+  route: Array<{ x: number; y: number }>
+  end: { x: number; y: number }
+}
 
 export interface Breadboard08mmViaPosition {
   name: string
   corner: Breadboard08mmViaCorner
   arm: Breadboard08mmViaArm
-  breakoutSide: Breadboard08mmViaBreakoutSide
-  breakoutStyle: Breadboard08mmViaBreakoutStyle
   x: number
   y: number
-  breakoutRoute: Array<{ x: number; y: number }>
-  breakoutEnd: { x: number; y: number }
+  topBreakout: Breadboard08mmViaBreakout
+  bottomBreakout: Breadboard08mmViaBreakout
 }
 
 export interface Breadboard08mmRowConnection {
@@ -106,8 +116,8 @@ const cornerViaAxisX = createPitchedRange(
   BREADBOARD_08MM_CORNER_VIA_X_OUTER_OFFSET,
 )
 const cornerViaArmAxisX = createPitchedRange(
-  BREADBOARD_08MM_CORNER_VIA_X_INNER_OFFSET,
-  BREADBOARD_08MM_CORNER_VIA_X_INNER_OFFSET +
+  BREADBOARD_08MM_CORNER_VIA_ARM_X_INNER_OFFSET,
+  BREADBOARD_08MM_CORNER_VIA_ARM_X_INNER_OFFSET +
     BREADBOARD_08MM_CORNER_VIA_ARM_WIDTH,
 )
 const cornerViaArmAxisY = createPitchedRange(
@@ -127,35 +137,10 @@ interface LocalCornerVia extends LocalCornerPoint {
 }
 
 interface LocalCornerBreakout {
-  side: Breadboard08mmViaBreakoutSide
+  openAreaEdge: Breadboard08mmViaOpenAreaEdge
   style: Breadboard08mmViaBreakoutStyle
   route: LocalCornerPoint[]
   end: LocalCornerPoint
-}
-
-const getPointToSegmentDistance = (
-  point: LocalCornerPoint,
-  start: LocalCornerPoint,
-  end: LocalCornerPoint,
-) => {
-  const dx = end.x - start.x
-  const dy = end.y - start.y
-  const lengthSquared = dx * dx + dy * dy
-  const projection =
-    lengthSquared === 0
-      ? 0
-      : Math.max(
-          0,
-          Math.min(
-            1,
-            ((point.x - start.x) * dx + (point.y - start.y) * dy) /
-              lengthSquared,
-          ),
-        )
-  return Math.hypot(
-    point.x - (start.x + projection * dx),
-    point.y - (start.y + projection * dy),
-  )
 }
 
 const createCornerViaPositions = (
@@ -171,7 +156,15 @@ const createCornerViaPositions = (
     x: roundCoordinate(point.x * xSign),
     y: roundCoordinate(point.y * ySign),
   })
-  const shiftedCornerViaAxisX = cornerViaAxisX.map((x) =>
+  const cornerLongSideAxisX =
+    corner === "top_right"
+      ? [
+          ...cornerViaAxisX,
+          BREADBOARD_08MM_CORNER_VIA_X_OUTER_OFFSET +
+            BREADBOARD_08MM_CORNER_VIA_SPACING,
+        ]
+      : cornerViaAxisX
+  const shiftedCornerViaAxisX = cornerLongSideAxisX.map((x) =>
     roundCoordinate(x + xOutwardShift),
   )
   const shiftedCornerViaArmAxisX = cornerViaArmAxisX.map((x) =>
@@ -197,123 +190,158 @@ const createCornerViaPositions = (
 
   const createBreakout = (
     via: LocalCornerVia,
-    side: Breadboard08mmViaBreakoutSide,
+    openAreaEdge: Breadboard08mmViaOpenAreaEdge,
+    layer: "top" | "bottom",
   ): LocalCornerBreakout => {
-    if (side === "long_side") {
-      const sameColumnVias = localVias.filter(
-        (candidate) => candidate.x === via.x,
-      )
-      const blockers = localVias.filter(
-        (candidate) => candidate.x === via.x && candidate.y > via.y,
-      )
-      if (blockers.length === 0) {
+    const innerX = shiftedCornerViaAxisX[0]!
+    const openCenterX = innerX - BREADBOARD_08MM_VIA_BREAKOUT_LENGTH
+    const openRowsY =
+      BREADBOARD_08MM_CORNER_VIA_Y_INNER_OFFSET -
+      BREADBOARD_08MM_VIA_BREAKOUT_LENGTH
+    const columnIndex = Math.round(
+      (via.x - innerX) / BREADBOARD_08MM_CORNER_VIA_SPACING,
+    )
+
+    if (layer === "top") {
+      if (openAreaEdge === "toward_breadboard_rows") {
+        if (via.y === BREADBOARD_08MM_CORNER_VIA_Y_INNER_OFFSET) {
+          return {
+            openAreaEdge,
+            style: "direct",
+            route: [],
+            end: { x: via.x, y: openRowsY },
+          }
+        }
+        const rowWeaveDirection = columnIndex % 2 === 0 ? -1 : 1
+        const weaveDirection =
+          via.y === BREADBOARD_08MM_CORNER_VIA_Y_OUTER_OFFSET
+            ? -rowWeaveDirection
+            : rowWeaveDirection
+        const weaveX =
+          via.x + weaveDirection * BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET
         return {
-          side,
-          style: "direct",
-          route: [],
-          end: { x: via.x, y: via.y + BREADBOARD_08MM_VIA_BREAKOUT_LENGTH },
+          openAreaEdge,
+          style: "woven",
+          route: [
+            {
+              x: weaveX,
+              y: via.y - BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET,
+            },
+          ],
+          end: { x: weaveX, y: openRowsY },
         }
       }
-      const weaveX =
-        via.x -
-        (BREADBOARD_08MM_CORNER_VIA_SPACING * blockers.length) /
-          sameColumnVias.length
+
+      if (columnIndex === 0) {
+        return {
+          openAreaEdge,
+          style: "direct",
+          route: [],
+          end: { x: openCenterX, y: via.y },
+        }
+      }
+      const weaveY = via.y - BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET
       return {
-        side,
+        openAreaEdge,
         style: "woven",
         route: [
           {
-            x: weaveX,
-            y: via.y + BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET,
+            x: via.x - BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET,
+            y: weaveY,
           },
         ],
-        end: {
-          x: weaveX,
-          y:
-            Math.max(...blockers.map((blocker) => blocker.y)) +
-            BREADBOARD_08MM_VIA_BREAKOUT_LENGTH,
-        },
+        end: { x: openCenterX, y: weaveY },
       }
     }
 
-    const blockers = localVias.filter(
-      (candidate) => candidate.y === via.y && candidate.x > via.x,
-    )
-    if (blockers.length === 0) {
+    if (openAreaEdge === "toward_board_center") {
+      if (columnIndex === 0) {
+        return {
+          openAreaEdge,
+          style: "direct",
+          route: [],
+          end: { x: openCenterX, y: via.y },
+        }
+      }
+      const laneOffset =
+        0.7 + (columnIndex - 1) * BREADBOARD_08MM_BREAKOUT_LANE_SPACING
+      const laneY = via.y - laneOffset
       return {
-        side,
-        style: "direct",
-        route: [],
-        end: { x: via.x + BREADBOARD_08MM_VIA_BREAKOUT_LENGTH, y: via.y },
+        openAreaEdge,
+        style: "woven",
+        route: [
+          {
+            x: via.x - BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET,
+            y: laneY,
+          },
+        ],
+        end: { x: openCenterX, y: laneY },
       }
     }
-    const weaveY = via.y - BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET
-    return {
-      side,
-      style: "woven",
-      route: [
-        {
-          x: via.x + BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET,
-          y: weaveY,
-        },
-      ],
-      end: {
-        x:
-          Math.max(...blockers.map((blocker) => blocker.x)) +
-          BREADBOARD_08MM_VIA_BREAKOUT_LENGTH,
-        y: weaveY,
-      },
-    }
-  }
 
-  const approachesMountingHole = (
-    via: LocalCornerVia,
-    breakout: LocalCornerBreakout,
-  ) => {
-    const route = [via, ...breakout.route, breakout.end].map(toBoardPoint)
-    const minimumCenterlineDistance = Math.min(
-      ...BISCUIT_BOARD_MOUNTING_HOLE_POSITIONS.flatMap((hole) =>
-        route
-          .slice(0, -1)
-          .map((point, index) =>
-            getPointToSegmentDistance(hole, point, route[index + 1]!),
-          ),
-      ),
-    )
-    return (
-      minimumCenterlineDistance -
-        BREADBOARD_MOUNTING_HOLE_DIAMETER / 2 -
-        BREADBOARD_08MM_BREAKOUT_TRACE_WIDTH / 2 <
-      BREADBOARD_08MM_BREAKOUT_TO_MOUNTING_HOLE_CLEARANCE
-    )
+    const wrapLaneX =
+      openCenterX -
+      (via.y === BREADBOARD_08MM_CORNER_VIA_Y_OUTER_OFFSET
+        ? columnIndex === 0
+          ? 1.2
+          : 0.8
+        : 0.4)
+    const route =
+      via.y === BREADBOARD_08MM_CORNER_VIA_Y_OUTER_OFFSET && columnIndex > 0
+        ? [
+            {
+              x: via.x - BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET,
+              y: via.y - BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET,
+            },
+            {
+              x: wrapLaneX,
+              y: via.y - BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET,
+            },
+          ]
+        : [{ x: wrapLaneX, y: via.y }]
+    return {
+      openAreaEdge,
+      style: "woven",
+      route,
+      end: { x: wrapLaneX, y: openRowsY },
+    }
   }
 
   return localVias.map((via): Breadboard08mmViaPosition => {
-    const longSideDistance = BREADBOARD_CLAD_HEIGHT / 2 - via.y
-    const shortSideDistance = BREADBOARD_CLAD_WIDTH / 2 - via.x
-    const preferredSide =
-      longSideDistance <= shortSideDistance ? "long_side" : "short_side"
-    const alternateSide =
-      preferredSide === "long_side" ? "short_side" : "long_side"
-    const preferredBreakout = createBreakout(via, preferredSide)
-    const breakout = approachesMountingHole(via, preferredBreakout)
-      ? createBreakout(via, alternateSide)
-      : preferredBreakout
+    const boardCenterDistance = via.x - shiftedCornerViaAxisX[0]!
+    const breadboardRowsDistance =
+      via.y - BREADBOARD_08MM_CORNER_VIA_Y_INNER_OFFSET
+    const topOpenAreaEdge =
+      boardCenterDistance < breadboardRowsDistance
+        ? "toward_board_center"
+        : "toward_breadboard_rows"
+    const bottomOpenAreaEdge =
+      topOpenAreaEdge === "toward_board_center"
+        ? "toward_breadboard_rows"
+        : "toward_board_center"
+    const toBoardBreakout = (
+      breakout: LocalCornerBreakout,
+    ): Breadboard08mmViaBreakout => ({
+      openAreaEdge: breakout.openAreaEdge,
+      style: breakout.style,
+      route: breakout.route.map(toBoardPoint),
+      end: toBoardPoint(breakout.end),
+    })
 
     return {
       name: `V_${corner.toUpperCase()}_${via.nameSuffix}`,
       corner,
       arm: via.arm,
-      breakoutSide: breakout.side,
-      breakoutStyle: breakout.style,
       ...toBoardPoint(via),
-      breakoutRoute: breakout.route.map(toBoardPoint),
-      breakoutEnd: toBoardPoint(breakout.end),
+      topBreakout: toBoardBreakout(createBreakout(via, topOpenAreaEdge, "top")),
+      bottomBreakout: toBoardBreakout(
+        createBreakout(via, bottomOpenAreaEdge, "bottom"),
+      ),
     }
   })
 }
 
-/** Four independent two-via-wide L fields with five long-side columns. */
+/** Four independent L fields; top-right has an extra column below its holes. */
 export const BREADBOARD_08MM_VIA_POSITIONS = (
   [
     ["top_left", -1, 1],
@@ -375,9 +403,9 @@ export const BREADBOARD_08MM_ROW_BREAKOUTS = Array.from(
 ])
 
 const viaBreakoutPinLabels = Object.fromEntries(
-  BREADBOARD_08MM_VIA_POSITIONS.map((via, index) => [
-    `pin${index + 1}`,
-    via.name,
+  BREADBOARD_08MM_VIA_POSITIONS.flatMap((via, index) => [
+    [`pin${index * 2 + 1}`, `${via.name}_TOP`],
+    [`pin${index * 2 + 2}`, `${via.name}_BOTTOM`],
   ]),
 )
 
@@ -393,11 +421,20 @@ const Breadboard08mmViaBreakoutFootprint = () => (
     {BREADBOARD_08MM_VIA_POSITIONS.map((via, index) => (
       <Fragment key={`via-breakout-pad-${via.name}`}>
         <smtpad
-          portHints={[`pin${index + 1}`]}
+          portHints={[`pin${index * 2 + 1}`]}
           shape="circle"
           radius={`${BREADBOARD_08MM_BREAKOUT_PAD_DIAMETER / 2}mm`}
-          pcbX={via.breakoutEnd.x}
-          pcbY={via.breakoutEnd.y}
+          layer="top"
+          pcbX={via.topBreakout.end.x}
+          pcbY={via.topBreakout.end.y}
+        />
+        <smtpad
+          portHints={[`pin${index * 2 + 2}`]}
+          shape="circle"
+          radius={`${BREADBOARD_08MM_BREAKOUT_PAD_DIAMETER / 2}mm`}
+          layer="bottom"
+          pcbX={via.bottomBreakout.end.x}
+          pcbY={via.bottomBreakout.end.y}
         />
       </Fragment>
     ))}
@@ -451,6 +488,10 @@ export const BreadboardClad08mmVias = ({
     minViaHoleDiameter={`${BREADBOARD_08MM_VIA_HOLE_DIAMETER}mm`}
     minViaPadDiameter={`${BREADBOARD_08MM_VIA_PAD_DIAMETER}mm`}
     minViaHoleEdgeToViaHoleEdgeClearance={`${BREADBOARD_08MM_MIN_VIA_EDGE_SPACING}mm`}
+    pcbStyle={{
+      viaHoleDiameter: `${BREADBOARD_08MM_VIA_HOLE_DIAMETER}mm`,
+      viaPadDiameter: `${BREADBOARD_08MM_VIA_PAD_DIAMETER}mm`,
+    }}
     autorouter={
       autorouter ??
       createPrefabricatedViaAutorouter({
@@ -477,7 +518,7 @@ export const BreadboardClad08mmVias = ({
 
     <pinheader
       name="J_VIA_BREAKOUTS"
-      pinCount={BREADBOARD_08MM_VIA_POSITIONS.length}
+      pinCount={BREADBOARD_08MM_VIA_POSITIONS.length * 2}
       pinLabels={viaBreakoutPinLabels}
       manufacturerPartNumber="GENERIC-BREADBOARD-08MM-VIA-BREAKOUTS"
       footprint={<Breadboard08mmViaBreakoutFootprint />}
@@ -518,28 +559,24 @@ export const BreadboardClad08mmVias = ({
 
     {BREADBOARD_08MM_VIA_POSITIONS.map((via) => (
       <Fragment key={via.name}>
-        <via
-          name={via.name}
-          connectsTo={`.J_VIA_BREAKOUTS > .${via.name}`}
-          pcbX={via.x}
-          pcbY={via.y}
-          fromLayer="top"
-          toLayer="bottom"
-          holeDiameter={`${BREADBOARD_08MM_VIA_HOLE_DIAMETER}mm`}
-          outerDiameter={`${BREADBOARD_08MM_VIA_PAD_DIAMETER}mm`}
-        />
         <trace
-          name={`${via.name}_BREAKOUT`}
-          from={`.${via.name} > .pin1`}
-          to={`.J_VIA_BREAKOUTS > .${via.name}`}
-          pcbPathRelativeTo={`.${via.name} > .pin1`}
+          name={`${via.name}_DUAL_LAYER_BREAKOUT`}
+          from={`.J_VIA_BREAKOUTS > .${via.name}_TOP`}
+          to={`.J_VIA_BREAKOUTS > .${via.name}_BOTTOM`}
           pcbPath={[
-            `.${via.name} > .pin1`,
-            ...via.breakoutRoute.map((point) => ({
-              x: roundCoordinate(point.x - via.x),
-              y: roundCoordinate(point.y - via.y),
-            })),
-            `.J_VIA_BREAKOUTS > .${via.name}`,
+            `.J_VIA_BREAKOUTS > .${via.name}_TOP`,
+            ...via.topBreakout.route.toReversed(),
+            { x: via.x, y: via.y },
+            {
+              x: via.x,
+              y: via.y,
+              via: true,
+              fromLayer: "top",
+              toLayer: "bottom",
+            },
+            { x: via.x, y: via.y },
+            ...via.bottomBreakout.route,
+            `.J_VIA_BREAKOUTS > .${via.name}_BOTTOM`,
           ]}
           width={`${BREADBOARD_08MM_BREAKOUT_TRACE_WIDTH}mm`}
         />
@@ -552,7 +589,7 @@ export const BreadboardClad08mmVias = ({
           name={`ROW_${connection.from}_${connection.to}`}
           from={`.J_TERMINALS > .${connection.from}`}
           to={`.J_TERMINALS > .${connection.to}`}
-          width={`${BREADBOARD_08MM_BREAKOUT_TRACE_WIDTH}mm`}
+          width={`${BREADBOARD_08MM_ROW_TRACE_WIDTH}mm`}
         />
       </Fragment>
     ))}
@@ -563,7 +600,7 @@ export const BreadboardClad08mmVias = ({
           name={breakout.name}
           from={`.J_TERMINALS > .${breakout.terminalLabel}`}
           to={`.J_ROW_BREAKOUTS > .${breakout.name}`}
-          width={`${BREADBOARD_08MM_BREAKOUT_TRACE_WIDTH}mm`}
+          width={`${BREADBOARD_08MM_ROW_TRACE_WIDTH}mm`}
         />
       </Fragment>
     ))}
