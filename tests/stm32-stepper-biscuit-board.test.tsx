@@ -41,25 +41,41 @@ test("routes the STM32 stepper controller on BiscuitBoard", async () => {
     (element) =>
       element.type === "source_component" && element.name === "R_PWR_LED",
   )
+  if (
+    powerConnector?.type !== "source_component" ||
+    powerLed?.type !== "source_component" ||
+    powerLedResistor?.type !== "source_component"
+  ) {
+    throw new Error(
+      "Power indicator or barrel jack source component is missing",
+    )
+  }
   const powerConnectorPcb = circuitJson.find(
     (element) =>
       element.type === "pcb_component" &&
-      element.source_component_id === powerConnector?.source_component_id,
+      element.source_component_id === powerConnector.source_component_id,
   )
   const powerLedPcb = circuitJson.find(
     (element) =>
       element.type === "pcb_component" &&
-      element.source_component_id === powerLed?.source_component_id,
+      element.source_component_id === powerLed.source_component_id,
   )
   const powerLedResistorPcb = circuitJson.find(
     (element) =>
       element.type === "pcb_component" &&
-      element.source_component_id === powerLedResistor?.source_component_id,
+      element.source_component_id === powerLedResistor.source_component_id,
   )
+  if (
+    powerConnectorPcb?.type !== "pcb_component" ||
+    powerLedPcb?.type !== "pcb_component" ||
+    powerLedResistorPcb?.type !== "pcb_component"
+  ) {
+    throw new Error("Power indicator or barrel jack PCB component is missing")
+  }
   const powerConnectorBody = circuitJson.find(
     (element) =>
       element.type === "pcb_silkscreen_rect" &&
-      element.pcb_component_id === powerConnectorPcb?.pcb_component_id,
+      element.pcb_component_id === powerConnectorPcb.pcb_component_id,
   )
   const allowedViaPositions = new Set(BISCUIT_BOARD_VIA_POSITIONS.map(pointKey))
 
@@ -74,12 +90,8 @@ test("routes the STM32 stepper controller on BiscuitBoard", async () => {
   expect(powerConnector).toMatchObject({
     manufacturer_part_number: "54-00164",
   })
-  if (
-    powerConnectorBody?.type !== "pcb_silkscreen_rect" ||
-    powerLedPcb?.type !== "pcb_component" ||
-    powerLedResistorPcb?.type !== "pcb_component"
-  ) {
-    throw new Error("Power indicator or barrel jack body is missing")
+  if (powerConnectorBody?.type !== "pcb_silkscreen_rect") {
+    throw new Error("Barrel jack body is missing")
   }
   const barrelJackBodyBottom =
     powerConnectorBody.center.y - powerConnectorBody.height / 2

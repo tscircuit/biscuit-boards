@@ -173,15 +173,16 @@ const Amphenol10129380Footprint = () => (
       { pin: 3, x: 1.27, y: -1.8 },
       { pin: 4, x: 3.81, y: 1.8 },
     ].map(({ pin, x, y }) => (
-      <smtpad
-        key={`pin-${pin}`}
-        portHints={[`pin${pin}`]}
-        pcbX={x}
-        pcbY={y}
-        width="1.27mm"
-        height="2.2mm"
-        shape="rect"
-      />
+      <Fragment key={`pin-${pin}`}>
+        <smtpad
+          portHints={[`pin${pin}`]}
+          pcbX={x}
+          pcbY={y}
+          width="1.27mm"
+          height="2.2mm"
+          shape="rect"
+        />
+      </Fragment>
     ))}
     <silkscreenrect width="10.16mm" height="2.54mm" />
     <silkscreencircle pcbX="-6.35mm" pcbY="-1.27mm" radius="0.15mm" />
@@ -197,15 +198,16 @@ const Tensility5400164Footprint = () => (
       { pin: 2, x: -2.35, y: -5.5 },
       { pin: 3, x: 2.15, y: -5.5 },
     ].map(({ pin, x, y }) => (
-      <smtpad
-        key={`pad-${x}-${y}`}
-        {...(pin === undefined ? {} : { portHints: [`pin${pin}`] })}
-        pcbX={x}
-        pcbY={y}
-        width="2mm"
-        height="2mm"
-        shape="rect"
-      />
+      <Fragment key={`pad-${x}-${y}`}>
+        <smtpad
+          {...(pin === undefined ? {} : { portHints: [`pin${pin}`] })}
+          pcbX={x}
+          pcbY={y}
+          width="2mm"
+          height="2mm"
+          shape="rect"
+        />
+      </Fragment>
     ))}
     <hole pcbX="-2.35mm" diameter="1.6mm" />
     <hole pcbX="2.15mm" diameter="1.8mm" />
