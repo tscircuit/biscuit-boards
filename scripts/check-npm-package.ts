@@ -13,7 +13,8 @@ const expectedExports = [
   "createBiscuitBoardAutorouter",
 ] as const
 
-const esmBundle = await import("../dist/npm.js")
+const esmBundlePath = "../dist/npm.js"
+const esmBundle: Record<string, unknown> = await import(esmBundlePath)
 const require = createRequire(import.meta.url)
 const cjsBundle = require("../dist/npm.cjs")
 
