@@ -10,7 +10,9 @@ import {
 } from "../lib/breadboard-clad"
 import {
   BREADBOARD_08MM_BOTTOM_BANK_ROWS,
+  BREADBOARD_08MM_BREAKOUT_LANE_SPACING,
   BREADBOARD_08MM_BREAKOUT_TRACE_WIDTH,
+  BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET,
   BREADBOARD_08MM_CORNER_VIA_ARM_WIDTH,
   BREADBOARD_08MM_CORNER_VIA_ARM_X_INNER_OFFSET,
   BREADBOARD_08MM_CORNER_VIA_LONG_SIDE_COLUMNS,
@@ -84,7 +86,7 @@ const renderedBreadboardCircuitJson = (async () => {
   return circuit.getCircuitJson()
 })()
 
-test("places separately broken-out 0.8 mm vias with 1 mm inward stubs", async () => {
+test("places separately broken-out 0.8 mm vias with inward woven escapes", async () => {
   const circuitJson = await renderedBreadboardCircuitJson
   const board = circuitJson.find((element) => element.type === "pcb_board")
   const platedHoles = circuitJson.filter(
@@ -168,9 +170,16 @@ test("places separately broken-out 0.8 mm vias with 1 mm inward stubs", async ()
       longSideColumns,
     )
     expect(
-      cornerVias.every(
+      cornerVias.some(
         (via) =>
-          via.topBreakout.style === "direct" &&
+          via.topBreakout.style === "woven" ||
+          via.bottomBreakout.style === "woven",
+      ),
+    ).toBe(true)
+    expect(
+      cornerVias.some(
+        (via) =>
+          via.topBreakout.style === "direct" ||
           via.bottomBreakout.style === "direct",
       ),
     ).toBe(true)
@@ -235,17 +244,18 @@ test("places separately broken-out 0.8 mm vias with 1 mm inward stubs", async ()
           x: breakout.end.x * xSign,
           y: breakout.end.y * ySign,
         }
-        expect(breakout.style).toBe("direct")
-        expect(breakout.route).toEqual([])
-        expect(
-          Math.hypot(localEnd.x - localX, localEnd.y - localY),
-        ).toBeCloseTo(BREADBOARD_08MM_VIA_BREAKOUT_LENGTH, 6)
+        expect(breakout.route.length === 0).toBe(breakout.style === "direct")
         if (breakout.openAreaEdge === "toward_board_center") {
-          expect(localX - localEnd.x).toBe(BREADBOARD_08MM_VIA_BREAKOUT_LENGTH)
-          expect(localEnd.y).toBe(localY)
+          expect(localEnd.x).toBe(
+            localInnerX - BREADBOARD_08MM_VIA_BREAKOUT_LENGTH,
+          )
+          expect(localEnd.x).toBeLessThan(localX)
         } else {
-          expect(localEnd.x).toBe(localX)
-          expect(localY - localEnd.y).toBe(BREADBOARD_08MM_VIA_BREAKOUT_LENGTH)
+          expect(localEnd.y).toBe(
+            BREADBOARD_08MM_CORNER_VIA_Y_INNER_OFFSET -
+              BREADBOARD_08MM_VIA_BREAKOUT_LENGTH,
+          )
+          expect(localEnd.y).toBeLessThan(localY)
         }
       }
     }
@@ -306,6 +316,8 @@ test("places separately broken-out 0.8 mm vias with 1 mm inward stubs", async ()
   )
   expect(BREADBOARD_08MM_CORNER_VIA_SPACING).toBe(3)
   expect(BREADBOARD_08MM_CORNER_VIA_ARM_WIDTH).toBe(3)
+  expect(BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET).toBe(0.8)
+  expect(BREADBOARD_08MM_BREAKOUT_LANE_SPACING).toBe(0.4)
   expect(BREADBOARD_08MM_VIA_BREAKOUT_LENGTH).toBe(1)
   expect(minimumPadEdgeSpacing).toBeGreaterThanOrEqual(
     BREADBOARD_08MM_MIN_VIA_EDGE_SPACING - coordinateTolerance,

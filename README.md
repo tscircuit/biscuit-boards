@@ -85,12 +85,14 @@ board's long side; the top-right has a sixth pitch-aligned column beneath the
 second mounting hole, while the short arms remain beside the mounting holes.
 Every via has its own 0.15 mm top- and bottom-copper breakout: the top trace
 reaches one inward open-area edge and the bottom trace reaches the opposite
-inward open-area edge. Each breakout is a 1 mm stub from its via into the open
-space between corner fields, where connectors, components, and later copper
-fills can sit. No via breakout is collected at or routed toward a board edge or
-mounting hole. The vias use 0.8 mm finished holes and 0.9 mm pads, leaving 2.1
-mm between pad edges and 2.2 mm between drill edges. The bare routed preview
-and checked-in PCB snapshot are in
+inward open-area edge. Breakouts from boundary vias take direct paths; recessed
+breakouts weave through the 3 mm via gaps until every endpoint sits 1 mm beyond
+the inward edge of the L-shaped via grid. The endpoints remain in the open space
+between corner fields, where connectors, components, and later copper fills can
+sit. No via breakout is collected at or routed toward a board edge or mounting
+hole. The vias use 0.8 mm finished holes and 0.9 mm pads, leaving 2.1 mm between
+pad edges and 2.2 mm between drill edges. The bare routed preview and checked-in
+PCB snapshot are in
 [`examples/breadboard-clad-0.8mm-vias.tsx`](./examples/breadboard-clad-0.8mm-vias.tsx).
 
 ```sh

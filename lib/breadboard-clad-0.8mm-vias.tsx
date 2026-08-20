@@ -33,6 +33,8 @@ export const BREADBOARD_08MM_CORNER_VIA_X_INNER_OFFSET =
 export const BREADBOARD_08MM_CORNER_VIA_Y_INNER_OFFSET = 19
 export const BREADBOARD_08MM_CORNER_VIA_Y_OUTER_OFFSET = 25
 export const BREADBOARD_08MM_CORNER_VIA_X_OUTWARD_SHIFT = 3
+export const BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET = 0.8
+export const BREADBOARD_08MM_BREAKOUT_LANE_SPACING = 0.4
 export const BREADBOARD_08MM_VIA_BREAKOUT_LENGTH = 1
 export const BREADBOARD_08MM_ROW_BREAKOUT_LENGTH = 1.2
 
@@ -61,7 +63,7 @@ export type Breadboard08mmViaCorner =
   | "bottom_right"
 
 export type Breadboard08mmViaArm = "horizontal" | "vertical"
-export type Breadboard08mmViaBreakoutStyle = "direct"
+export type Breadboard08mmViaBreakoutStyle = "direct" | "woven"
 export type Breadboard08mmViaOpenAreaEdge =
   | "toward_board_center"
   | "toward_breadboard_rows"
@@ -189,21 +191,123 @@ const createCornerViaPositions = (
   const createBreakout = (
     via: LocalCornerVia,
     openAreaEdge: Breadboard08mmViaOpenAreaEdge,
-  ): LocalCornerBreakout => ({
-    openAreaEdge,
-    style: "direct",
-    route: [],
-    end:
-      openAreaEdge === "toward_board_center"
-        ? {
-            x: via.x - BREADBOARD_08MM_VIA_BREAKOUT_LENGTH,
-            y: via.y,
+    layer: "top" | "bottom",
+  ): LocalCornerBreakout => {
+    const innerX = shiftedCornerViaAxisX[0]!
+    // Both destinations sit just beyond the inward boundary of the via field;
+    // recessed vias reach them through staggered lanes between 3 mm pitches.
+    const openCenterX = innerX - BREADBOARD_08MM_VIA_BREAKOUT_LENGTH
+    const openRowsY =
+      BREADBOARD_08MM_CORNER_VIA_Y_INNER_OFFSET -
+      BREADBOARD_08MM_VIA_BREAKOUT_LENGTH
+    const columnIndex = Math.round(
+      (via.x - innerX) / BREADBOARD_08MM_CORNER_VIA_SPACING,
+    )
+
+    if (layer === "top") {
+      if (openAreaEdge === "toward_breadboard_rows") {
+        if (via.y === BREADBOARD_08MM_CORNER_VIA_Y_INNER_OFFSET) {
+          return {
+            openAreaEdge,
+            style: "direct",
+            route: [],
+            end: { x: via.x, y: openRowsY },
           }
-        : {
-            x: via.x,
-            y: via.y - BREADBOARD_08MM_VIA_BREAKOUT_LENGTH,
+        }
+        const rowWeaveDirection = columnIndex % 2 === 0 ? -1 : 1
+        const weaveDirection =
+          via.y === BREADBOARD_08MM_CORNER_VIA_Y_OUTER_OFFSET
+            ? -rowWeaveDirection
+            : rowWeaveDirection
+        const weaveX =
+          via.x + weaveDirection * BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET
+        return {
+          openAreaEdge,
+          style: "woven",
+          route: [
+            {
+              x: weaveX,
+              y: via.y - BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET,
+            },
+          ],
+          end: { x: weaveX, y: openRowsY },
+        }
+      }
+
+      if (columnIndex === 0) {
+        return {
+          openAreaEdge,
+          style: "direct",
+          route: [],
+          end: { x: openCenterX, y: via.y },
+        }
+      }
+      const weaveY = via.y - BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET
+      return {
+        openAreaEdge,
+        style: "woven",
+        route: [
+          {
+            x: via.x - BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET,
+            y: weaveY,
           },
-  })
+        ],
+        end: { x: openCenterX, y: weaveY },
+      }
+    }
+
+    if (openAreaEdge === "toward_board_center") {
+      if (columnIndex === 0) {
+        return {
+          openAreaEdge,
+          style: "direct",
+          route: [],
+          end: { x: openCenterX, y: via.y },
+        }
+      }
+      const laneOffset =
+        0.7 + (columnIndex - 1) * BREADBOARD_08MM_BREAKOUT_LANE_SPACING
+      const laneY = via.y - laneOffset
+      return {
+        openAreaEdge,
+        style: "woven",
+        route: [
+          {
+            x: via.x - BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET,
+            y: laneY,
+          },
+        ],
+        end: { x: openCenterX, y: laneY },
+      }
+    }
+
+    const wrapLaneX =
+      openCenterX -
+      (via.y === BREADBOARD_08MM_CORNER_VIA_Y_OUTER_OFFSET
+        ? columnIndex === 0
+          ? 1.2
+          : 0.8
+        : 0.4)
+    const route =
+      via.y === BREADBOARD_08MM_CORNER_VIA_Y_OUTER_OFFSET && columnIndex > 0
+        ? [
+            {
+              x: via.x - BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET,
+              y: via.y - BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET,
+            },
+            {
+              x: wrapLaneX,
+              y: via.y - BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET,
+            },
+          ]
+        : [{ x: wrapLaneX, y: via.y }]
+    return {
+      openAreaEdge,
+      style: "woven",
+      route,
+      end: { x: wrapLaneX, y: openRowsY },
+    }
+  }
 
   const toBoardBreakout = (
     breakout: LocalCornerBreakout,
@@ -232,8 +336,10 @@ const createCornerViaPositions = (
       corner,
       arm: via.arm,
       ...toBoardPoint(via),
-      topBreakout: toBoardBreakout(createBreakout(via, topOpenAreaEdge)),
-      bottomBreakout: toBoardBreakout(createBreakout(via, bottomOpenAreaEdge)),
+      topBreakout: toBoardBreakout(createBreakout(via, topOpenAreaEdge, "top")),
+      bottomBreakout: toBoardBreakout(
+        createBreakout(via, bottomOpenAreaEdge, "bottom"),
+      ),
     }
   })
 }
