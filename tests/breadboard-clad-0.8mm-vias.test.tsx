@@ -10,6 +10,8 @@ import {
 } from "../lib/breadboard-clad"
 import {
   BREADBOARD_08MM_BOTTOM_BANK_ROWS,
+  BREADBOARD_08MM_BREAKOUT_ENDPOINT_EDGE_INSET,
+  BREADBOARD_08MM_BREAKOUT_ENDPOINT_SPACING,
   BREADBOARD_08MM_BREAKOUT_LANE_SPACING,
   BREADBOARD_08MM_BREAKOUT_TRACE_WIDTH,
   BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET,
@@ -227,10 +229,12 @@ test("places separately broken-out 0.8 mm vias in four woven L fields", async ()
       const localInnerX =
         BREADBOARD_08MM_CORNER_VIA_X_INNER_OFFSET + xOutwardShift
       const expectedTopOpenAreaEdge =
-        localX - localInnerX <
-        localY - BREADBOARD_08MM_CORNER_VIA_Y_INNER_OFFSET
+        corner === "top_right" && via.name.endsWith("V3_INNER")
           ? "toward_board_center"
-          : "toward_breadboard_rows"
+          : localX - localInnerX <
+              localY - BREADBOARD_08MM_CORNER_VIA_Y_INNER_OFFSET
+            ? "toward_board_center"
+            : "toward_breadboard_rows"
       expect(via.topBreakout.openAreaEdge).toBe(expectedTopOpenAreaEdge)
       expect(via.bottomBreakout.openAreaEdge).toBe(
         expectedTopOpenAreaEdge === "toward_board_center"
@@ -238,17 +242,75 @@ test("places separately broken-out 0.8 mm vias in four woven L fields", async ()
           : "toward_board_center",
       )
 
-      for (const breakout of [via.topBreakout, via.bottomBreakout]) {
-        if (breakout.openAreaEdge === "toward_board_center") {
-          expect(breakout.end.x * xSign).toBeLessThan(localInnerX)
-        } else {
-          expect(breakout.end.y * ySign).toBeLessThan(
-            BREADBOARD_08MM_CORNER_VIA_Y_INNER_OFFSET,
-          )
-        }
-        expect(breakout.route.length === 0).toBe(breakout.style === "direct")
-      }
+      expect(via.topBreakout.route.length).toBeGreaterThan(0)
+      expect(via.bottomBreakout.route.length).toBeGreaterThan(0)
     }
+
+    const cornerBreakouts = cornerVias.flatMap((via) => [
+      via.topBreakout,
+      via.bottomBreakout,
+    ])
+    const sideEdgeEndpoints = cornerBreakouts
+      .filter((breakout) => breakout.openAreaEdge === "toward_breadboard_rows")
+      .map((breakout) => ({
+        x: breakout.end.x * xSign,
+        y: breakout.end.y * ySign,
+      }))
+      .sort((a, b) => a.y - b.y)
+    const longEdgeEndpoints = cornerBreakouts
+      .filter((breakout) => breakout.openAreaEdge === "toward_board_center")
+      .map((breakout) => ({
+        x: breakout.end.x * xSign,
+        y: breakout.end.y * ySign,
+      }))
+      .sort((a, b) => a.x - b.x)
+
+    expect(sideEdgeEndpoints).toHaveLength(cornerVias.length)
+    expect(longEdgeEndpoints).toHaveLength(cornerVias.length)
+    expect(
+      sideEdgeEndpoints.every(
+        (endpoint) =>
+          Math.abs(
+            endpoint.x -
+              (BREADBOARD_CLAD_WIDTH / 2 -
+                BREADBOARD_08MM_BREAKOUT_ENDPOINT_EDGE_INSET),
+          ) < coordinateTolerance,
+      ),
+    ).toBe(true)
+    expect(
+      longEdgeEndpoints.every(
+        (endpoint) =>
+          Math.abs(
+            endpoint.y -
+              (BREADBOARD_CLAD_HEIGHT / 2 -
+                BREADBOARD_08MM_BREAKOUT_ENDPOINT_EDGE_INSET),
+          ) < coordinateTolerance,
+      ),
+    ).toBe(true)
+    expect(
+      sideEdgeEndpoints
+        .slice(1)
+        .every(
+          (endpoint, index) =>
+            Math.abs(
+              endpoint.y -
+                sideEdgeEndpoints[index]!.y -
+                BREADBOARD_08MM_BREAKOUT_ENDPOINT_SPACING,
+            ) < coordinateTolerance,
+        ),
+    ).toBe(true)
+    expect(
+      longEdgeEndpoints
+        .slice(1)
+        .every(
+          (endpoint, index) =>
+            Math.abs(
+              endpoint.x -
+                longEdgeEndpoints[index]!.x -
+                BREADBOARD_08MM_BREAKOUT_ENDPOINT_SPACING,
+            ) < coordinateTolerance,
+        ),
+    ).toBe(true)
   }
 
   expect(
@@ -308,6 +370,7 @@ test("places separately broken-out 0.8 mm vias in four woven L fields", async ()
   expect(BREADBOARD_08MM_CORNER_VIA_ARM_WIDTH).toBe(3)
   expect(BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET).toBe(0.8)
   expect(BREADBOARD_08MM_BREAKOUT_LANE_SPACING).toBe(0.4)
+  expect(BREADBOARD_08MM_BREAKOUT_ENDPOINT_SPACING).toBe(1)
   expect(minimumPadEdgeSpacing).toBeGreaterThanOrEqual(
     BREADBOARD_08MM_MIN_VIA_EDGE_SPACING - coordinateTolerance,
   )

@@ -84,12 +84,14 @@ two-via-wide L-shaped corner fields. Three corners have five columns along the
 board's long side; the top-right has a sixth pitch-aligned column beneath the
 second mounting hole, while the short arms remain beside the mounting holes.
 Every via has its own 0.15 mm top- and bottom-copper breakout: the top trace
-reaches the nearest inward open-area edge and the bottom trace reaches the
-opposite inward open-area edge. Recessed vias weave through separate lanes in
-the 3 mm gaps without routing toward a board edge or mounting hole. The vias use
-0.8 mm finished holes and 0.9 mm pads, leaving 2.1 mm between pad edges and
-2.2 mm between drill edges. The bare routed preview and checked-in PCB snapshot
-are in
+reaches one inward open-area edge and the bottom trace reaches the opposite
+inward open-area edge. Recessed vias weave through separate ordered
+lanes in the 3 mm gaps, clear the mounting-hole keepouts, and then collect into
+compact endpoint banks near the board perimeter. Every endpoint bank is far
+from the breadboard socket field and uses exactly 1 mm pitch so one breakout
+cannot wall off the traces behind it. The vias use 0.8 mm finished holes and
+0.9 mm pads, leaving 2.1 mm between pad edges and 2.2 mm between drill edges.
+The bare routed preview and checked-in PCB snapshot are in
 [`examples/breadboard-clad-0.8mm-vias.tsx`](./examples/breadboard-clad-0.8mm-vias.tsx).
 
 ```sh
