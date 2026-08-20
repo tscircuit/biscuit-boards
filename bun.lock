@@ -11,7 +11,7 @@
       "devDependencies": {
         "@biomejs/biome": "^2.3.4",
         "@resvg/resvg-js": "2.6.2",
-        "@tscircuit/biscuit-board-autorouter": "github:tscircuit/biscuit-board-autorouter#2d4445a1d93cbf037723c04771c27530f6c52a45",
+        "@tscircuit/biscuit-board-autorouter": "github:tscircuit/biscuit-board-autorouter#e36168eb9d8622e2683d353a1d153250fea89578",
         "@tscircuit/checks": "0.0.151",
         "@tscircuit/common": "0.0.56",
         "@tscircuit/copper-pour-solver": "0.0.47",
@@ -298,7 +298,7 @@
 
     "@tscircuit/alphabet": ["@tscircuit/alphabet@0.0.25", "", { "peerDependencies": { "typescript": "^5.0.0" } }, "sha512-PWLjptI6AlLEtF/wjN1N8uC+n3G7vtg0j3xKE1fgWHDhahtnlQRqHDrtPSLlkIR9aJjRfjplzLuaUEaCRvJmZA=="],
 
-    "@tscircuit/biscuit-board-autorouter": ["@tscircuit/biscuit-board-autorouter@github:tscircuit/biscuit-board-autorouter#2d4445a", { "dependencies": { "@tscircuit/core": "^0.0.1621", "@tscircuit/power-trace-expander": "github:tscircuit/power-trace-expander#6fa2ac79cf13129c47432db3a23e61c17067e912", "@tscircuit/props": "^0.0.617", "@tscircuit/solver-utils": "^0.0.17", "graphics-debug": "^0.0.93" }, "peerDependencies": { "typescript": "^5" } }, "tscircuit-biscuit-board-autorouter-2d4445a", "sha512-n4dcQPL6oc0917HgzyNJIBD7I2rSLLQkqUunzTDY+0unMocDJytGrl/1qQa5MITGAsgBkBLKsr4JsQ2nNiBl0A=="],
+    "@tscircuit/biscuit-board-autorouter": ["@tscircuit/biscuit-board-autorouter@github:tscircuit/biscuit-board-autorouter#e36168e", { "dependencies": { "@tscircuit/core": "^0.0.1621", "@tscircuit/power-trace-expander": "github:tscircuit/power-trace-expander#6fa2ac79cf13129c47432db3a23e61c17067e912", "@tscircuit/props": "^0.0.617", "@tscircuit/solver-utils": "^0.0.17", "graphics-debug": "^0.0.93" }, "peerDependencies": { "typescript": "^5" } }, "tscircuit-biscuit-board-autorouter-e36168e", "sha512-psHLHD2YSUsp9UAxtLG2U6tRk6yZXKC6idOY6cScZ0/K83BHKNOeN80+0djryg+4+IHYKAYa7TKLbFmND3n0tw=="],
 
     "@tscircuit/capacity-autorouter": ["@tscircuit/capacity-autorouter@0.0.782", "", { "dependencies": { "fast-json-stable-stringify": "^2.1.0", "object-hash": "^3.0.0", "stack-svgs": "^0.0.1" } }, "sha512-fq+zlqznv97xd10wtGbk2CqTF/Bpc5jDXBDXeFnrnWITAyNyRxkY37INwdmywj4EPhhZS/6ng1+buxlCh2qfoQ=="],
 
