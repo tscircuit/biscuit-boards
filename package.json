@@ -1,6 +1,6 @@
 {
   "name": "biscuitboard",
-  "version": "1.0.18",
+  "version": "1.0.20",
   "description": "Prefabricated copper-clad board wrappers and fixed-via autorouting for tscircuit",
   "license": "MIT",
   "type": "module",
