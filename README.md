@@ -83,6 +83,9 @@ The 50 vias are separate from the breadboard strips and sit in four
 two-via-wide L-shaped corner fields. Three corners have five columns along the
 board's long side; the top-right has a sixth pitch-aligned column beneath the
 second mounting hole, while the short arms remain beside the mounting holes.
+In every corner, the four vias in the two innermost long-side columns shift one
+3 mm pitch toward the top or bottom edge, extending the edge-hugging row without
+changing the grid pitch.
 Every via has its own 0.15 mm top- and bottom-copper breakout: the top trace
 reaches one inward open-area edge and the bottom trace reaches the opposite
 inward open-area edge. Breakouts from boundary vias take direct paths; recessed

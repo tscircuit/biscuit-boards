@@ -21,6 +21,8 @@ import {
   BREADBOARD_08MM_CORNER_VIA_X_OUTWARD_SHIFT,
   BREADBOARD_08MM_CORNER_VIA_Y_INNER_OFFSET,
   BREADBOARD_08MM_CORNER_VIA_Y_OUTER_OFFSET,
+  BREADBOARD_08MM_EDGE_HUG_COLUMN_COUNT,
+  BREADBOARD_08MM_EDGE_HUG_Y_SHIFT,
   BREADBOARD_08MM_MIN_VIA_EDGE_SPACING,
   BREADBOARD_08MM_ROW_BREAKOUTS,
   BREADBOARD_08MM_ROW_CONNECTIONS,
@@ -86,7 +88,7 @@ const renderedBreadboardCircuitJson = (async () => {
   return circuit.getCircuitJson()
 })()
 
-test("places separately broken-out 0.8 mm vias with inward woven escapes", async () => {
+test("places edge-hugging 0.8 mm via grids with inward woven escapes", async () => {
   const circuitJson = await renderedBreadboardCircuitJson
   const board = circuitJson.find((element) => element.type === "pcb_board")
   const platedHoles = circuitJson.filter(
@@ -190,10 +192,30 @@ test("places separately broken-out 0.8 mm vias with inward woven escapes", async
       xSign === -1 || ySign === -1
         ? BREADBOARD_08MM_CORNER_VIA_X_OUTWARD_SHIFT
         : 0
+    const localInnerX =
+      BREADBOARD_08MM_CORNER_VIA_X_INNER_OFFSET + xOutwardShift
+    const edgeHugVias = cornerVias.filter(
+      (via) =>
+        via.arm === "horizontal" &&
+        (via.x * xSign - localInnerX) / BREADBOARD_08MM_CORNER_VIA_SPACING <
+          BREADBOARD_08MM_EDGE_HUG_COLUMN_COUNT,
+    )
+    expect(edgeHugVias).toHaveLength(4)
+    expect(
+      edgeHugVias.every(
+        (via) =>
+          via.y * ySign >=
+          BREADBOARD_08MM_CORNER_VIA_Y_INNER_OFFSET +
+            BREADBOARD_08MM_EDGE_HUG_Y_SHIFT,
+      ),
+    ).toBe(true)
 
     for (const via of cornerVias) {
       const localX = via.x * xSign
       const localY = via.y * ySign
+      const columnIndex = Math.round(
+        (localX - localInnerX) / BREADBOARD_08MM_CORNER_VIA_SPACING,
+      )
       expect(localX).toBeGreaterThanOrEqual(
         BREADBOARD_08MM_CORNER_VIA_X_INNER_OFFSET + xOutwardShift,
       )
@@ -208,25 +230,29 @@ test("places separately broken-out 0.8 mm vias with inward woven escapes", async
       expect(localY).toBeLessThanOrEqual(
         BREADBOARD_08MM_CORNER_VIA_Y_OUTER_OFFSET,
       )
-      expect(
-        localY <=
+      if (via.arm === "horizontal") {
+        const yShift =
+          columnIndex < BREADBOARD_08MM_EDGE_HUG_COLUMN_COUNT
+            ? BREADBOARD_08MM_EDGE_HUG_Y_SHIFT
+            : 0
+        expect([
+          BREADBOARD_08MM_CORNER_VIA_Y_INNER_OFFSET + yShift,
           BREADBOARD_08MM_CORNER_VIA_Y_INNER_OFFSET +
             BREADBOARD_08MM_CORNER_VIA_ARM_WIDTH +
-            coordinateTolerance ||
-          (localY === BREADBOARD_08MM_CORNER_VIA_Y_OUTER_OFFSET &&
-            localX >=
-              BREADBOARD_08MM_CORNER_VIA_ARM_X_INNER_OFFSET +
-                xOutwardShift -
-                coordinateTolerance &&
-            localX <=
-              BREADBOARD_08MM_CORNER_VIA_ARM_X_INNER_OFFSET +
-                xOutwardShift +
-                BREADBOARD_08MM_CORNER_VIA_ARM_WIDTH +
-                coordinateTolerance),
-      ).toBe(true)
+            yShift,
+        ]).toContain(localY)
+      } else {
+        expect(localY).toBe(BREADBOARD_08MM_CORNER_VIA_Y_OUTER_OFFSET)
+        expect(localX).toBeGreaterThanOrEqual(
+          BREADBOARD_08MM_CORNER_VIA_ARM_X_INNER_OFFSET + xOutwardShift,
+        )
+        expect(localX).toBeLessThanOrEqual(
+          BREADBOARD_08MM_CORNER_VIA_ARM_X_INNER_OFFSET +
+            xOutwardShift +
+            BREADBOARD_08MM_CORNER_VIA_ARM_WIDTH,
+        )
+      }
 
-      const localInnerX =
-        BREADBOARD_08MM_CORNER_VIA_X_INNER_OFFSET + xOutwardShift
       const expectedTopOpenAreaEdge =
         localX - localInnerX <
         localY - BREADBOARD_08MM_CORNER_VIA_Y_INNER_OFFSET
@@ -318,6 +344,8 @@ test("places separately broken-out 0.8 mm vias with inward woven escapes", async
   expect(BREADBOARD_08MM_CORNER_VIA_ARM_WIDTH).toBe(3)
   expect(BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET).toBe(0.8)
   expect(BREADBOARD_08MM_BREAKOUT_LANE_SPACING).toBe(0.4)
+  expect(BREADBOARD_08MM_EDGE_HUG_COLUMN_COUNT).toBe(2)
+  expect(BREADBOARD_08MM_EDGE_HUG_Y_SHIFT).toBe(3)
   expect(BREADBOARD_08MM_VIA_BREAKOUT_LENGTH).toBe(1)
   expect(minimumPadEdgeSpacing).toBeGreaterThanOrEqual(
     BREADBOARD_08MM_MIN_VIA_EDGE_SPACING - coordinateTolerance,

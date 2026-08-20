@@ -33,6 +33,9 @@ export const BREADBOARD_08MM_CORNER_VIA_X_INNER_OFFSET =
 export const BREADBOARD_08MM_CORNER_VIA_Y_INNER_OFFSET = 19
 export const BREADBOARD_08MM_CORNER_VIA_Y_OUTER_OFFSET = 25
 export const BREADBOARD_08MM_CORNER_VIA_X_OUTWARD_SHIFT = 3
+export const BREADBOARD_08MM_EDGE_HUG_COLUMN_COUNT = 2
+export const BREADBOARD_08MM_EDGE_HUG_Y_SHIFT =
+  BREADBOARD_08MM_CORNER_VIA_SPACING
 export const BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET = 0.8
 export const BREADBOARD_08MM_BREAKOUT_LANE_SPACING = 0.4
 export const BREADBOARD_08MM_VIA_BREAKOUT_LENGTH = 1
@@ -177,7 +180,11 @@ const createCornerViaPositions = (
         nameSuffix: `H${xIndex + 1}_${yIndex === 0 ? "INNER" : "OUTER"}`,
         arm: "horizontal" as const,
         x,
-        y,
+        y:
+          y +
+          (xIndex < BREADBOARD_08MM_EDGE_HUG_COLUMN_COUNT
+            ? BREADBOARD_08MM_EDGE_HUG_Y_SHIFT
+            : 0),
       })),
     ),
     ...shiftedCornerViaArmAxisX.map((x, xIndex) => ({
@@ -281,23 +288,26 @@ const createCornerViaPositions = (
       }
     }
 
+    // The shifted H2 bottom escape uses the long-edge-side lane before turning
+    // inward, then lands inside H1's endpoint without crossing H1's vertical.
     const wrapLaneX =
       openCenterX -
       (via.y === BREADBOARD_08MM_CORNER_VIA_Y_OUTER_OFFSET
         ? columnIndex === 0
-          ? 1.2
-          : 0.8
+          ? 1.6
+          : 2
         : 0.4)
+    const outerRowWeaveY = via.y + BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET
     const route =
       via.y === BREADBOARD_08MM_CORNER_VIA_Y_OUTER_OFFSET && columnIndex > 0
         ? [
             {
               x: via.x - BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET,
-              y: via.y - BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET,
+              y: outerRowWeaveY,
             },
             {
               x: wrapLaneX,
-              y: via.y - BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET,
+              y: outerRowWeaveY,
             },
           ]
         : [{ x: wrapLaneX, y: via.y }]
