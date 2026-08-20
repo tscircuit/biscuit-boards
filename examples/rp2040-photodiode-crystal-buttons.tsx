@@ -170,20 +170,19 @@ const Kmr2PushButton = (props: PushButtonProps<typeof buttonPins>) => (
 // 2.54 mm lead pitch, 0.7 mm drills, and the original 1.6 x 1.2 / 1.2 mm pads.
 const To18_2Footprint = () => (
   <footprint insertionDirection="from_above">
-    <platedhole
+    <smtpad
       portHints={["pin1", "anode"]}
-      shape="circular_hole_with_rect_pad"
-      holeDiameter="0.7mm"
-      rectPadWidth="1.6mm"
-      rectPadHeight="1.2mm"
+      shape="rect"
+      width="1.2mm"
+      height="1.2mm"
       pcbX={0}
       pcbY={0}
     />
-    <platedhole
+    <smtpad
       portHints={["pin2", "cathode"]}
-      shape="circle"
-      holeDiameter="0.7mm"
-      outerDiameter="1.2mm"
+      shape="rect"
+      width="1.2mm"
+      height="1.2mm"
       pcbX={2.54}
       pcbY={0}
     />
@@ -240,8 +239,8 @@ const Rp2040CrystalClock = () => (
       supplierPartNumbers={{ jlcpcb: ["C9002"] }}
       pinVariant="four_pin"
       footprint={<Crystal3225Footprint />}
-      pcbX={19.5}
-      pcbY={2}
+        pcbX={19.5}
+        pcbY={2}
       connections={{
         pin1: "net.XIN",
         pin2: "net.GND",
@@ -253,8 +252,8 @@ const Rp2040CrystalClock = () => (
       name="C_XIN"
       capacitance="18pF"
       footprint="0603"
-      pcbX={22}
-      pcbY={-1}
+        pcbX={22.39208694455893}
+        pcbY={-1.3528782501030392}
       pcbRotation={90}
       connections={{ pin1: "net.XIN", pin2: "net.GND" }}
     />
@@ -262,8 +261,8 @@ const Rp2040CrystalClock = () => (
       name="C_XOUT"
       capacitance="18pF"
       footprint="0603"
-      pcbX={17}
-      pcbY={5}
+        pcbX={16.76202007217947}
+        pcbY={7.152821859656601}
       pcbRotation={270}
       connections={{ pin1: "net.XOUT", pin2: "net.GND" }}
     />
@@ -312,16 +311,16 @@ const Rp2040UsbFlashSupport = ({
       name="R_USB_DM"
       resistance="27"
       footprint="0603"
-      pcbX={3}
-      pcbY={withProgrammingButtons ? 7 : 6.5}
+        pcbX={3.221677295959175}
+        pcbY={10.934772003275377}
       connections={{ pin1: "net.USB_DM_CONN", pin2: "net.USB_DM_MCU" }}
     />
     <resistor
       name="R_USB_DP"
       resistance="27"
       footprint="0603"
-      pcbX={3}
-      pcbY={withProgrammingButtons ? 4 : 4.5}
+        pcbX={28}
+        pcbY={5.5}
       connections={{ pin1: "net.USB_DP_CONN", pin2: "net.USB_DP_MCU" }}
     />
 
@@ -339,7 +338,7 @@ const Rp2040UsbFlashSupport = ({
       }}
       manufacturerPartNumber="W25Q16JVUXIQ"
       footprint={<W25q16UsOn8Footprint />}
-      pcbX={1}
+        pcbX={2.039780348458317}
       pcbY={0.15}
       pcbRotation={180}
       connections={{
@@ -357,8 +356,8 @@ const Rp2040UsbFlashSupport = ({
       name="C_FLASH"
       capacitance="100nF"
       footprint="0603"
-      pcbX={1}
-      pcbY={-1.8}
+        pcbX={1.7724082588547496}
+      pcbY={-4.8}
       pcbRotation={90}
       connections={{ pin1: "net.V3V3", pin2: "net.GND" }}
     />
@@ -366,8 +365,8 @@ const Rp2040UsbFlashSupport = ({
       name="R_POWER_LED"
       resistance="1k"
       footprint="0603"
-      pcbX={25}
-      pcbY={10}
+        pcbX={20.67729272879607}
+        pcbY={15.462605756372557}
       connections={{ pin1: "net.V3V3", pin2: "net.POWER_LED_A" }}
     />
     <led
@@ -375,16 +374,16 @@ const Rp2040UsbFlashSupport = ({
       color="green"
       footprint="0603"
       manufacturerPartNumber="GENERIC-0603-GREEN-LED"
-      pcbX={29}
-      pcbY={10}
+        pcbX={25.342324616673597}
+        pcbY={15.32025510302023}
       connections={{ anode: "net.POWER_LED_A", cathode: "net.GND" }}
     />
     <resistor
       name="R_USER_LED"
       resistance="1k"
       footprint="0603"
-      pcbX={25}
-      pcbY={5}
+        pcbX={6.373903260227841}
+        pcbY={24.414823963280423}
       connections={{ pin1: "net.USER_LED", pin2: "net.USER_LED_A" }}
     />
     <led
@@ -392,8 +391,8 @@ const Rp2040UsbFlashSupport = ({
       color="blue"
       footprint="0603"
       manufacturerPartNumber="GENERIC-0603-BLUE-LED"
-      pcbX={29}
-      pcbY={5}
+        pcbX={6.308924492916013}
+        pcbY={21.684614343444117}
       connections={{ anode: "net.USER_LED_A", cathode: "net.GND" }}
     />
     <silkscreentext
@@ -419,21 +418,21 @@ const Rp2040ProgrammingButtons = () => (
       name="R_BOOTSEL"
       resistance="1k"
       footprint="0603"
-      pcbX={4}
-      pcbY={-2.5}
+        pcbX={5.4556924878416435}
+        pcbY={-5.470291990044046}
       pcbRotation={90}
       connections={{ pin1: "net.QSPI_SS", pin2: "net.BOOTSEL" }}
     />
     <Kmr2PushButton
       name="SW_BOOTSEL"
-      pcbX={3}
-      pcbY={-6}
+        pcbX={3.059416019911904}
+        pcbY={-9.326788109515467}
       connections={{ A: "net.BOOTSEL", B: "net.GND" }}
     />
     <Kmr2PushButton
       name="SW_RESET"
-      pcbX={4}
-      pcbY={15}
+        pcbX={-4.811672514377253}
+        pcbY={12.284453124000493}
       connections={{ A: "net.RUN", B: "net.GND" }}
     />
     <silkscreentext
@@ -460,8 +459,8 @@ const PhotodiodeTransimpedanceAmplifier = () => (
       photo
       manufacturerPartNumber="Generic TO-18 photodiode"
       footprint={<To18_2Footprint />}
-      pcbX={25}
-      pcbY={-16}
+        pcbX={26.37600493542221}
+        pcbY={-18.446727608992035}
       pcbRotation={90}
       connections={{ anode: "net.GND", cathode: "net.PD_SUM" }}
     />
@@ -470,8 +469,8 @@ const PhotodiodeTransimpedanceAmplifier = () => (
       name="U_TIA"
       manufacturerPartNumber="IC OPAMP GP 1 CIRCUIT SOT-23-5"
       footprint="sot23_5"
-      pcbX={7}
-      pcbY={-16}
+        pcbX={6.910875970132144}
+        pcbY={-15.168175721233348}
       pcbRotation={90}
       connections={{
         inverting_input: "net.PD_SUM",
@@ -486,16 +485,16 @@ const PhotodiodeTransimpedanceAmplifier = () => (
       name="R_TIA"
       resistance="100k"
       footprint="0603"
-      pcbX={14}
-      pcbY={-16}
+        pcbX={14.285033835654147}
+        pcbY={-15.61022262903019}
       connections={{ pin1: "net.PD_ADC", pin2: "net.PD_SUM" }}
     />
     <capacitor
       name="C_TIA"
       capacitance="15pF"
       footprint="0603"
-      pcbX={14}
-      pcbY={-20}
+        pcbX={14.414210990841724}
+        pcbY={-22.55012586225068}
       connections={{ pin1: "net.PD_ADC", pin2: "net.PD_SUM" }}
     />
 
@@ -503,8 +502,8 @@ const PhotodiodeTransimpedanceAmplifier = () => (
       name="R_BIAS_TOP"
       resistance="100k"
       footprint="0603"
-      pcbX={7}
-      pcbY={-6}
+        pcbX={8.515108507753547}
+        pcbY={-10.940583980088094}
       pcbRotation={90}
       connections={{ pin1: "net.V3V3", pin2: "net.PD_BIAS" }}
     />
@@ -512,8 +511,8 @@ const PhotodiodeTransimpedanceAmplifier = () => (
       name="R_BIAS_BOTTOM"
       resistance="100k"
       footprint="0603"
-      pcbX={12}
-      pcbY={-6}
+        pcbX={11.019635671453589}
+        pcbY={-6.02970800995595}
       pcbRotation={90}
       connections={{ pin1: "net.PD_BIAS", pin2: "net.GND" }}
     />
@@ -521,8 +520,8 @@ const PhotodiodeTransimpedanceAmplifier = () => (
       name="C_BIAS"
       capacitance="100nF"
       footprint="0603"
-      pcbX={17}
-      pcbY={-6}
+        pcbX={14.861023283171463}
+        pcbY={-6.118832039823808}
       pcbRotation={90}
       connections={{ pin1: "net.PD_BIAS", pin2: "net.GND" }}
     />
@@ -579,8 +578,8 @@ const Rp2040UsbSupport = ({
       name="R_CC1"
       resistance="5.1k"
       footprint="0603"
-      pcbX={-15}
-      pcbY={17}
+        pcbX={-14.002452168183709}
+        pcbY={18.66257971969382}
       connections={{ pin1: "net.CC1" }}
     />
     <trace
@@ -612,8 +611,8 @@ const Rp2040UsbSupport = ({
       name="R_USB_GND"
       resistance="0"
       footprint="0603"
-      pcbX={-29}
-      pcbY={7}
+        pcbX={-29.154371747647932}
+        pcbY={7.668944239807708}
       connections={{ pin2: "net.GND" }}
     />
     <resistor
@@ -634,10 +633,10 @@ const Rp2040UsbSupport = ({
         pin5: ["VOUT"],
       }}
       noConnect={["NC"]}
-      manufacturerPartNumber="AP2112K-3.3"
+      manufacturerPartNumber="TLV75533PDBVR"
       footprint="sot23_5"
-      pcbX={-25}
-      pcbY={10}
+        pcbX={-24.433970258624246}
+        pcbY={10.051457249215975}
       pcbRotation={180}
       connections={{
         VIN: "net.VBUS",
@@ -658,8 +657,8 @@ const Rp2040UsbSupport = ({
       name="C_REG_IN"
       capacitance="1uF"
       footprint="0603"
-      pcbX={-5}
-      pcbY={17}
+        pcbX={-6.995642292807567}
+        pcbY={18.865601697931403}
       pcbRotation={180}
       connections={{ pin1: "net.VBUS", pin2: "net.GND" }}
     />
@@ -667,8 +666,8 @@ const Rp2040UsbSupport = ({
       name="C_REG_OUT"
       capacitance="10uF"
       footprint="0805"
-      pcbX={-5}
-      pcbY={-17}
+        pcbX={-5.434152799899344}
+        pcbY={-17.10474353531565}
       pcbRotation={withProgrammingButtons ? 0 : 180}
       connections={{ pin1: "net.V3V3", pin2: "net.GND" }}
     />
@@ -694,8 +693,8 @@ const Rp2040UsbSupport = ({
 
     <Rp2040
       name="U1"
-      pcbX={12}
-      pcbY={2}
+        pcbX={11.718003908900288}
+        pcbY={1.9530006514833822}
       pcbRotation={90}
       noConnect={[
         ...(withCrystal ? [] : (["XIN", "XOUT"] as const)),
@@ -762,16 +761,16 @@ const Rp2040UsbSupport = ({
       name="C_3V3_A"
       capacitance="100nF"
       footprint="0603"
-      pcbX={20}
-      pcbY={11}
+        pcbX={20.981957998290216}
+        pcbY={5.778986284818476}
       connections={{ pin1: "net.V3V3", pin2: "net.GND" }}
     />
     <capacitor
       name="C_V1V1"
       capacitance="1uF"
       footprint="0603"
-      pcbX={13}
-      pcbY={11}
+        pcbX={13.582171582950796}
+        pcbY={11.476322204232467}
       connections={{ pin1: "net.V1V1", pin2: "net.GND" }}
     />
   </>
