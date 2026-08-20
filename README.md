@@ -92,10 +92,12 @@ inward open-area edge. Breakouts from boundary vias take direct paths; recessed
 breakouts weave through the 3 mm via gaps until every endpoint sits 1 mm beyond
 the inward edge of the L-shaped via grid. The endpoints remain in the open space
 between corner fields, where connectors, components, and later copper fills can
-sit. No via breakout is collected at or routed toward a board edge or mounting
-hole. The vias use 0.8 mm finished holes and 0.9 mm pads, leaving 2.1 mm between
-pad edges and 2.2 mm between drill edges. The bare routed preview and checked-in
-PCB snapshot are in
+sit. On the bottom layer, the shifted H2 escape and both short-arm escapes take
+staggered lanes behind the outer via row before turning inward, so they do not
+wall off another via. No via breakout is collected at a board edge or routed
+toward a mounting hole. The vias use 0.8 mm finished holes and 0.9 mm pads,
+leaving 2.1 mm between pad edges and 2.2 mm between drill edges. The bare routed
+preview and checked-in PCB snapshot are in
 [`examples/breadboard-clad-0.8mm-vias.tsx`](./examples/breadboard-clad-0.8mm-vias.tsx).
 
 ```sh

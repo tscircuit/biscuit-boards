@@ -209,6 +209,12 @@ test("places edge-hugging 0.8 mm via grids with inward woven escapes", async () 
             BREADBOARD_08MM_EDGE_HUG_Y_SHIFT,
       ),
     ).toBe(true)
+    const bottomBehindViaGrid = cornerVias.filter((via) =>
+      via.bottomBreakout.route.some(
+        (point) => point.y * ySign > BREADBOARD_08MM_CORNER_VIA_Y_OUTER_OFFSET,
+      ),
+    )
+    expect(bottomBehindViaGrid).toHaveLength(3)
 
     for (const via of cornerVias) {
       const localX = via.x * xSign

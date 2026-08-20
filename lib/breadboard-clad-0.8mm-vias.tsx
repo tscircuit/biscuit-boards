@@ -43,6 +43,8 @@ export const BREADBOARD_08MM_ROW_BREAKOUT_LENGTH = 1.2
 
 const BREADBOARD_08MM_CLAD_EDGE_CLEARANCE = 0.2
 const BREADBOARD_08MM_CLAD_EDGE_CLEARANCE_VALIDATION_TOLERANCE = 0.001
+const BREADBOARD_08MM_BOTTOM_BEHIND_VIA_LANE_START_OFFSET = 1.2
+const BREADBOARD_08MM_BOTTOM_BEHIND_VIA_LANE_SPACING = 0.4
 
 export const BREADBOARD_08MM_TOP_BANK_ROWS = [
   "A",
@@ -264,6 +266,26 @@ const createCornerViaPositions = (
     }
 
     if (openAreaEdge === "toward_board_center") {
+      // Short-arm bottom escapes go behind the outer row first, preserving an
+      // open inward path for the shifted H2 via instead of walling it off.
+      if (via.arm === "vertical") {
+        const verticalArmIndex = shiftedCornerViaArmAxisX.indexOf(via.x)
+        const behindViaLaneY =
+          via.y +
+          BREADBOARD_08MM_BOTTOM_BEHIND_VIA_LANE_START_OFFSET +
+          verticalArmIndex * BREADBOARD_08MM_BOTTOM_BEHIND_VIA_LANE_SPACING
+        return {
+          openAreaEdge,
+          style: "woven",
+          route: [
+            {
+              x: via.x - BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET,
+              y: behindViaLaneY,
+            },
+          ],
+          end: { x: openCenterX, y: behindViaLaneY },
+        }
+      }
       if (columnIndex === 0) {
         return {
           openAreaEdge,
