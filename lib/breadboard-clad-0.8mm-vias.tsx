@@ -33,28 +33,11 @@ export const BREADBOARD_08MM_CORNER_VIA_X_INNER_OFFSET =
 export const BREADBOARD_08MM_CORNER_VIA_Y_INNER_OFFSET = 19
 export const BREADBOARD_08MM_CORNER_VIA_Y_OUTER_OFFSET = 25
 export const BREADBOARD_08MM_CORNER_VIA_X_OUTWARD_SHIFT = 3
-export const BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET = 0.8
-export const BREADBOARD_08MM_BREAKOUT_LANE_SPACING = 0.4
-export const BREADBOARD_08MM_VIA_BREAKOUT_LENGTH = 1.4
-export const BREADBOARD_08MM_BREAKOUT_ENDPOINT_SPACING = 1
-export const BREADBOARD_08MM_BREAKOUT_ENDPOINT_EDGE_INSET = 1
-const BREADBOARD_08MM_LONG_EDGE_COLLECTION_INSET = 1.5
-const BREADBOARD_08MM_LONG_EDGE_COLLECTION_OUTWARD_SHIFT = 0.5
-const BREADBOARD_08MM_TOP_RIGHT_COLLECTION_OUTWARD_SHIFT = 6.5
-const BREADBOARD_08MM_SIDE_EDGE_ENDPOINT_MAX_Y = 17.5
-const BREADBOARD_08MM_SIDE_COLLECTION_GATE_X = 26.8
-const BREADBOARD_08MM_SIDE_COLLECTION_GATE_START_X_MAX = 24
-const BREADBOARD_08MM_SIDE_COLLECTION_GATE_MIN_Y = 15.6
-const BREADBOARD_08MM_SIDE_COLLECTION_LANE_SPACING = 0.6
-const BREADBOARD_08MM_SIDE_INNER_COLLECTION_X = 36
-const BREADBOARD_08MM_SIDE_COLLECTION_LANE_Y = 22.7
-const BREADBOARD_08MM_SIDE_VERTICAL_COLLECTION_LANE_Y = 23
-const BREADBOARD_08MM_VERTICAL_OUTER_COLLECTION_Y = 26
+export const BREADBOARD_08MM_VIA_BREAKOUT_LENGTH = 1
 export const BREADBOARD_08MM_ROW_BREAKOUT_LENGTH = 1.2
 
 const BREADBOARD_08MM_CLAD_EDGE_CLEARANCE = 0.2
 const BREADBOARD_08MM_CLAD_EDGE_CLEARANCE_VALIDATION_TOLERANCE = 0.001
-const BREADBOARD_08MM_SIDE_OUTER_COLLECTION_X = 37
 
 export const BREADBOARD_08MM_TOP_BANK_ROWS = [
   "A",
@@ -78,7 +61,7 @@ export type Breadboard08mmViaCorner =
   | "bottom_right"
 
 export type Breadboard08mmViaArm = "horizontal" | "vertical"
-export type Breadboard08mmViaBreakoutStyle = "direct" | "woven"
+export type Breadboard08mmViaBreakoutStyle = "direct"
 export type Breadboard08mmViaOpenAreaEdge =
   | "toward_board_center"
   | "toward_breadboard_rows"
@@ -158,20 +141,6 @@ interface LocalCornerBreakout {
   end: LocalCornerPoint
 }
 
-// These five escapes enter the top-right side bank through ordered horizontal
-// lanes so an outer trace never closes off an inner trace's route.
-const topRightCollectedRowKeys = [
-  "H1_INNER:top",
-  "H2_INNER:top",
-  "H2_OUTER:top",
-  "H3_OUTER:top",
-  "H3_INNER:top",
-] as const
-const TOP_RIGHT_COLLECTION_LANE_START_Y = 15.6
-const TOP_RIGHT_COLLECTION_COLLECTOR_START_X = 26.6
-const TOP_RIGHT_COLLECTION_LANE_PITCH = 0.3
-const TOP_RIGHT_COLLECTION_COLLECTOR_PITCH = 0.26
-
 const createCornerViaPositions = (
   corner: Breadboard08mmViaCorner,
   xSign: -1 | 1,
@@ -220,348 +189,21 @@ const createCornerViaPositions = (
   const createBreakout = (
     via: LocalCornerVia,
     openAreaEdge: Breadboard08mmViaOpenAreaEdge,
-    layer: "top" | "bottom",
-  ): LocalCornerBreakout => {
-    const innerX = shiftedCornerViaAxisX[0]!
-    const openCenterX = innerX - BREADBOARD_08MM_VIA_BREAKOUT_LENGTH
-    const openRowsY =
-      BREADBOARD_08MM_CORNER_VIA_Y_INNER_OFFSET -
-      BREADBOARD_08MM_VIA_BREAKOUT_LENGTH
-    const columnIndex = Math.round(
-      (via.x - innerX) / BREADBOARD_08MM_CORNER_VIA_SPACING,
-    )
-
-    if (
-      layer === "top" &&
-      openAreaEdge === "toward_board_center" &&
-      via.y === BREADBOARD_08MM_CORNER_VIA_Y_OUTER_OFFSET
-    ) {
-      return {
-        openAreaEdge,
-        style: "direct",
-        route: [],
-        end: {
-          x: via.x,
-          y: BREADBOARD_08MM_VERTICAL_OUTER_COLLECTION_Y,
-        },
-      }
-    }
-
-    if (layer === "top") {
-      if (openAreaEdge === "toward_breadboard_rows") {
-        if (via.y === BREADBOARD_08MM_CORNER_VIA_Y_INNER_OFFSET) {
-          return {
-            openAreaEdge,
-            style: "direct",
-            route: [],
-            end: { x: via.x, y: openRowsY },
+  ): LocalCornerBreakout => ({
+    openAreaEdge,
+    style: "direct",
+    route: [],
+    end:
+      openAreaEdge === "toward_board_center"
+        ? {
+            x: via.x - BREADBOARD_08MM_VIA_BREAKOUT_LENGTH,
+            y: via.y,
           }
-        }
-        const rowWeaveDirection = columnIndex % 2 === 0 ? -1 : 1
-        const weaveDirection =
-          via.y === BREADBOARD_08MM_CORNER_VIA_Y_OUTER_OFFSET
-            ? -rowWeaveDirection
-            : rowWeaveDirection
-        const weaveX =
-          via.x + weaveDirection * BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET
-        return {
-          openAreaEdge,
-          style: "woven",
-          route: [
-            {
-              x: weaveX,
-              y: via.y - BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET,
-            },
-          ],
-          end: { x: weaveX, y: openRowsY },
-        }
-      }
-
-      if (columnIndex === 0) {
-        return {
-          openAreaEdge,
-          style: "direct",
-          route: [],
-          end: { x: openCenterX, y: via.y },
-        }
-      }
-      const weaveY = via.y - BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET
-      return {
-        openAreaEdge,
-        style: "woven",
-        route: [
-          {
-            x: via.x - BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET,
-            y: weaveY,
-          },
-        ],
-        end: { x: openCenterX, y: weaveY },
-      }
-    }
-
-    if (openAreaEdge === "toward_board_center") {
-      if (via.y === BREADBOARD_08MM_CORNER_VIA_Y_OUTER_OFFSET) {
-        const isOuterVerticalVia = via.x === shiftedCornerViaArmAxisX.at(-1)!
-        return {
-          openAreaEdge,
-          style: "direct",
-          route: [],
-          end: {
+        : {
             x: via.x,
-            y: isOuterVerticalVia
-              ? BREADBOARD_08MM_VERTICAL_OUTER_COLLECTION_Y
-              : via.y,
+            y: via.y - BREADBOARD_08MM_VIA_BREAKOUT_LENGTH,
           },
-        }
-      }
-      if (columnIndex === 0) {
-        return {
-          openAreaEdge,
-          style: "direct",
-          route: [],
-          end: { x: openCenterX, y: via.y },
-        }
-      }
-      const laneOffset =
-        0.7 + (columnIndex - 1) * BREADBOARD_08MM_BREAKOUT_LANE_SPACING
-      const laneY = via.y - laneOffset
-      return {
-        openAreaEdge,
-        style: "woven",
-        route: [
-          {
-            x: via.x - BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET,
-            y: laneY,
-          },
-        ],
-        end: { x: openCenterX, y: laneY },
-      }
-    }
-
-    if (
-      layer === "bottom" &&
-      via.y === BREADBOARD_08MM_CORNER_VIA_Y_OUTER_OFFSET
-    ) {
-      return {
-        openAreaEdge,
-        style: "woven",
-        route: [
-          { x: via.x, y: BREADBOARD_08MM_SIDE_VERTICAL_COLLECTION_LANE_Y },
-        ],
-        end: {
-          x: BREADBOARD_08MM_SIDE_INNER_COLLECTION_X,
-          y: BREADBOARD_08MM_SIDE_VERTICAL_COLLECTION_LANE_Y,
-        },
-      }
-    }
-
-    if (
-      columnIndex === 0 &&
-      via.y ===
-        BREADBOARD_08MM_CORNER_VIA_Y_INNER_OFFSET +
-          BREADBOARD_08MM_CORNER_VIA_ARM_WIDTH
-    ) {
-      return {
-        openAreaEdge,
-        style: "woven",
-        route: [{ x: via.x, y: BREADBOARD_08MM_SIDE_COLLECTION_LANE_Y }],
-        end: {
-          x:
-            BREADBOARD_CLAD_WIDTH / 2 -
-            BREADBOARD_08MM_BREAKOUT_ENDPOINT_EDGE_INSET,
-          y: BREADBOARD_08MM_SIDE_COLLECTION_LANE_Y,
-        },
-      }
-    }
-
-    const wrapLaneX =
-      openCenterX -
-      (via.y === BREADBOARD_08MM_CORNER_VIA_Y_OUTER_OFFSET
-        ? columnIndex === 0
-          ? 1.2
-          : 0.8
-        : 0.4)
-    const route =
-      via.y === BREADBOARD_08MM_CORNER_VIA_Y_OUTER_OFFSET && columnIndex > 0
-        ? [
-            {
-              x: via.x - BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET,
-              y: via.y - BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET,
-            },
-            {
-              x: wrapLaneX,
-              y: via.y - BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET,
-            },
-          ]
-        : [{ x: wrapLaneX, y: via.y }]
-    return {
-      openAreaEdge,
-      style: "woven",
-      route,
-      end: { x: wrapLaneX, y: openRowsY },
-    }
-  }
-
-  const localPositions = localVias.map((via) => {
-    const boardCenterDistance = via.x - shiftedCornerViaAxisX[0]!
-    const breadboardRowsDistance =
-      via.y - BREADBOARD_08MM_CORNER_VIA_Y_INNER_OFFSET
-    // The extra via beneath the second top-right mounting hole uses the long
-    // open area on top, leaving its bottom trace free to enter the side bank.
-    const topOpenAreaEdge =
-      corner === "top_right" && via.nameSuffix === "V3_INNER"
-        ? "toward_board_center"
-        : boardCenterDistance < breadboardRowsDistance
-          ? "toward_board_center"
-          : "toward_breadboard_rows"
-    const bottomOpenAreaEdge =
-      topOpenAreaEdge === "toward_board_center"
-        ? "toward_breadboard_rows"
-        : "toward_board_center"
-    return {
-      via,
-      topBreakout: createBreakout(via, topOpenAreaEdge, "top"),
-      bottomBreakout: createBreakout(via, bottomOpenAreaEdge, "bottom"),
-    }
   })
-
-  const innerX = shiftedCornerViaAxisX[0]!
-  const longEdgeCollectionOutwardShift =
-    BREADBOARD_08MM_LONG_EDGE_COLLECTION_OUTWARD_SHIFT +
-    (corner === "top_right"
-      ? BREADBOARD_08MM_TOP_RIGHT_COLLECTION_OUTWARD_SHIFT
-      : 0)
-  const collectedBreakouts = new Map<string, LocalCornerBreakout>()
-  for (const openAreaEdge of [
-    "toward_board_center",
-    "toward_breadboard_rows",
-  ] as const) {
-    const breakouts = localPositions
-      .flatMap((position) =>
-        (["top", "bottom"] as const).map((layer) => ({
-          key: `${position.via.nameSuffix}:${layer}`,
-          breakout:
-            layer === "top" ? position.topBreakout : position.bottomBreakout,
-        })),
-      )
-      .filter((entry) => entry.breakout.openAreaEdge === openAreaEdge)
-      .sort((a, b) =>
-        openAreaEdge === "toward_breadboard_rows"
-          ? a.breakout.end.x - b.breakout.end.x
-          : a.breakout.end.y - b.breakout.end.y,
-      )
-    const innerRowBreakouts =
-      openAreaEdge === "toward_breadboard_rows"
-        ? breakouts.filter(
-            (entry) =>
-              !(
-                corner === "top_right" &&
-                topRightCollectedRowKeys.includes(
-                  entry.key as (typeof topRightCollectedRowKeys)[number],
-                )
-              ) &&
-              entry.breakout.end.x <
-                BREADBOARD_08MM_SIDE_COLLECTION_GATE_START_X_MAX,
-          )
-        : []
-
-    breakouts.forEach((entry, index) => {
-      const end =
-        openAreaEdge === "toward_breadboard_rows"
-          ? {
-              x:
-                BREADBOARD_CLAD_WIDTH / 2 -
-                BREADBOARD_08MM_BREAKOUT_ENDPOINT_EDGE_INSET,
-              y:
-                BREADBOARD_08MM_SIDE_EDGE_ENDPOINT_MAX_Y -
-                (breakouts.length - 1 - index) *
-                  BREADBOARD_08MM_BREAKOUT_ENDPOINT_SPACING,
-            }
-          : {
-              x:
-                innerX -
-                BREADBOARD_08MM_LONG_EDGE_COLLECTION_INSET -
-                (breakouts.length - 1 - index) *
-                  BREADBOARD_08MM_BREAKOUT_ENDPOINT_SPACING +
-                longEdgeCollectionOutwardShift,
-              y:
-                BREADBOARD_CLAD_HEIGHT / 2 -
-                BREADBOARD_08MM_BREAKOUT_ENDPOINT_EDGE_INSET,
-            }
-      const topRightCollectedRowIndex = topRightCollectedRowKeys.indexOf(
-        entry.key as (typeof topRightCollectedRowKeys)[number],
-      )
-      const collectionRoute =
-        openAreaEdge === "toward_board_center"
-          ? end.x - (end.y - entry.breakout.end.y) <= entry.breakout.end.x
-            ? [
-                {
-                  x: roundCoordinate(end.x - (end.y - entry.breakout.end.y)),
-                  y: entry.breakout.end.y,
-                },
-              ]
-            : []
-          : corner === "top_right" && topRightCollectedRowIndex >= 0
-            ? [
-                {
-                  x: entry.breakout.end.x,
-                  y:
-                    TOP_RIGHT_COLLECTION_LANE_START_Y +
-                    topRightCollectedRowIndex * TOP_RIGHT_COLLECTION_LANE_PITCH,
-                },
-                {
-                  x:
-                    TOP_RIGHT_COLLECTION_COLLECTOR_START_X +
-                    topRightCollectedRowIndex *
-                      TOP_RIGHT_COLLECTION_COLLECTOR_PITCH,
-                  y:
-                    TOP_RIGHT_COLLECTION_LANE_START_Y +
-                    topRightCollectedRowIndex * TOP_RIGHT_COLLECTION_LANE_PITCH,
-                },
-                {
-                  x:
-                    TOP_RIGHT_COLLECTION_COLLECTOR_START_X +
-                    topRightCollectedRowIndex *
-                      TOP_RIGHT_COLLECTION_COLLECTOR_PITCH,
-                  y: end.y,
-                },
-              ]
-            : corner === "top_right" && entry.key === "V3_INNER:bottom"
-              ? [
-                  // Run outside the bank before turning toward this endpoint;
-                  // otherwise this trace forms a wall across H1_OUTER's lane.
-                  {
-                    x: BREADBOARD_08MM_SIDE_OUTER_COLLECTION_X,
-                    y: entry.breakout.end.y,
-                  },
-                  {
-                    x: BREADBOARD_08MM_SIDE_OUTER_COLLECTION_X,
-                    y: end.y,
-                  },
-                ]
-              : entry.breakout.end.x <
-                  BREADBOARD_08MM_SIDE_COLLECTION_GATE_START_X_MAX
-                ? [
-                    {
-                      x: BREADBOARD_08MM_SIDE_COLLECTION_GATE_X,
-                      y:
-                        BREADBOARD_08MM_SIDE_COLLECTION_GATE_MIN_Y +
-                        innerRowBreakouts.indexOf(entry) *
-                          BREADBOARD_08MM_SIDE_COLLECTION_LANE_SPACING,
-                    },
-                  ]
-                : []
-      collectedBreakouts.set(entry.key, {
-        ...entry.breakout,
-        route: [
-          ...entry.breakout.route,
-          entry.breakout.end,
-          ...collectionRoute,
-        ],
-        end,
-      })
-    })
-  }
 
   const toBoardBreakout = (
     breakout: LocalCornerBreakout,
@@ -572,20 +214,28 @@ const createCornerViaPositions = (
     end: toBoardPoint(breakout.end),
   })
 
-  return localPositions.map(
-    ({ via }): Breadboard08mmViaPosition => ({
+  return localVias.map((via): Breadboard08mmViaPosition => {
+    const boardCenterDistance = via.x - shiftedCornerViaAxisX[0]!
+    const breadboardRowsDistance =
+      via.y - BREADBOARD_08MM_CORNER_VIA_Y_INNER_OFFSET
+    const topOpenAreaEdge =
+      boardCenterDistance < breadboardRowsDistance
+        ? "toward_board_center"
+        : "toward_breadboard_rows"
+    const bottomOpenAreaEdge =
+      topOpenAreaEdge === "toward_board_center"
+        ? "toward_breadboard_rows"
+        : "toward_board_center"
+
+    return {
       name: `V_${corner.toUpperCase()}_${via.nameSuffix}`,
       corner,
       arm: via.arm,
       ...toBoardPoint(via),
-      topBreakout: toBoardBreakout(
-        collectedBreakouts.get(`${via.nameSuffix}:top`)!,
-      ),
-      bottomBreakout: toBoardBreakout(
-        collectedBreakouts.get(`${via.nameSuffix}:bottom`)!,
-      ),
-    }),
-  )
+      topBreakout: toBoardBreakout(createBreakout(via, topOpenAreaEdge)),
+      bottomBreakout: toBoardBreakout(createBreakout(via, bottomOpenAreaEdge)),
+    }
+  })
 }
 
 /** Four independent L fields; top-right has an extra column below its holes. */
