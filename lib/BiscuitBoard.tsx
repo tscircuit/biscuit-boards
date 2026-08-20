@@ -70,6 +70,8 @@ export interface BiscuitBoardProps {
   minTraceWidth?: number
   /** Preferred post-route trace width in millimeters. Defaults to 0.3 mm. */
   nominalTraceWidth?: number
+  /** Optional extra autorouter inset without changing the board's DRC rule. */
+  autorouterEdgeClearance?: number
   routingDisabled?: boolean
 }
 
@@ -84,6 +86,7 @@ export const BiscuitBoard = ({
   autorouterOptions,
   minTraceWidth,
   nominalTraceWidth = 0.3,
+  autorouterEdgeClearance,
   routingDisabled = false,
 }: BiscuitBoardProps) => (
   <board
@@ -102,7 +105,7 @@ export const BiscuitBoard = ({
       createPrefabricatedViaAutorouter({
         width: BISCUIT_BOARD_WIDTH,
         height: BISCUIT_BOARD_HEIGHT,
-        edgeClearance: BISCUIT_BOARD_EDGE_CLEARANCE,
+        edgeClearance: autorouterEdgeClearance ?? BISCUIT_BOARD_EDGE_CLEARANCE,
         options: autorouterOptions,
         minimumTraceWidth: minTraceWidth,
         nominalTraceWidth,

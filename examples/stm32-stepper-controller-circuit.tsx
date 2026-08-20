@@ -5,6 +5,14 @@ import { S5B_PH_SM4_TB, STM32C071FBP6 } from "./stm32c071-parts"
 const gnd = { displayName: "GND", schDisplayLabel: "GND" } as const
 const vm = { displayName: "VM (6-18V)", schDisplayLabel: "VM" } as const
 const v3v3 = { displayName: "3V3", schDisplayLabel: "3V3" } as const
+const schSections = {
+  power: "power",
+  control: "control",
+  debug: "debug",
+  driver: "driver",
+  motor: "motor",
+  status: "status",
+} as const
 
 const tmc5130Pins = {
   pin1: ["TST_MODE"],
@@ -156,62 +164,82 @@ const LDK320M33R = (props: ChipProps<typeof regulatorPins>) => (
   />
 )
 
-const JstPhSideEntryFootprint = ({ pinCount }: { pinCount: number }) => {
-  const bodyWidth = pinCount * 2 + 3.9
-  const mountingX = bodyWidth / 2 - 0.9
-  return (
-    <footprint insertionDirection="from_y_pos">
-      {Array.from({ length: pinCount }, (_, index) => (
-        <Fragment key={`pin-${index + 1}`}>
-          <smtpad
-            portHints={[`pin${index + 1}`]}
-            pcbX={(index - (pinCount - 1) / 2) * 2}
-            pcbY="-2.25mm"
-            width="1.2mm"
-            height="3mm"
-            shape="rect"
-          />
-        </Fragment>
-      ))}
+/** Amphenol EconoStik 10129380 single-row vertical SMT header. */
+const Amphenol10129380Footprint = () => (
+  <footprint insertionDirection="from_z_pos">
+    {[
+      { pin: 1, x: -3.81, y: -1.8 },
+      { pin: 2, x: -1.27, y: 1.8 },
+      { pin: 3, x: 1.27, y: -1.8 },
+      { pin: 4, x: 3.81, y: 1.8 },
+    ].map(({ pin, x, y }) => (
       <smtpad
-        pcbX={-mountingX}
-        pcbY="1mm"
-        width="2.4mm"
-        height="3.4mm"
+        key={`pin-${pin}`}
+        portHints={[`pin${pin}`]}
+        pcbX={x}
+        pcbY={y}
+        width="1.27mm"
+        height="2.2mm"
         shape="rect"
       />
+    ))}
+    <silkscreenrect width="10.16mm" height="2.54mm" />
+    <silkscreencircle pcbX="-6.35mm" pcbY="-1.27mm" radius="0.15mm" />
+  </footprint>
+)
+
+/** Tensility 54-00164 right-angle 5.5 x 2.1 mm SMT barrel jack. */
+const Tensility5400164Footprint = () => (
+  <footprint insertionDirection="from_x_neg">
+    {[
+      { pin: 1, x: -2.35, y: 5.5 },
+      { pin: undefined, x: 2.15, y: 5.5 },
+      { pin: 2, x: -2.35, y: -5.5 },
+      { pin: 3, x: 2.15, y: -5.5 },
+    ].map(({ pin, x, y }) => (
       <smtpad
-        pcbX={mountingX}
-        pcbY="1mm"
-        width="2.4mm"
-        height="3.4mm"
+        key={`pad-${x}-${y}`}
+        {...(pin === undefined ? {} : { portHints: [`pin${pin}`] })}
+        pcbX={x}
+        pcbY={y}
+        width="2mm"
+        height="2mm"
         shape="rect"
       />
-      <silkscreenrect pcbY="0.75mm" width={bodyWidth} height="6mm" />
-    </footprint>
-  )
-}
+    ))}
+    <hole pcbX="-2.35mm" diameter="1.6mm" />
+    <hole pcbX="2.15mm" diameter="1.8mm" />
+    <silkscreenrect width="14.7mm" height="9mm" />
+    <courtyardrect width="15.7mm" height="10mm" />
+  </footprint>
+)
 
 const motorPins = {
-  pin1: ["B1"],
-  pin2: ["B2"],
-  pin3: ["A2"],
-  pin4: ["A1"],
+  pin1: ["A1"],
+  pin2: ["A2"],
+  pin3: ["B2"],
+  pin4: ["B1"],
 } as const
-const powerPins = { pin1: ["VM"], pin2: ["GND"] } as const
+const powerPins = {
+  pin1: ["A", "VM"],
+  pin2: ["B", "GND"],
+  pin3: ["C", "SWITCH"],
+} as const
 const MotorConnector = (props: ConnectorProps) => (
   <connector
     pinLabels={motorPins}
-    manufacturerPartNumber="S4B-PH-SM4-TB"
-    footprint={<JstPhSideEntryFootprint pinCount={4} />}
+    manufacturerPartNumber="10129380-904001ALF"
+    supplierPartNumbers={{ digikey: ["609-10129380-904001ALFCT-ND"] }}
+    footprint={<Amphenol10129380Footprint />}
     {...props}
   />
 )
 const PowerConnector = (props: ConnectorProps) => (
   <connector
     pinLabels={powerPins}
-    manufacturerPartNumber="S2B-PH-SM4-TB"
-    footprint={<JstPhSideEntryFootprint pinCount={2} />}
+    manufacturerPartNumber="54-00164"
+    supplierPartNumbers={{ digikey: ["839-54-00164CT-ND"] }}
+    footprint={<Tensility5400164Footprint />}
     {...props}
   />
 )
@@ -219,26 +247,28 @@ const PowerConnector = (props: ConnectorProps) => (
 /** STM32 STEP/DIR + SPI controller for one TMC5130A-driven bipolar stepper. */
 export const Stm32StepperControllerCircuit = () => {
   const p = {
-    power: [-10, 24.8, 0],
-    motor: [24, 2, 90],
-    swd: [20, -21.5, 180],
-    mcu: [10, -12, 90],
-    driver: [8, 5, 0],
-    reg: [-8, 13, 0],
-    regIn: [-12, 13, 0],
-    regOut: [-4, 13, 0],
-    mcuCap: [9.35, -16.2, 0],
-    vmBulk: [-2, 20, 90],
-    vmDec: [2, 20, 0],
-    fiveV: [15, 6, 0],
-    vccRes: [17, 8.5, 90],
-    vccCap: [17, 12, 90],
-    chargePump: [13.5, 10, 90],
-    vcp: [9.75, 10.8, 180],
-    vsa: [6, 12, 0],
-    vio: [1.5, 3.25, 180],
-    senseA: [4, 14, 0],
-    senseB: [11.5, -1.5, 0],
+    power: [-12.038527824766255, 20.723335950715512, 270],
+    motor: [27.303165891949014, 1.7578516800016324, 270],
+    swd: [21.146671901431024, -22.07333595071551, 180],
+    mcu: [10.764447934287347, -11.42666404928449, 90],
+    driver: [8.741161310184516, 4.694228442484313, 0],
+    reg: [3.1302176116840883, -2.5239536746818594, 0],
+    regIn: [-12, 10, 0],
+    regOut: [-4, 10, 0],
+    mcuCap: [9.35, -17.028151928811283, 0],
+    vmBulk: [-2.0637039945239444, 20.318519972619725, 90],
+    vmDec: [2.9576114373282607, 20.445927961667614, 0],
+    fiveV: [16.024798585599854, 5.151799802871402, 0],
+    vccRes: [18.15456803671207, 8.95085646826217, 90],
+    vccCap: [18.114433482165268, 13.4381919039748, 90],
+    chargePump: [13.878612153922816, 10.897700539147213, 90],
+    vcp: [10.638334751675409, 11.836835777731235, 180],
+    vsa: [4.040048306141241, 11.792632844453749, 0],
+    vio: [-7.930625160416103, 10.046173457029411, 180],
+    senseA: [4.256867497564862, 15.361935192258315, 0],
+    senseB: [13.01988086050558, -3.475845118657247, 0],
+    powerLedResistor: [-8, 12, 0],
+    powerLed: [-12, 12, 0],
   }
   const at = (v: number[]) => ({ pcbX: v[0], pcbY: v[1], pcbRotation: v[2] })
 
@@ -247,11 +277,32 @@ export const Stm32StepperControllerCircuit = () => {
       <net name="VM" isPowerNet />
       <net name="V3V3" isPowerNet />
 
-      <PowerConnector name="J_PWR" {...at(p.power)} />
-      <MotorConnector name="J_MOTOR" {...at(p.motor)} />
-      <S5B_PH_SM4_TB name="J_SWD" {...at(p.swd)} />
+      <schematicsection name={schSections.power} displayName="Power Input" />
+      <schematicsection name={schSections.control} displayName="MCU Control" />
+      <schematicsection name={schSections.debug} displayName="SWD Debug" />
+      <schematicsection name={schSections.driver} displayName="Motor Driver" />
+      <schematicsection name={schSections.motor} displayName="Motor Output" />
+      <schematicsection name={schSections.status} displayName="Power Status" />
+
+      <PowerConnector
+        name="J_PWR"
+        schSectionName={schSections.power}
+        noConnect={["SWITCH"]}
+        {...at(p.power)}
+      />
+      <MotorConnector
+        name="J_MOTOR"
+        schSectionName={schSections.motor}
+        {...at(p.motor)}
+      />
+      <S5B_PH_SM4_TB
+        name="J_SWD"
+        schSectionName={schSections.debug}
+        {...at(p.swd)}
+      />
       <STM32C071FBP6
         name="U_MCU"
+        schSectionName={schSections.control}
         {...at(p.mcu)}
         noConnect={[
           "PB7",
@@ -266,6 +317,7 @@ export const Stm32StepperControllerCircuit = () => {
       />
       <TMC5130A_TA
         name="U_DRIVER"
+        schSectionName={schSections.driver}
         {...at(p.driver)}
         noConnect={[
           "DNC1",
@@ -283,91 +335,126 @@ export const Stm32StepperControllerCircuit = () => {
           "AIN_IREF",
         ]}
       />
-      <LDK320M33R name="U_REG" {...at(p.reg)} noConnect={["NC"]} />
+      <LDK320M33R
+        name="U_REG"
+        schSectionName={schSections.power}
+        {...at(p.reg)}
+        noConnect={["NC"]}
+      />
 
       <capacitor
         name="C_REG_IN"
+        schSectionName={schSections.power}
         capacitance="1uF"
         footprint="0603"
         {...at(p.regIn)}
       />
       <capacitor
         name="C_REG_OUT"
+        schSectionName={schSections.power}
         capacitance="1uF"
         footprint="0603"
         {...at(p.regOut)}
       />
       <capacitor
         name="C_MCU"
+        schSectionName={schSections.control}
         capacitance="100nF"
         footprint="0603"
         {...at(p.mcuCap)}
       />
       <capacitor
         name="C_VM_BULK"
+        schSectionName={schSections.driver}
         capacitance="100uF"
         footprint="1210"
         {...at(p.vmBulk)}
       />
       <capacitor
         name="C_VM"
+        schSectionName={schSections.driver}
         capacitance="100nF"
         footprint="0603"
         {...at(p.vmDec)}
       />
       <capacitor
         name="C_5VOUT"
+        schSectionName={schSections.driver}
         capacitance="4.7uF"
         footprint="0805"
         {...at(p.fiveV)}
       />
       <resistor
         name="R_VCC"
+        schSectionName={schSections.driver}
         resistance="2.2ohm"
         footprint="0603"
         {...at(p.vccRes)}
       />
       <capacitor
         name="C_VCC"
+        schSectionName={schSections.driver}
         capacitance="470nF"
         footprint="0603"
         {...at(p.vccCap)}
       />
       <capacitor
         name="C_CP"
+        schSectionName={schSections.driver}
         capacitance="22nF"
         footprint="0603"
         {...at(p.chargePump)}
       />
       <capacitor
         name="C_VCP"
+        schSectionName={schSections.driver}
         capacitance="100nF"
         footprint="0603"
         {...at(p.vcp)}
       />
       <capacitor
         name="C_VSA"
+        schSectionName={schSections.driver}
         capacitance="100nF"
         footprint="0603"
         {...at(p.vsa)}
       />
       <capacitor
         name="C_VIO"
+        schSectionName={schSections.driver}
         capacitance="100nF"
         footprint="0603"
         {...at(p.vio)}
       />
       <resistor
         name="R_SENSE_A"
+        schSectionName={schSections.driver}
         resistance="0.22ohm"
         footprint="1206"
         {...at(p.senseA)}
       />
       <resistor
         name="R_SENSE_B"
+        schSectionName={schSections.driver}
         resistance="0.22ohm"
         footprint="1206"
         {...at(p.senseB)}
+      />
+      <resistor
+        name="R_PWR_LED"
+        schSectionName={schSections.status}
+        resistance="1k"
+        footprint="0603"
+        manufacturerPartNumber="GENERIC-0603-1K"
+        {...at(p.powerLedResistor)}
+      />
+      <led
+        name="D_PWR"
+        schSectionName={schSections.status}
+        color="green"
+        footprint="0603"
+        manufacturerPartNumber="GENERIC-0603-GREEN-LED"
+        {...at(p.powerLed)}
       />
 
       <silkscreentext
@@ -388,6 +475,13 @@ export const Stm32StepperControllerCircuit = () => {
         pcbX={p.swd[0]}
         pcbY={-16.7}
         fontSize="0.7mm"
+      />
+      <silkscreentext
+        text="POWER"
+        pcbX={p.powerLed[0] - 3}
+        pcbY={p.powerLed[1] - 0.5}
+        pcbRotation={90}
+        fontSize="0.65mm"
       />
 
       <trace from=".J_PWR > .VM" to="net.VM" {...vm} />
@@ -455,6 +549,23 @@ export const Stm32StepperControllerCircuit = () => {
       <trace from=".R_SENSE_A > .pin2" to="net.GND" width="0.2mm" {...gnd} />
       <trace from=".U_DRIVER > .BRB" to=".R_SENSE_B > .pin1" width="0.3mm" />
       <trace from=".R_SENSE_B > .pin2" to="net.GND" width="0.2mm" {...gnd} />
+      <trace
+        name="PWR_LED_3V3"
+        from="net.V3V3"
+        to=".R_PWR_LED > .pin1"
+        {...v3v3}
+      />
+      <trace
+        name="PWR_LED_ANODE"
+        from=".R_PWR_LED > .pin2"
+        to=".D_PWR > .anode"
+      />
+      <trace
+        name="PWR_LED_GND"
+        from=".D_PWR > .cathode"
+        to="net.GND"
+        {...gnd}
+      />
       <trace
         name="MOTOR_A1"
         from=".U_DRIVER > .OA1"
