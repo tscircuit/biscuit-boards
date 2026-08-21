@@ -5,12 +5,14 @@ import {
   BREADBOARD_CLAD_HEIGHT,
   BREADBOARD_CLAD_WIDTH,
   BREADBOARD_COLUMN_COUNT,
+  BREADBOARD_HEADER_PITCH,
   BREADBOARD_MOUNTING_HOLE_DIAMETER,
-  BREADBOARD_TERMINAL_HEADER_POSITIONS,
 } from "../lib/breadboard-clad"
 import {
   BREADBOARD_08MM_BOTTOM_BANK_ROWS,
+  BREADBOARD_08MM_BOTTOM_ENDPOINT_FANOUT_LENGTH,
   BREADBOARD_08MM_BREAKOUT_LANE_SPACING,
+  BREADBOARD_08MM_BREAKOUT_PAD_DIAMETER,
   BREADBOARD_08MM_BREAKOUT_TRACE_WIDTH,
   BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET,
   BREADBOARD_08MM_CORNER_VIA_ARM_WIDTH,
@@ -27,6 +29,8 @@ import {
   BREADBOARD_08MM_ROW_BREAKOUTS,
   BREADBOARD_08MM_ROW_CONNECTIONS,
   BREADBOARD_08MM_ROW_TRACE_WIDTH,
+  BREADBOARD_08MM_TERMINAL_HEADER_POSITIONS,
+  BREADBOARD_08MM_TERMINAL_ROW_YS,
   BREADBOARD_08MM_TOP_BANK_ROWS,
   BREADBOARD_08MM_TOP_RIGHT_LONG_SIDE_COLUMNS,
   BREADBOARD_08MM_VIA_BREAKOUT_LENGTH,
@@ -37,8 +41,62 @@ import {
 } from "../lib/breadboard-clad-0.8mm-vias"
 
 const coordinateTolerance = 1e-6
+const minimumCopperClearance = 0.1
 const pointKey = (point: { x: number; y: number }) =>
   `${point.x.toFixed(3)},${point.y.toFixed(3)}`
+
+const expectedViaPositionKeys = new Set([
+  "-22.000,22.000",
+  "-22.000,25.000",
+  "-25.000,22.000",
+  "-25.000,25.000",
+  "-28.000,19.000",
+  "-28.000,22.000",
+  "-31.000,19.000",
+  "-31.000,22.000",
+  "-34.000,19.000",
+  "-34.000,22.000",
+  "-28.000,25.000",
+  "-31.000,25.000",
+  "19.000,22.000",
+  "19.000,25.000",
+  "22.000,22.000",
+  "22.000,25.000",
+  "25.000,19.000",
+  "25.000,22.000",
+  "28.000,19.000",
+  "28.000,22.000",
+  "31.000,19.000",
+  "31.000,22.000",
+  "34.000,19.000",
+  "34.000,22.000",
+  "25.000,25.000",
+  "28.000,25.000",
+  "-22.000,-22.000",
+  "-22.000,-25.000",
+  "-25.000,-22.000",
+  "-25.000,-25.000",
+  "-28.000,-19.000",
+  "-28.000,-22.000",
+  "-31.000,-19.000",
+  "-31.000,-22.000",
+  "-34.000,-19.000",
+  "-34.000,-22.000",
+  "-28.000,-25.000",
+  "-31.000,-25.000",
+  "22.000,-22.000",
+  "22.000,-25.000",
+  "25.000,-22.000",
+  "25.000,-25.000",
+  "28.000,-19.000",
+  "28.000,-22.000",
+  "31.000,-19.000",
+  "31.000,-22.000",
+  "34.000,-19.000",
+  "34.000,-22.000",
+  "28.000,-25.000",
+  "31.000,-25.000",
+])
 
 const getPointToSegmentDistance = (
   point: { x: number; y: number },
@@ -65,6 +123,65 @@ const getPointToSegmentDistance = (
   )
 }
 
+const crossProduct = (
+  start: { x: number; y: number },
+  end: { x: number; y: number },
+  point: { x: number; y: number },
+) =>
+  (end.x - start.x) * (point.y - start.y) -
+  (end.y - start.y) * (point.x - start.x)
+
+const segmentsIntersect = (
+  firstStart: { x: number; y: number },
+  firstEnd: { x: number; y: number },
+  secondStart: { x: number; y: number },
+  secondEnd: { x: number; y: number },
+) =>
+  Math.max(
+    Math.min(firstStart.x, firstEnd.x),
+    Math.min(secondStart.x, secondEnd.x),
+  ) <=
+    Math.min(
+      Math.max(firstStart.x, firstEnd.x),
+      Math.max(secondStart.x, secondEnd.x),
+    ) +
+      coordinateTolerance &&
+  Math.max(
+    Math.min(firstStart.y, firstEnd.y),
+    Math.min(secondStart.y, secondEnd.y),
+  ) <=
+    Math.min(
+      Math.max(firstStart.y, firstEnd.y),
+      Math.max(secondStart.y, secondEnd.y),
+    ) +
+      coordinateTolerance &&
+  crossProduct(firstStart, firstEnd, secondStart) *
+    crossProduct(firstStart, firstEnd, secondEnd) <=
+    coordinateTolerance &&
+  crossProduct(secondStart, secondEnd, firstStart) *
+    crossProduct(secondStart, secondEnd, firstEnd) <=
+    coordinateTolerance
+
+const getSegmentToSegmentDistance = (
+  firstStart: { x: number; y: number },
+  firstEnd: { x: number; y: number },
+  secondStart: { x: number; y: number },
+  secondEnd: { x: number; y: number },
+) =>
+  segmentsIntersect(firstStart, firstEnd, secondStart, secondEnd)
+    ? 0
+    : Math.min(
+        getPointToSegmentDistance(firstStart, secondStart, secondEnd),
+        getPointToSegmentDistance(firstEnd, secondStart, secondEnd),
+        getPointToSegmentDistance(secondStart, firstStart, firstEnd),
+        getPointToSegmentDistance(secondEnd, firstStart, firstEnd),
+      )
+
+const getSegments = (points: Array<{ x: number; y: number }>) =>
+  points
+    .slice(0, -1)
+    .map((point, index) => [point, points[index + 1]!] as const)
+
 const getMinimumEdgeSpacing = (
   points: Array<{ x: number; y: number }>,
   diameter: number,
@@ -88,7 +205,7 @@ const renderedBreadboardCircuitJson = (async () => {
   return circuit.getCircuitJson()
 })()
 
-test("places edge-hugging 0.8 mm via grids with inward woven escapes", async () => {
+test("places edge-hugging 0.8 mm via grids with complementary escapes", async () => {
   const circuitJson = await renderedBreadboardCircuitJson
   const board = circuitJson.find((element) => element.type === "pcb_board")
   const platedHoles = circuitJson.filter(
@@ -133,9 +250,14 @@ test("places edge-hugging 0.8 mm via grids with inward woven escapes", async () 
     min_via_hole_edge_to_via_hole_edge_clearance:
       BREADBOARD_08MM_MIN_VIA_EDGE_SPACING,
   })
-  expect(platedHoles).toHaveLength(BREADBOARD_TERMINAL_HEADER_POSITIONS.length)
+  expect(platedHoles).toHaveLength(
+    BREADBOARD_08MM_TERMINAL_HEADER_POSITIONS.length,
+  )
   expect(vias).toHaveLength(50)
   expect(vias).toHaveLength(BREADBOARD_08MM_VIA_POSITIONS.length)
+  expect(new Set(BREADBOARD_08MM_VIA_POSITIONS.map(pointKey))).toEqual(
+    expectedViaPositionKeys,
+  )
   expect(new Set(vias.map(pointKey))).toEqual(
     new Set(BREADBOARD_08MM_VIA_POSITIONS.map(pointKey)),
   )
@@ -214,7 +336,27 @@ test("places edge-hugging 0.8 mm via grids with inward woven escapes", async () 
         (point) => point.y * ySign > BREADBOARD_08MM_CORNER_VIA_Y_OUTER_OFFSET,
       ),
     )
-    expect(bottomBehindViaGrid).toHaveLength(3)
+    expect(bottomBehindViaGrid).toHaveLength(corner === "top_right" ? 3 : 2)
+    const bottomEndpointYs = cornerVias
+      .map((via) => via.bottomBreakout.end.y * ySign)
+      .sort((first, second) => first - second)
+    const bottomEndpointSpacing =
+      (bottomEndpointYs.at(-1)! - bottomEndpointYs[0]!) /
+      (bottomEndpointYs.length - 1)
+    for (let index = 1; index < bottomEndpointYs.length; index++) {
+      expect(
+        bottomEndpointYs[index]! - bottomEndpointYs[index - 1]!,
+      ).toBeCloseTo(bottomEndpointSpacing)
+    }
+    for (const outerEndpointY of [
+      bottomEndpointYs[0]!,
+      bottomEndpointYs.at(-1)!,
+    ]) {
+      const outerBreakout = cornerVias.find(
+        (via) => via.bottomBreakout.end.y * ySign === outerEndpointY,
+      )!.bottomBreakout
+      expect(outerBreakout.route.at(-1)!.y * ySign).toBe(outerEndpointY)
+    }
 
     for (const via of cornerVias) {
       const localX = via.x * xSign
@@ -259,17 +401,14 @@ test("places edge-hugging 0.8 mm via grids with inward woven escapes", async () 
         )
       }
 
-      const expectedTopOpenAreaEdge =
-        localX - localInnerX <
-        localY - BREADBOARD_08MM_CORNER_VIA_Y_INNER_OFFSET
-          ? "toward_board_center"
-          : "toward_breadboard_rows"
-      expect(via.topBreakout.openAreaEdge).toBe(expectedTopOpenAreaEdge)
-      expect(via.bottomBreakout.openAreaEdge).toBe(
-        expectedTopOpenAreaEdge === "toward_board_center"
-          ? "toward_breadboard_rows"
-          : "toward_board_center",
+      expect(via.topBreakout.openAreaEdge).toBe("toward_breadboard_rows")
+      expect(via.bottomBreakout.openAreaEdge).toBe("toward_board_center")
+      expect(via.topBreakout.style).toBe(
+        localY === BREADBOARD_08MM_CORNER_VIA_Y_INNER_OFFSET
+          ? "direct"
+          : "woven",
       )
+      expect(via.bottomBreakout.style).toBe("woven")
 
       for (const breakout of [via.topBreakout, via.bottomBreakout]) {
         const localEnd = {
@@ -279,7 +418,9 @@ test("places edge-hugging 0.8 mm via grids with inward woven escapes", async () 
         expect(breakout.route.length === 0).toBe(breakout.style === "direct")
         if (breakout.openAreaEdge === "toward_board_center") {
           expect(localEnd.x).toBe(
-            localInnerX - BREADBOARD_08MM_VIA_BREAKOUT_LENGTH,
+            localInnerX -
+              BREADBOARD_08MM_VIA_BREAKOUT_LENGTH -
+              BREADBOARD_08MM_BOTTOM_ENDPOINT_FANOUT_LENGTH,
           )
           expect(localEnd.x).toBeLessThan(localX)
         } else {
@@ -290,6 +431,20 @@ test("places edge-hugging 0.8 mm via grids with inward woven escapes", async () 
           expect(localEnd.y).toBeLessThan(localY)
         }
       }
+    }
+
+    for (const localX of new Set(cornerVias.map((via) => via.x * xSign))) {
+      const wovenTopVias = cornerVias.filter(
+        (via) => via.x * xSign === localX && via.topBreakout.style === "woven",
+      )
+      if (wovenTopVias.length < 2) continue
+      expect(
+        new Set(
+          wovenTopVias.map((via) =>
+            Math.sign(via.topBreakout.route[0]!.x * xSign - localX),
+          ),
+        ),
+      ).toEqual(new Set([-1, 1]))
     }
   }
 
@@ -305,6 +460,118 @@ test("places edge-hugging 0.8 mm via grids with inward woven escapes", async () 
       ),
     ),
   ).toHaveLength(BREADBOARD_08MM_VIA_POSITIONS.length)
+
+  for (const layerName of ["topBreakout", "bottomBreakout"] as const) {
+    const routedVias = BREADBOARD_08MM_VIA_POSITIONS.map((via) => ({
+      via,
+      breakout: via[layerName],
+      segments: getSegments([
+        { x: via.x, y: via.y },
+        ...via[layerName].route,
+        via[layerName].end,
+      ]),
+    }))
+
+    for (const [routeIndex, routedVia] of routedVias.entries()) {
+      for (const otherRoutedVia of routedVias.slice(routeIndex + 1)) {
+        for (const [routeStart, routeEnd] of routedVia.segments) {
+          for (const [otherStart, otherEnd] of otherRoutedVia.segments) {
+            expect(
+              getSegmentToSegmentDistance(
+                routeStart,
+                routeEnd,
+                otherStart,
+                otherEnd,
+              ) - BREADBOARD_08MM_BREAKOUT_TRACE_WIDTH,
+            ).toBeGreaterThanOrEqual(
+              minimumCopperClearance - coordinateTolerance,
+            )
+          }
+        }
+      }
+
+      for (const otherRoutedVia of routedVias) {
+        if (otherRoutedVia.via === routedVia.via) continue
+        for (const [routeStart, routeEnd] of routedVia.segments) {
+          expect(
+            getPointToSegmentDistance(
+              otherRoutedVia.via,
+              routeStart,
+              routeEnd,
+            ) -
+              BREADBOARD_08MM_VIA_PAD_DIAMETER / 2 -
+              BREADBOARD_08MM_BREAKOUT_TRACE_WIDTH / 2,
+          ).toBeGreaterThanOrEqual(minimumCopperClearance - coordinateTolerance)
+          expect(
+            getPointToSegmentDistance(
+              otherRoutedVia.breakout.end,
+              routeStart,
+              routeEnd,
+            ) -
+              BREADBOARD_08MM_BREAKOUT_PAD_DIAMETER / 2 -
+              BREADBOARD_08MM_BREAKOUT_TRACE_WIDTH / 2,
+          ).toBeGreaterThanOrEqual(minimumCopperClearance - coordinateTolerance)
+        }
+      }
+
+      const xSign = routedVia.via.corner.includes("left") ? -1 : 1
+      const ySign = routedVia.via.corner.includes("bottom") ? -1 : 1
+      const corridorEnd =
+        layerName === "topBreakout"
+          ? {
+              x: routedVia.breakout.end.x,
+              y:
+                routedVia.breakout.end.y -
+                ySign * BREADBOARD_08MM_VIA_BREAKOUT_LENGTH,
+            }
+          : {
+              x:
+                routedVia.breakout.end.x -
+                xSign * BREADBOARD_08MM_VIA_BREAKOUT_LENGTH,
+              y: routedVia.breakout.end.y,
+            }
+
+      for (const otherRoutedVia of routedVias) {
+        if (otherRoutedVia.via === routedVia.via) continue
+        for (const [routeStart, routeEnd] of otherRoutedVia.segments) {
+          expect(
+            getSegmentToSegmentDistance(
+              routedVia.breakout.end,
+              corridorEnd,
+              routeStart,
+              routeEnd,
+            ) - BREADBOARD_08MM_BREAKOUT_TRACE_WIDTH,
+          ).toBeGreaterThanOrEqual(minimumCopperClearance - coordinateTolerance)
+        }
+        expect(
+          getPointToSegmentDistance(
+            otherRoutedVia.via,
+            routedVia.breakout.end,
+            corridorEnd,
+          ) -
+            BREADBOARD_08MM_VIA_PAD_DIAMETER / 2 -
+            BREADBOARD_08MM_BREAKOUT_TRACE_WIDTH / 2,
+        ).toBeGreaterThanOrEqual(minimumCopperClearance - coordinateTolerance)
+        expect(
+          getPointToSegmentDistance(
+            otherRoutedVia.breakout.end,
+            routedVia.breakout.end,
+            corridorEnd,
+          ) -
+            BREADBOARD_08MM_BREAKOUT_PAD_DIAMETER / 2 -
+            BREADBOARD_08MM_BREAKOUT_TRACE_WIDTH / 2,
+        ).toBeGreaterThanOrEqual(minimumCopperClearance - coordinateTolerance)
+      }
+
+      for (const hole of BISCUIT_BOARD_MOUNTING_HOLE_POSITIONS) {
+        expect(
+          getPointToSegmentDistance(hole, routedVia.breakout.end, corridorEnd) -
+            BREADBOARD_MOUNTING_HOLE_DIAMETER / 2 -
+            BREADBOARD_08MM_BREAKOUT_TRACE_WIDTH / 2,
+        ).toBeGreaterThanOrEqual(minimumCopperClearance - coordinateTolerance)
+      }
+    }
+  }
 
   for (const via of BREADBOARD_08MM_VIA_POSITIONS) {
     for (const breakout of [via.topBreakout, via.bottomBreakout]) {
@@ -349,7 +616,8 @@ test("places edge-hugging 0.8 mm via grids with inward woven escapes", async () 
   expect(BREADBOARD_08MM_CORNER_VIA_SPACING).toBe(3)
   expect(BREADBOARD_08MM_CORNER_VIA_ARM_WIDTH).toBe(3)
   expect(BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET).toBe(0.8)
-  expect(BREADBOARD_08MM_BREAKOUT_LANE_SPACING).toBe(0.4)
+  expect(BREADBOARD_08MM_BREAKOUT_LANE_SPACING).toBe(0.28)
+  expect(BREADBOARD_08MM_BOTTOM_ENDPOINT_FANOUT_LENGTH).toBe(2)
   expect(BREADBOARD_08MM_EDGE_HUG_COLUMN_COUNT).toBe(2)
   expect(BREADBOARD_08MM_EDGE_HUG_Y_SHIFT).toBe(3)
   expect(BREADBOARD_08MM_VIA_BREAKOUT_LENGTH).toBe(1)
@@ -425,11 +693,60 @@ test("places edge-hugging 0.8 mm via grids with inward woven escapes", async () 
   expect(errorsAndWarnings).toEqual([])
 }, 60_000)
 
-test("connects every five-socket strip and breaks both ends out with traces", async () => {
-  expect(BREADBOARD_08MM_TOP_BANK_ROWS).toEqual(["A", "B", "C", "D", "E"])
-  expect(BREADBOARD_08MM_BOTTOM_BANK_ROWS).toEqual(["F", "G", "H", "I", "J"])
+test("connects every four-socket strip and breaks both ends out with traces", async () => {
+  expect(BREADBOARD_08MM_TOP_BANK_ROWS).toEqual(["A", "B", "C", "D"])
+  expect(BREADBOARD_08MM_BOTTOM_BANK_ROWS).toEqual(["E", "F", "G", "H"])
+  expect(BREADBOARD_08MM_TERMINAL_HEADER_POSITIONS).toHaveLength(
+    8 * BREADBOARD_COLUMN_COUNT,
+  )
+  expect(
+    BREADBOARD_08MM_TERMINAL_HEADER_POSITIONS.map(({ label }) => label),
+  ).toEqual(
+    [
+      ...BREADBOARD_08MM_TOP_BANK_ROWS,
+      ...BREADBOARD_08MM_BOTTOM_BANK_ROWS,
+    ].flatMap((row) =>
+      Array.from(
+        { length: BREADBOARD_COLUMN_COUNT },
+        (_, index) => `${row}${index + 1}`,
+      ),
+    ),
+  )
+  expect(BREADBOARD_08MM_TERMINAL_ROW_YS).toEqual({
+    A: 11.43,
+    B: 8.89,
+    C: 6.35,
+    D: 3.81,
+    E: -3.81,
+    F: -6.35,
+    G: -8.89,
+    H: -11.43,
+  })
+  expect(
+    BREADBOARD_08MM_TERMINAL_ROW_YS.D -
+      BREADBOARD_08MM_TERMINAL_ROW_YS.E,
+  ).toBeCloseTo(3 * BREADBOARD_HEADER_PITCH, 6)
+  expect(BREADBOARD_08MM_TERMINAL_ROW_YS.A).toBe(
+    -BREADBOARD_08MM_TERMINAL_ROW_YS.H,
+  )
+  expect(BREADBOARD_08MM_TERMINAL_ROW_YS.B).toBe(
+    -BREADBOARD_08MM_TERMINAL_ROW_YS.G,
+  )
+  for (const rows of [
+    BREADBOARD_08MM_TOP_BANK_ROWS,
+    BREADBOARD_08MM_BOTTOM_BANK_ROWS,
+  ]) {
+    for (const [index, row] of rows.slice(0, -1).entries()) {
+      expect(
+        Math.abs(
+          BREADBOARD_08MM_TERMINAL_ROW_YS[row] -
+            BREADBOARD_08MM_TERMINAL_ROW_YS[rows[index + 1]!],
+        ),
+      ).toBeCloseTo(BREADBOARD_HEADER_PITCH, 6)
+    }
+  }
   expect(BREADBOARD_08MM_ROW_CONNECTIONS).toHaveLength(
-    BREADBOARD_COLUMN_COUNT * 8,
+    BREADBOARD_COLUMN_COUNT * 6,
   )
   expect(BREADBOARD_08MM_ROW_BREAKOUTS).toHaveLength(
     BREADBOARD_COLUMN_COUNT * 4,
@@ -443,18 +760,16 @@ test("connects every five-socket strip and breaks both ends out with traces", as
       `A${column}-B${column}`,
       `B${column}-C${column}`,
       `C${column}-D${column}`,
-      `D${column}-E${column}`,
+      `E${column}-F${column}`,
       `F${column}-G${column}`,
       `G${column}-H${column}`,
-      `H${column}-I${column}`,
-      `I${column}-J${column}`,
     ])
 
     expect(
       BREADBOARD_08MM_ROW_BREAKOUTS.filter(
         (breakout) => breakout.column === column,
       ).map((breakout) => breakout.terminalLabel),
-    ).toEqual([`A${column}`, `E${column}`, `F${column}`, `J${column}`])
+    ).toEqual([`A${column}`, `D${column}`, `E${column}`, `H${column}`])
   }
 
   const circuitJson = await renderedBreadboardCircuitJson
@@ -488,7 +803,7 @@ test("connects every five-socket strip and breaks both ends out with traces", as
     ),
   ).toBe(true)
   const terminalPositions = new Map(
-    BREADBOARD_TERMINAL_HEADER_POSITIONS.map((position) => [
+    BREADBOARD_08MM_TERMINAL_HEADER_POSITIONS.map((position) => [
       position.label,
       position,
     ]),
