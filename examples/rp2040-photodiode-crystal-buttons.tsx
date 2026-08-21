@@ -822,7 +822,7 @@ export const Rp2040PhotodiodeBiscuitBoardBase = ({
       maxRipsPerRoute: 1_000,
       maxTotalRips: 10_000,
       maxSearchStates: 2_000_000,
-      routeOrder: "input",
+      routeOrder: "signal_longest_first",
       ...props.autorouterOptions,
     }}
   >

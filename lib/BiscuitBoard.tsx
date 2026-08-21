@@ -62,6 +62,14 @@ export const BISCUIT_BOARD_MOUNTING_HOLE_POSITIONS = [
   { x: -BISCUIT_BOARD_WIDTH / 2 + 2.5, y: BISCUIT_BOARD_HEIGHT / 2 - 2.5 },
 ] as const
 
+/** Physical-feature keepout near the bottom edge of the prefabricated clad. */
+export const BISCUIT_BOARD_BOTTOM_KEEPOUT = {
+  x: -BISCUIT_BOARD_WIDTH / 2 + 22 + 10 / 2,
+  y: -BISCUIT_BOARD_HEIGHT / 2 + 1.5 + 5.5 / 2,
+  width: 10,
+  height: 5.5,
+} as const
+
 export interface BiscuitBoardProps {
   children?: ReactNode
   autorouter?: AutorouterProp
@@ -128,6 +136,15 @@ export const BiscuitBoard = ({
         <hole pcbX={hole.x} pcbY={hole.y} diameter="2.2mm" />
       </Fragment>
     ))}
+
+    <keepout
+      shape="rect"
+      pcbX={BISCUIT_BOARD_BOTTOM_KEEPOUT.x}
+      pcbY={BISCUIT_BOARD_BOTTOM_KEEPOUT.y}
+      width={`${BISCUIT_BOARD_BOTTOM_KEEPOUT.width}mm`}
+      height={`${BISCUIT_BOARD_BOTTOM_KEEPOUT.height}mm`}
+      layers={["top", "bottom"]}
+    />
 
     {BISCUIT_BOARD_VIA_ZONES.map((zone) => (
       <Fragment key={`via-zone-${zone.minX}-${zone.minY}`}>

@@ -502,7 +502,16 @@ export const Stm32StepperControllerCircuit = () => {
       <trace from=".C_MCU > .pin2" to="net.GND" {...gnd} />
       <trace from=".J_SWD > .V3V3" to="net.V3V3" {...v3v3} />
       <trace from=".J_SWD > .GND" to="net.GND" {...gnd} />
-      <trace from=".J_SWD > .SWDIO" to=".U_MCU > .SWDIO" />
+      <tracehint
+        for=".J_SWD > .SWDIO"
+        offsets={[
+          { x: p.swd[0] + 2, y: -26.65 },
+          { x: -5.5, y: -26.65 },
+          { x: -15.5, y: -26.65 },
+          { x: -23.5, y: -26.65 },
+        ]}
+      />
+      <trace from=".J_SWD > .SWDIO" to=".U_MCU > .SWDIO" width="0.2mm" />
       <trace from=".J_SWD > .SWCLK" to=".U_MCU > .SWCLK" />
       <trace from=".J_SWD > .NRST" to=".U_MCU > .NRST" />
 
@@ -527,7 +536,17 @@ export const Stm32StepperControllerCircuit = () => {
       <trace from=".C_VM_BULK > .pin2" to="net.GND" {...gnd} />
       <trace from=".C_VM > .pin1" to="net.VM" {...vm} />
       <trace from=".C_VM > .pin2" to="net.GND" {...gnd} />
-      <trace from=".U_DRIVER > .5VOUT" to=".C_5VOUT > .pin1" maxLength="5mm" />
+      <trace
+        from=".U_DRIVER > .5VOUT"
+        to=".C_5VOUT > .pin1"
+        maxLength="5mm"
+        pcbPathRelativeTo=".U_DRIVER > .5VOUT"
+        pcbPath={[
+          // Clear the adjacent TQFP pads before turning toward the capacitor.
+          { x: 5.35, y: 1.25 },
+          { x: 5.35, y: p.fiveV[1] - p.driver[1] },
+        ]}
+      />
       <trace from=".C_5VOUT > .pin2" to="net.GND" maxLength="20mm" {...gnd} />
       <trace from=".U_DRIVER > .5VOUT" to=".R_VCC > .pin1" />
       <trace from=".R_VCC > .pin2" to=".U_DRIVER > .VCC" />
@@ -595,7 +614,12 @@ export const Stm32StepperControllerCircuit = () => {
 
       <trace name="STEP" from=".U_MCU > .PA6" to=".U_DRIVER > .STEP" />
       <trace name="DIR" from=".U_MCU > .PA5" to=".U_DRIVER > .DIR" />
-      <trace name="SPI_CS" from=".U_MCU > .PA4" to=".U_DRIVER > .CSN_CFG3" />
+      <trace
+        name="SPI_CS"
+        from=".U_MCU > .PA4"
+        to=".U_DRIVER > .CSN_CFG3"
+        width="0.2mm"
+      />
       <trace name="SPI_SCK" from=".U_MCU > .PA7" to=".U_DRIVER > .SCK_CFG2" />
       <trace name="SPI_MOSI" from=".U_MCU > .PA12" to=".U_DRIVER > .SDI_CFG1" />
       <trace name="SPI_MISO" from=".U_DRIVER > .SDO_CFG0" to=".U_MCU > .PB3" />
