@@ -37,11 +37,11 @@ bun run build:site
 
 The site is written to `dist/`. Its Gerber download index is available at
 `/gerbers/`, with panel archives such as
-`/gerbers/examples/clad-panel.zip`. Circuits without a clad board are skipped;
-both bare clads and populated circuits built on a clad are included. Panel
-circuits also get a Gerber ZIP and PCB screenshot for every clad board in the
-panel, listed alongside the full-panel download. These artifacts are written
-under paths such as
+`/gerbers/examples/clad-panel.zip`. The circuits to export are explicitly
+listed in `scripts/build-site.ts`, where more can be appended. Panel circuits
+also get a Gerber ZIP and PCB screenshot for every board in the panel, listed
+alongside the full-panel download. These artifacts are written under paths such
+as
 `/gerbers/examples/clad-panel/boards/01-<board-name>.zip` and `.png`.
 
 `BiscuitBoard` owns the fixed 75 mm x 55 mm outline, mounting holes, and

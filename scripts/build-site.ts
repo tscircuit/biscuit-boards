@@ -5,13 +5,36 @@ import { Resvg } from "@resvg/resvg-js"
 import type { CircuitJson } from "circuit-json"
 import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
 import { extractIndividualBoardCircuits } from "./lib/extract-individual-board-circuits"
-import { isCladCircuit } from "./lib/is-clad-circuit"
 
 const workingDirectory = process.cwd()
 const distDirectory = resolve(workingDirectory, "dist")
 const gerberDirectory = resolve(distDirectory, "gerbers")
 const tsciPath = resolve(import.meta.dir, "../node_modules/.bin/tsci")
 const gerberExporterPath = resolve(import.meta.dir, "export-gerbers.ts")
+
+// Add a built circuit's dist-relative directory here to publish its Gerbers.
+const gerberCircuitNames = new Set([
+  "examples/arduino-shield-clad",
+  "examples/biscuit-board-usb-led",
+  "examples/boosterpack-clad",
+  "examples/breadboard-clad",
+  "examples/breadboard-clad-0.8mm-vias",
+  "examples/clad-32x32",
+  "examples/clad-40x40",
+  "examples/clad-panel",
+  "examples/feather-clad-with-pin-headers",
+  "examples/four-board-clad-panel",
+  "examples/rp2040",
+  "examples/rp2040-photodiode-crystal-buttons",
+  "examples/stm32-stepper-biscuit-board",
+  "examples/stm32c071",
+  "examples/stm32c071-display-arduino-shield",
+  "examples/stm32c071-display-boosterpack",
+  "examples/xiao-clad-with-perforated-pin-headers",
+  "examples/xiao-clad-with-pin-headers",
+  "examples/xiao-pair-clad-panel",
+  "examples/xiao-stm32-usb",
+])
 
 const runCommand = async (command: string[]) => {
   const childProcess = Bun.spawn(command, {
@@ -60,10 +83,10 @@ try {
     cwd: distDirectory,
     absolute: true,
   })) {
-    const circuitJson = (await Bun.file(circuitJsonPath).json()) as CircuitJson
-    if (!isCladCircuit(circuitJson)) continue
-
     const circuitName = relative(distDirectory, dirname(circuitJsonPath))
+    if (!gerberCircuitNames.has(circuitName)) continue
+
+    const circuitJson = (await Bun.file(circuitJsonPath).json()) as CircuitJson
     const gerberPath = resolve(gerberDirectory, `${circuitName}.zip`)
     await runCommand([
       process.execPath,
@@ -72,9 +95,7 @@ try {
       gerberPath,
     ])
 
-    const individualBoards = extractIndividualBoardCircuits(circuitJson).filter(
-      (individualBoard) => isCladCircuit(individualBoard.circuitJson),
-    )
+    const individualBoards = extractIndividualBoardCircuits(circuitJson)
     const boardDownloads: (typeof circuitDownloads)[number]["boards"] = []
 
     if (individualBoards.length > 1) {
@@ -194,5 +215,5 @@ const individualBoardCount = circuitDownloads.reduce(
   0,
 )
 console.log(
-  `Gerber downloads available at /gerbers/ (${circuitDownloads.length} clad circuits, ${individualBoardCount} individual panel boards)`,
+  `Gerber downloads available at /gerbers/ (${circuitDownloads.length} configured circuits, ${individualBoardCount} individual panel boards)`,
 )
