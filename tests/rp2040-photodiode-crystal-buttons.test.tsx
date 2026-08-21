@@ -93,3 +93,42 @@ test("builds the RP2040 USB flash board with programming buttons", async () => {
     ),
   ).toBe(true)
 }, 10_000)
+
+test("routes every photodiode net on the RP2040 board", async () => {
+  const circuit = new Circuit()
+  circuit.add(<Rp2040PhotodiodeCrystalButtonsBiscuitBoard />)
+  await circuit.renderUntilSettled()
+
+  const circuitJson = circuit.getCircuitJson()
+  const errors = circuitJson.filter((element) => element.type.endsWith("error"))
+  const photodiodeNetIds = new Set(
+    circuitJson.flatMap((element) =>
+      element.type === "source_net" && element.name.startsWith("PD_")
+        ? [element.source_net_id]
+        : [],
+    ),
+  )
+  const sourceTracesById = new Map(
+    circuitJson.flatMap((element) =>
+      element.type === "source_trace"
+        ? [[element.source_trace_id, element] as const]
+        : [],
+    ),
+  )
+  const routedPhotodiodeNetIds = new Set(
+    circuitJson.flatMap((element) => {
+      if (element.type !== "pcb_trace" || !element.source_trace_id) return []
+
+      const sourceTrace = sourceTracesById.get(element.source_trace_id)
+      return (
+        sourceTrace?.connected_source_net_ids?.filter((sourceNetId) =>
+          photodiodeNetIds.has(sourceNetId),
+        ) ?? []
+      )
+    }),
+  )
+
+  expect(errors).toEqual([])
+  expect(photodiodeNetIds.size).toBe(3)
+  expect(routedPhotodiodeNetIds).toEqual(photodiodeNetIds)
+}, 120_000)
