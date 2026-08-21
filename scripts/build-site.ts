@@ -15,7 +15,6 @@ const gerberExporterPath = resolve(import.meta.dir, "export-gerbers.ts")
 // Add a built circuit's dist-relative directory here to publish its Gerbers.
 const gerberCircuitNames = new Set([
   "examples/arduino-shield-clad",
-  "examples/biscuit-board-usb-led",
   "examples/boosterpack-clad",
   "examples/breadboard-clad",
   "examples/breadboard-clad-0.8mm-vias",
@@ -24,16 +23,9 @@ const gerberCircuitNames = new Set([
   "examples/clad-panel",
   "examples/feather-clad-with-pin-headers",
   "examples/four-board-clad-panel",
-  "examples/rp2040",
-  "examples/rp2040-photodiode-crystal-buttons",
-  "examples/stm32-stepper-biscuit-board",
-  "examples/stm32c071",
-  "examples/stm32c071-display-arduino-shield",
-  "examples/stm32c071-display-boosterpack",
   "examples/xiao-clad-with-perforated-pin-headers",
   "examples/xiao-clad-with-pin-headers",
   "examples/xiao-pair-clad-panel",
-  "examples/xiao-stm32-usb",
 ])
 
 const runCommand = async (command: string[]) => {
