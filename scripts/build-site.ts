@@ -12,6 +12,22 @@ const gerberDirectory = resolve(distDirectory, "gerbers")
 const tsciPath = resolve(import.meta.dir, "../node_modules/.bin/tsci")
 const gerberExporterPath = resolve(import.meta.dir, "export-gerbers.ts")
 
+// Add a built circuit's dist-relative directory here to publish its Gerbers.
+const gerberCircuitNames = new Set([
+  "examples/arduino-shield-clad",
+  "examples/boosterpack-clad",
+  "examples/breadboard-clad",
+  "examples/breadboard-clad-0.8mm-vias",
+  "examples/clad-32x32",
+  "examples/clad-40x40",
+  "examples/clad-panel",
+  "examples/feather-clad-with-pin-headers",
+  "examples/four-board-clad-panel",
+  "examples/xiao-clad-with-perforated-pin-headers",
+  "examples/xiao-clad-with-pin-headers",
+  "examples/xiao-pair-clad-panel",
+])
+
 const runCommand = async (command: string[]) => {
   const childProcess = Bun.spawn(command, {
     cwd: workingDirectory,
@@ -60,6 +76,9 @@ try {
     absolute: true,
   })) {
     const circuitName = relative(distDirectory, dirname(circuitJsonPath))
+    if (!gerberCircuitNames.has(circuitName)) continue
+
+    const circuitJson = (await Bun.file(circuitJsonPath).json()) as CircuitJson
     const gerberPath = resolve(gerberDirectory, `${circuitName}.zip`)
     await runCommand([
       process.execPath,
@@ -68,7 +87,6 @@ try {
       gerberPath,
     ])
 
-    const circuitJson = (await Bun.file(circuitJsonPath).json()) as CircuitJson
     const individualBoards = extractIndividualBoardCircuits(circuitJson)
     const boardDownloads: (typeof circuitDownloads)[number]["boards"] = []
 
@@ -189,5 +207,5 @@ const individualBoardCount = circuitDownloads.reduce(
   0,
 )
 console.log(
-  `Gerber downloads available at /gerbers/ (${circuitDownloads.length} circuits, ${individualBoardCount} individual panel boards)`,
+  `Gerber downloads available at /gerbers/ (${circuitDownloads.length} configured circuits, ${individualBoardCount} individual panel boards)`,
 )

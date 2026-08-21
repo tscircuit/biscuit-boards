@@ -29,7 +29,7 @@ receives full top and bottom copper pours and the front and back solder-mask
 layers are removed. The source TSX is not modified. The exporter also accepts a
 built `circuit.json` file, which the site build uses to avoid rendering twice.
 
-Build the static circuit site and downloadable Gerbers for every circuit with:
+Build the static circuit site and downloadable Gerbers for clad circuits with:
 
 ```sh
 bun run build:site
@@ -37,9 +37,11 @@ bun run build:site
 
 The site is written to `dist/`. Its Gerber download index is available at
 `/gerbers/`, with panel archives such as
-`/gerbers/examples/clad-panel.zip`. Panel circuits also get a Gerber ZIP and
-PCB screenshot for every board in the panel, listed alongside the full-panel
-download. These artifacts are written under paths such as
+`/gerbers/examples/clad-panel.zip`. The circuits to export are explicitly
+listed in `scripts/build-site.ts`, where more can be appended. Panel circuits
+also get a Gerber ZIP and PCB screenshot for every board in the panel, listed
+alongside the full-panel download. These artifacts are written under paths such
+as
 `/gerbers/examples/clad-panel/boards/01-<board-name>.zip` and `.png`.
 
 `BiscuitBoard` owns the fixed 75 mm x 55 mm outline, mounting holes, and
