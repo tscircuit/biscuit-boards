@@ -39,7 +39,7 @@ export const BREADBOARD_08MM_EDGE_HUG_COLUMN_COUNT = 2
 export const BREADBOARD_08MM_EDGE_HUG_Y_SHIFT =
   BREADBOARD_08MM_CORNER_VIA_SPACING
 export const BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET = 0.8
-export const BREADBOARD_08MM_BREAKOUT_LANE_SPACING = 0.5
+export const BREADBOARD_08MM_BREAKOUT_LANE_SPACING = 0.28
 export const BREADBOARD_08MM_BOTTOM_ENDPOINT_FANOUT_LENGTH = 2
 export const BREADBOARD_08MM_VIA_BREAKOUT_LENGTH = 1
 export const BREADBOARD_08MM_ROW_BREAKOUT_LENGTH = 1.2
@@ -340,8 +340,15 @@ const createCornerViaPositions = (
         end: { x: openCenterX, y: via.y },
       }
     }
-    const laneOffset =
-      0.7 + (columnIndex - 1) * BREADBOARD_08MM_BREAKOUT_LANE_SPACING
+    const shouldTuckInsideBreakoutEndLine =
+      via.y === BREADBOARD_08MM_CORNER_VIA_Y_INNER_OFFSET &&
+      columnIndex >= 2 &&
+      columnIndex < BREADBOARD_08MM_CORNER_VIA_LONG_SIDE_COLUMNS
+    const laneOffset = shouldTuckInsideBreakoutEndLine
+      ? 0.35 +
+        (columnIndex - 2) * BREADBOARD_08MM_BREAKOUT_LANE_SPACING
+      : 0.7 +
+        (columnIndex - 1) * BREADBOARD_08MM_BREAKOUT_LANE_SPACING
     const laneY = via.y - laneOffset
     return {
       openAreaEdge: "toward_board_center",
