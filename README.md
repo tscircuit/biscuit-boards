@@ -74,10 +74,12 @@ schematic snapshots.
 ## Pre-routed breadboard clad with 0.8 mm vias
 
 [`BreadboardClad08mmVias`](./lib/breadboard-clad-0.8mm-vias.tsx) retains the
-75 mm x 55 mm breadboard-clad outline and 10 x 21 socket grid while adding the
-standard breadboard connectivity in copper. For every numbered column, A-E
-form one five-socket terminal strip and F-J form the other. Each strip reaches
-a trace-only breakout on both its inner and outer side.
+75 mm x 55 mm breadboard-clad outline and uses a symmetric 8 x 21 socket grid
+with standard breadboard connectivity in copper. Rows within each bank use
+2.54 mm pitch, and the inner D-E rows preserve the conventional 7.62 mm center
+trench for 0.3-inch DIP packages. For every numbered column, A-D form one
+four-socket terminal strip and E-H form the other. Each strip reaches a
+trace-only breakout on both its inner and outer side.
 
 The 50 vias are separate from the breadboard strips and sit in four
 two-via-wide L-shaped corner fields. Three corners have five columns along the
@@ -86,18 +88,20 @@ second mounting hole, while the short arms remain beside the mounting holes.
 In every corner, the four vias in the two innermost long-side columns shift one
 3 mm pitch toward the top or bottom edge, extending the edge-hugging row without
 changing the grid pitch.
-Every via has its own 0.15 mm top- and bottom-copper breakout: the top trace
-reaches one inward open-area edge and the bottom trace reaches the opposite
-inward open-area edge. Breakouts from boundary vias take direct paths; recessed
-breakouts weave through the 3 mm via gaps until every endpoint sits 1 mm beyond
-the inward edge of the L-shaped via grid. The endpoints remain in the open space
-between corner fields, where connectors, components, and later copper fills can
-sit. On the bottom layer, the shifted H2 escape and both short-arm escapes take
-staggered lanes behind the outer via row before turning inward, so they do not
-wall off another via. No via breakout is collected at a board edge or routed
-toward a mounting hole. The vias use 0.8 mm finished holes and 0.9 mm pads,
-leaving 2.1 mm between pad edges and 2.2 mm between drill edges. The bare routed
-preview and checked-in PCB snapshot are in
+Every via has its own 0.15 mm top- and bottom-copper breakout. In all four
+corners, top copper exits toward the breadboard rows and bottom copper exits
+toward the board's horizontal center. Exposed top vias take direct paths;
+recessed vias use alternating staggered lanes, with the short-arm vias taking
+the lane opposite the long-arm via at the same X coordinate. Bottom routes use
+staggered center-facing lanes, and the short-arm routes pass behind the outer
+via row before turning inward so they cannot enclose another via. Top endpoints
+sit 1 mm beyond the row-facing field boundary. Bottom endpoints use an
+additional 2 mm fan-out; the topmost and bottommost routes stay straight while
+the endpoints between them are evenly spaced along the center-facing boundary.
+Every endpoint has an open escape corridor. No breakout is collected at a board
+edge or routed toward a mounting hole. The vias use 0.8 mm finished holes and
+0.9 mm pads, leaving 2.1 mm between pad edges and 2.2 mm between drill edges.
+The bare routed preview and checked-in PCB snapshot are in
 [`examples/breadboard-clad-0.8mm-vias.tsx`](./examples/breadboard-clad-0.8mm-vias.tsx).
 
 ```sh

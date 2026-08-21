@@ -1,4 +1,4 @@
-import type { AutorouterProp } from "@tscircuit/props"
+import type { AutorouterProp, ConnectorProps } from "@tscircuit/props"
 import { Fragment, type ReactNode } from "react"
 import { BISCUIT_BOARD_MOUNTING_HOLE_POSITIONS } from "./BiscuitBoard"
 import type { BiscuitBoardAutorouterOptions } from "./biscuit-board-autorouter"
@@ -7,9 +7,11 @@ import {
   BREADBOARD_CLAD_WIDTH,
   BREADBOARD_COLUMN_COUNT,
   BREADBOARD_COLUMN_XS,
+  BREADBOARD_HEADER_HOLE_DIAMETER,
+  BREADBOARD_HEADER_PAD_DIAMETER,
+  BREADBOARD_HEADER_PITCH,
   BREADBOARD_MOUNTING_HOLE_DIAMETER,
-  BREADBOARD_TERMINAL_ROW_YS,
-  BreadboardTerminalHeaders,
+  type BreadboardHeaderPosition,
   type BreadboardTerminalRowLabel,
 } from "./breadboard-clad"
 import { createPrefabricatedViaAutorouter } from "./create-prefabricated-via-autorouter"
@@ -37,29 +39,72 @@ export const BREADBOARD_08MM_EDGE_HUG_COLUMN_COUNT = 2
 export const BREADBOARD_08MM_EDGE_HUG_Y_SHIFT =
   BREADBOARD_08MM_CORNER_VIA_SPACING
 export const BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET = 0.8
-export const BREADBOARD_08MM_BREAKOUT_LANE_SPACING = 0.4
+export const BREADBOARD_08MM_BREAKOUT_LANE_SPACING = 0.5
+export const BREADBOARD_08MM_BOTTOM_ENDPOINT_FANOUT_LENGTH = 2
 export const BREADBOARD_08MM_VIA_BREAKOUT_LENGTH = 1
 export const BREADBOARD_08MM_ROW_BREAKOUT_LENGTH = 1.2
 
 const BREADBOARD_08MM_CLAD_EDGE_CLEARANCE = 0.2
 const BREADBOARD_08MM_CLAD_EDGE_CLEARANCE_VALIDATION_TOLERANCE = 0.001
 const BREADBOARD_08MM_BOTTOM_BEHIND_VIA_LANE_START_OFFSET = 1.2
-const BREADBOARD_08MM_BOTTOM_BEHIND_VIA_LANE_SPACING = 0.4
+const BREADBOARD_08MM_BOTTOM_BEHIND_VIA_LANE_SPACING = 0.5
 
 export const BREADBOARD_08MM_TOP_BANK_ROWS = [
   "A",
   "B",
   "C",
   "D",
-  "E",
 ] as const satisfies readonly BreadboardTerminalRowLabel[]
 export const BREADBOARD_08MM_BOTTOM_BANK_ROWS = [
+  "E",
   "F",
   "G",
   "H",
-  "I",
-  "J",
 ] as const satisfies readonly BreadboardTerminalRowLabel[]
+
+function roundCoordinate(value: number) {
+  return Math.round(value * 1e6) / 1e6
+}
+
+// Preserve the conventional 7.62 mm center trench while placing four rows at
+// 2.54 mm pitch on either side.
+const BREADBOARD_08MM_TERMINAL_BANK_CENTER_Y = 3 * BREADBOARD_HEADER_PITCH
+
+export const BREADBOARD_08MM_TERMINAL_ROW_YS = Object.fromEntries(
+  [...BREADBOARD_08MM_TOP_BANK_ROWS, ...BREADBOARD_08MM_BOTTOM_BANK_ROWS].map(
+    (label, index) => {
+      const bankIndex = index % BREADBOARD_08MM_TOP_BANK_ROWS.length
+      const distanceFromCenter =
+        (BREADBOARD_08MM_TOP_BANK_ROWS.length - 1) / 2 - bankIndex
+      const bankSign = index < BREADBOARD_08MM_TOP_BANK_ROWS.length ? 1 : -1
+      return [
+        label,
+        roundCoordinate(
+          bankSign *
+            (BREADBOARD_08MM_TERMINAL_BANK_CENTER_Y +
+              bankSign * distanceFromCenter * BREADBOARD_HEADER_PITCH),
+        ),
+      ]
+    },
+  ),
+) as Record<
+  | (typeof BREADBOARD_08MM_TOP_BANK_ROWS)[number]
+  | (typeof BREADBOARD_08MM_BOTTOM_BANK_ROWS)[number],
+  number
+>
+
+export const BREADBOARD_08MM_TERMINAL_HEADER_POSITIONS = [
+  ...BREADBOARD_08MM_TOP_BANK_ROWS,
+  ...BREADBOARD_08MM_BOTTOM_BANK_ROWS,
+].flatMap((row, rowIndex) =>
+  BREADBOARD_COLUMN_XS.map((x, columnIndex) => ({
+    pin: rowIndex * BREADBOARD_COLUMN_COUNT + columnIndex + 1,
+    label: `${row}${columnIndex + 1}`,
+    column: columnIndex + 1,
+    x,
+    y: BREADBOARD_08MM_TERMINAL_ROW_YS[row],
+  })),
+) satisfies BreadboardHeaderPosition[]
 
 export type Breadboard08mmViaCorner =
   | "top_left"
@@ -103,8 +148,6 @@ export interface Breadboard08mmRowBreakout {
   start: { x: number; y: number }
   end: { x: number; y: number }
 }
-
-const roundCoordinate = (value: number) => Math.round(value * 1e6) / 1e6
 
 const createPitchedRange = (start: number, end: number) =>
   Array.from(
@@ -197,15 +240,8 @@ const createCornerViaPositions = (
     })),
   ]
 
-  const createBreakout = (
-    via: LocalCornerVia,
-    openAreaEdge: Breadboard08mmViaOpenAreaEdge,
-    layer: "top" | "bottom",
-  ): LocalCornerBreakout => {
+  const createTopBreakout = (via: LocalCornerVia): LocalCornerBreakout => {
     const innerX = shiftedCornerViaAxisX[0]!
-    // Both destinations sit just beyond the inward boundary of the via field;
-    // recessed vias reach them through staggered lanes between 3 mm pitches.
-    const openCenterX = innerX - BREADBOARD_08MM_VIA_BREAKOUT_LENGTH
     const openRowsY =
       BREADBOARD_08MM_CORNER_VIA_Y_INNER_OFFSET -
       BREADBOARD_08MM_VIA_BREAKOUT_LENGTH
@@ -213,131 +249,110 @@ const createCornerViaPositions = (
       (via.x - innerX) / BREADBOARD_08MM_CORNER_VIA_SPACING,
     )
 
-    if (layer === "top") {
-      if (openAreaEdge === "toward_breadboard_rows") {
-        if (via.y === BREADBOARD_08MM_CORNER_VIA_Y_INNER_OFFSET) {
-          return {
-            openAreaEdge,
-            style: "direct",
-            route: [],
-            end: { x: via.x, y: openRowsY },
-          }
-        }
-        const rowWeaveDirection = columnIndex % 2 === 0 ? -1 : 1
-        const weaveDirection =
-          via.y === BREADBOARD_08MM_CORNER_VIA_Y_OUTER_OFFSET
-            ? -rowWeaveDirection
-            : rowWeaveDirection
-        const weaveX =
-          via.x + weaveDirection * BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET
-        return {
-          openAreaEdge,
-          style: "woven",
-          route: [
-            {
-              x: weaveX,
-              y: via.y - BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET,
-            },
-          ],
-          end: { x: weaveX, y: openRowsY },
-        }
-      }
-
-      if (columnIndex === 0) {
-        return {
-          openAreaEdge,
-          style: "direct",
-          route: [],
-          end: { x: openCenterX, y: via.y },
-        }
-      }
-      const weaveY = via.y - BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET
+    if (via.y === BREADBOARD_08MM_CORNER_VIA_Y_INNER_OFFSET) {
       return {
-        openAreaEdge,
-        style: "woven",
-        route: [
-          {
-            x: via.x - BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET,
-            y: weaveY,
-          },
-        ],
-        end: { x: openCenterX, y: weaveY },
+        openAreaEdge: "toward_breadboard_rows",
+        style: "direct",
+        route: [],
+        end: { x: via.x, y: openRowsY },
       }
     }
-
-    if (openAreaEdge === "toward_board_center") {
-      // Short-arm bottom escapes go behind the outer row first, preserving an
-      // open inward path for the shifted H2 via instead of walling it off.
-      if (via.arm === "vertical") {
-        const verticalArmIndex = shiftedCornerViaArmAxisX.indexOf(via.x)
-        const behindViaLaneY =
-          via.y +
-          BREADBOARD_08MM_BOTTOM_BEHIND_VIA_LANE_START_OFFSET +
-          verticalArmIndex * BREADBOARD_08MM_BOTTOM_BEHIND_VIA_LANE_SPACING
-        return {
-          openAreaEdge,
-          style: "woven",
-          route: [
-            {
-              x: via.x - BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET,
-              y: behindViaLaneY,
-            },
-          ],
-          end: { x: openCenterX, y: behindViaLaneY },
-        }
-      }
-      if (columnIndex === 0) {
-        return {
-          openAreaEdge,
-          style: "direct",
-          route: [],
-          end: { x: openCenterX, y: via.y },
-        }
-      }
-      const laneOffset =
-        0.7 + (columnIndex - 1) * BREADBOARD_08MM_BREAKOUT_LANE_SPACING
-      const laneY = via.y - laneOffset
-      return {
-        openAreaEdge,
-        style: "woven",
-        route: [
-          {
-            x: via.x - BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET,
-            y: laneY,
-          },
-        ],
-        end: { x: openCenterX, y: laneY },
-      }
-    }
-
-    // The shifted H2 bottom escape uses the long-edge-side lane before turning
-    // inward, then lands inside H1's endpoint without crossing H1's vertical.
-    const wrapLaneX =
-      openCenterX -
-      (via.y === BREADBOARD_08MM_CORNER_VIA_Y_OUTER_OFFSET
-        ? columnIndex === 0
-          ? 1.6
-          : 2
-        : 0.4)
-    const outerRowWeaveY = via.y + BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET
-    const route =
-      via.y === BREADBOARD_08MM_CORNER_VIA_Y_OUTER_OFFSET && columnIndex > 0
-        ? [
-            {
-              x: via.x - BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET,
-              y: outerRowWeaveY,
-            },
-            {
-              x: wrapLaneX,
-              y: outerRowWeaveY,
-            },
-          ]
-        : [{ x: wrapLaneX, y: via.y }]
+    const rowWeaveDirection = columnIndex % 2 === 0 ? -1 : 1
+    const weaveDirection =
+      via.y === BREADBOARD_08MM_CORNER_VIA_Y_OUTER_OFFSET
+        ? -rowWeaveDirection
+        : rowWeaveDirection
+    const weaveX =
+      via.x + weaveDirection * BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET
     return {
-      openAreaEdge,
+      openAreaEdge: "toward_breadboard_rows",
       style: "woven",
-      route,
-      end: { x: wrapLaneX, y: openRowsY },
+      route: [
+        {
+          x: weaveX,
+          y: via.y - BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET,
+        },
+      ],
+      end: { x: weaveX, y: openRowsY },
+    }
+  }
+
+  const createBottomBreakout = (via: LocalCornerVia): LocalCornerBreakout => {
+    const innerX = shiftedCornerViaAxisX[0]!
+    const openCenterX = innerX - BREADBOARD_08MM_VIA_BREAKOUT_LENGTH
+    const columnIndex = Math.round(
+      (via.x - innerX) / BREADBOARD_08MM_CORNER_VIA_SPACING,
+    )
+
+    // Short-arm escapes go behind the outer row first so their center-facing
+    // paths cannot wall off a via inside the L-shaped field.
+    if (via.arm === "vertical") {
+      const verticalArmIndex = shiftedCornerViaArmAxisX.indexOf(via.x)
+      const behindViaLaneY =
+        via.y +
+        BREADBOARD_08MM_BOTTOM_BEHIND_VIA_LANE_START_OFFSET +
+        verticalArmIndex * BREADBOARD_08MM_BOTTOM_BEHIND_VIA_LANE_SPACING
+      return {
+        openAreaEdge: "toward_board_center",
+        style: "woven",
+        route: [
+          {
+            x: via.x - BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET,
+            y: behindViaLaneY,
+          },
+        ],
+        end: { x: openCenterX, y: behindViaLaneY },
+      }
+    }
+
+    // The top-right field has one extra long-arm column. Route its outer via
+    // after the short-arm lanes so widening the lanes does not cross either
+    // the inner-row pads or the short-arm breakouts.
+    if (
+      columnIndex >= BREADBOARD_08MM_CORNER_VIA_LONG_SIDE_COLUMNS &&
+      via.y ===
+        BREADBOARD_08MM_CORNER_VIA_Y_INNER_OFFSET +
+          BREADBOARD_08MM_CORNER_VIA_ARM_WIDTH
+    ) {
+      const behindViaLaneY =
+        BREADBOARD_08MM_CORNER_VIA_Y_OUTER_OFFSET +
+        BREADBOARD_08MM_BOTTOM_BEHIND_VIA_LANE_START_OFFSET +
+        shiftedCornerViaArmAxisX.length *
+          BREADBOARD_08MM_BOTTOM_BEHIND_VIA_LANE_SPACING
+      return {
+        openAreaEdge: "toward_board_center",
+        style: "woven",
+        route: [
+          {
+            x: via.x - BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET,
+            y: behindViaLaneY,
+          },
+        ],
+        end: { x: openCenterX, y: behindViaLaneY },
+      }
+    }
+
+    if (columnIndex === 0) {
+      return {
+        openAreaEdge: "toward_board_center",
+        style: "direct",
+        route: [],
+        end: { x: openCenterX, y: via.y },
+      }
+    }
+    const laneOffset =
+      0.7 + (columnIndex - 1) * BREADBOARD_08MM_BREAKOUT_LANE_SPACING
+    const laneY = via.y - laneOffset
+    return {
+      openAreaEdge: "toward_board_center",
+      style: "woven",
+      route: [
+        {
+          x: via.x - BREADBOARD_08MM_BREAKOUT_WEAVE_OFFSET,
+          y: laneY,
+        },
+      ],
+      end: { x: openCenterX, y: laneY },
     }
   }
 
@@ -350,30 +365,54 @@ const createCornerViaPositions = (
     end: toBoardPoint(breakout.end),
   })
 
-  return localVias.map((via): Breadboard08mmViaPosition => {
-    const boardCenterDistance = via.x - shiftedCornerViaAxisX[0]!
-    const breadboardRowsDistance =
-      via.y - BREADBOARD_08MM_CORNER_VIA_Y_INNER_OFFSET
-    const topOpenAreaEdge =
-      boardCenterDistance < breadboardRowsDistance
-        ? "toward_board_center"
-        : "toward_breadboard_rows"
-    const bottomOpenAreaEdge =
-      topOpenAreaEdge === "toward_board_center"
-        ? "toward_breadboard_rows"
-        : "toward_board_center"
+  const bottomBreakouts = localVias.map(createBottomBreakout)
+  const bottomBreakoutsByLane = bottomBreakouts
+    .map((breakout, viaIndex) => ({ breakout, viaIndex }))
+    .sort(
+      (first, second) =>
+        first.breakout.end.y - second.breakout.end.y ||
+        first.viaIndex - second.viaIndex,
+    )
+  const bottomEndpointRankByViaIndex = new Map(
+    bottomBreakoutsByLane.map(({ viaIndex }, endpointRank) => [
+      viaIndex,
+      endpointRank,
+    ]),
+  )
+  const bottomEndpointMinimumY = bottomBreakoutsByLane[0]!.breakout.end.y
+  const bottomEndpointMaximumY =
+    bottomBreakoutsByLane.at(-1)!.breakout.end.y
+  const bottomEndpointSpacing =
+    (bottomEndpointMaximumY - bottomEndpointMinimumY) /
+    (localVias.length - 1)
 
-    return {
-      name: `V_${corner.toUpperCase()}_${via.nameSuffix}`,
-      corner,
-      arm: via.arm,
-      ...toBoardPoint(via),
-      topBreakout: toBoardBreakout(createBreakout(via, topOpenAreaEdge, "top")),
-      bottomBreakout: toBoardBreakout(
-        createBreakout(via, bottomOpenAreaEdge, "bottom"),
-      ),
-    }
-  })
+  return localVias.map(
+    (via, viaIndex): Breadboard08mmViaPosition => {
+      const bottomBreakout = bottomBreakouts[viaIndex]!
+      const endpointRank = bottomEndpointRankByViaIndex.get(viaIndex)!
+      const evenlySpacedBottomBreakout = {
+        ...bottomBreakout,
+        style: "woven" as const,
+        route: [...bottomBreakout.route, bottomBreakout.end],
+        end: {
+          x:
+            bottomBreakout.end.x -
+            BREADBOARD_08MM_BOTTOM_ENDPOINT_FANOUT_LENGTH,
+          y: roundCoordinate(
+            bottomEndpointMinimumY + endpointRank * bottomEndpointSpacing,
+          ),
+        },
+      }
+      return {
+        name: `V_${corner.toUpperCase()}_${via.nameSuffix}`,
+        corner,
+        arm: via.arm,
+        ...toBoardPoint(via),
+        topBreakout: toBoardBreakout(createTopBreakout(via)),
+        bottomBreakout: toBoardBreakout(evenlySpacedBottomBreakout),
+      }
+    },
+  )
 }
 
 /** Four independent L fields; top-right has an extra column below its holes. */
@@ -398,7 +437,7 @@ const createBankRowConnections = (
     column,
   }))
 
-/** A-E and F-J are connected as conventional five-socket terminal strips. */
+/** A-D and E-H are connected as four-socket terminal strips. */
 export const BREADBOARD_08MM_ROW_CONNECTIONS = Array.from(
   { length: BREADBOARD_COLUMN_COUNT },
   (_, index) => index + 1,
@@ -431,11 +470,67 @@ export const BREADBOARD_08MM_ROW_BREAKOUTS = Array.from(
   { length: BREADBOARD_COLUMN_COUNT },
   (_, index) => index + 1,
 ).flatMap((column) => [
-  createRowBreakout(`A${column}`, column, BREADBOARD_TERMINAL_ROW_YS.A, 1),
-  createRowBreakout(`E${column}`, column, BREADBOARD_TERMINAL_ROW_YS.E, -1),
-  createRowBreakout(`F${column}`, column, BREADBOARD_TERMINAL_ROW_YS.F, 1),
-  createRowBreakout(`J${column}`, column, BREADBOARD_TERMINAL_ROW_YS.J, -1),
+  createRowBreakout(`A${column}`, column, BREADBOARD_08MM_TERMINAL_ROW_YS.A, 1),
+  createRowBreakout(
+    `D${column}`,
+    column,
+    BREADBOARD_08MM_TERMINAL_ROW_YS.D,
+    -1,
+  ),
+  createRowBreakout(`E${column}`, column, BREADBOARD_08MM_TERMINAL_ROW_YS.E, 1),
+  createRowBreakout(
+    `H${column}`,
+    column,
+    BREADBOARD_08MM_TERMINAL_ROW_YS.H,
+    -1,
+  ),
 ])
+
+const terminalPinLabels = Object.fromEntries(
+  BREADBOARD_08MM_TERMINAL_HEADER_POSITIONS.map((position) => [
+    `pin${position.pin}`,
+    [position.label],
+  ]),
+)
+
+const Breadboard08mmTerminalHeaderFootprint = () => (
+  <footprint insertionDirection="from_above">
+    {BREADBOARD_08MM_TERMINAL_HEADER_POSITIONS.map((position) => (
+      <Fragment key={`terminal-${position.label}`}>
+        {position.pin === 1 ? (
+          <platedhole
+            portHints={[`pin${position.pin}`]}
+            shape="circular_hole_with_rect_pad"
+            holeDiameter={`${BREADBOARD_HEADER_HOLE_DIAMETER}mm`}
+            rectPadWidth={`${BREADBOARD_HEADER_PAD_DIAMETER}mm`}
+            rectPadHeight={`${BREADBOARD_HEADER_PAD_DIAMETER}mm`}
+            pcbX={position.x}
+            pcbY={position.y}
+          />
+        ) : (
+          <platedhole
+            portHints={[`pin${position.pin}`]}
+            shape="circle"
+            holeDiameter={`${BREADBOARD_HEADER_HOLE_DIAMETER}mm`}
+            outerDiameter={`${BREADBOARD_HEADER_PAD_DIAMETER}mm`}
+            pcbX={position.x}
+            pcbY={position.y}
+          />
+        )}
+      </Fragment>
+    ))}
+  </footprint>
+)
+
+const Breadboard08mmTerminalHeaders = (props: ConnectorProps) => (
+  <connector
+    pinLabels={terminalPinLabels}
+    manufacturerPartNumber="GENERIC-BREADBOARD-8X21-FEMALE-2.54MM"
+    footprint={<Breadboard08mmTerminalHeaderFootprint />}
+    noSchematicRepresentation
+    {...props}
+  />
+)
 
 const viaBreakoutPinLabels = Object.fromEntries(
   BREADBOARD_08MM_VIA_POSITIONS.flatMap((via, index) => [
@@ -501,7 +596,7 @@ export interface BreadboardClad08mmViasProps {
 }
 
 /**
- * A pre-routed breadboard clad with conventional five-socket terminal strips
+ * A pre-routed breadboard clad with four-socket terminal strips
  * and separate, individually broken-out 0.8 mm vias in the four corners.
  */
 export const BreadboardClad08mmVias = ({
@@ -549,7 +644,7 @@ export const BreadboardClad08mmVias = ({
       </Fragment>
     ))}
 
-    <BreadboardTerminalHeaders name="J_TERMINALS" />
+    <Breadboard08mmTerminalHeaders name="J_TERMINALS" />
 
     <pinheader
       name="J_VIA_BREAKOUTS"
@@ -653,7 +748,7 @@ export const BreadboardClad08mmVias = ({
         <silkscreentext
           text={row}
           pcbX={-28.3}
-          pcbY={BREADBOARD_TERMINAL_ROW_YS[row]}
+          pcbY={BREADBOARD_08MM_TERMINAL_ROW_YS[row]}
           fontSize="0.55mm"
         />
       </Fragment>
@@ -663,7 +758,7 @@ export const BreadboardClad08mmVias = ({
         <silkscreentext
           text={row}
           pcbX={-28.3}
-          pcbY={BREADBOARD_TERMINAL_ROW_YS[row]}
+          pcbY={BREADBOARD_08MM_TERMINAL_ROW_YS[row]}
           fontSize="0.55mm"
         />
       </Fragment>
