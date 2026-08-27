@@ -13,13 +13,7 @@ export const Stm32StepperBiscuitBoard = (
     nominalTraceWidth={0.2}
     autorouterEdgeClearance={0.7}
     autorouterOptions={{
-      routeOrder: "longest_first",
-      gridClearance: 0.1,
-      maxBlockersPerSearch: 512,
-      maxRipsPerRoute: 1_024,
-      maxTotalRips: 50_000,
-      maxSearchStates: 10_000_000,
-      ...props.autorouterOptions,
+      routeOrder: "signal_longest_first",
     }}
     {...props}
   >
