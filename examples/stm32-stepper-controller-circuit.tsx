@@ -193,10 +193,10 @@ const Amphenol10129380Footprint = () => (
 const Tensility5400164Footprint = () => (
   <footprint insertionDirection="from_x_neg">
     {[
-      { pin: 1, x: -2.35, y: 5.5 },
-      { pin: undefined, x: 2.15, y: 5.5 },
-      { pin: 2, x: -2.35, y: -5.5 },
-      { pin: 3, x: 2.15, y: -5.5 },
+      { pin: 1, x: -3.1, y: 5.5 },
+      { pin: undefined, x: 2.9, y: 5.5 },
+      { pin: 2, x: -3.1, y: -5.5 },
+      { pin: 3, x: 2.9, y: -5.5 },
     ].map(({ pin, x, y }) => (
       <Fragment key={`pad-${x}-${y}`}>
         <smtpad
@@ -369,7 +369,7 @@ export const Stm32StepperControllerCircuit = () => {
         name="C_VM_BULK"
         schSectionName={schSections.driver}
         capacitance="100uF"
-        footprint="1210"
+        footprint="0805"
         {...at(p.vmBulk)}
       />
       <capacitor
