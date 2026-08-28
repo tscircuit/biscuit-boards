@@ -486,9 +486,28 @@ export const Stm32StepperControllerCircuit = () => {
         fontSize="0.65mm"
       />
 
-      <trace from=".J_PWR > .VM" to="net.VM" {...vm} />
+      <trace
+        name="POWER_INPUT_VM"
+        from=".J_PWR > .VM"
+        to="net.VM"
+        width="0.3mm"
+        pcbPathRelativeTo=".J_PWR > .VM"
+        pcbPath={[
+          // Coordinates are in J_PWR's 270-degree-rotated component frame.
+          { x: -3.1, y: 7 },
+          { x: -3.1, y: 9 },
+          { x: -1.2, y: 10.9 },
+        ]}
+        {...vm}
+      />
       <trace from=".J_PWR > .GND" to="net.GND" {...gnd} />
-      <trace from=".U_REG > .IN" to="net.VM" {...vm} />
+      <trace
+        name="REGULATOR_VM"
+        from=".U_REG > .IN"
+        to="net.VM"
+        width="0.15mm"
+        {...vm}
+      />
       <trace from=".U_REG > .EN" to="net.VM" {...vm} />
       <trace from=".U_REG > .GND" to="net.GND" {...gnd} />
       <trace from=".U_REG > .OUT" to="net.V3V3" {...v3v3} />
@@ -512,7 +531,12 @@ export const Stm32StepperControllerCircuit = () => {
         ]}
       />
       <trace from=".J_SWD > .SWDIO" to=".U_MCU > .SWDIO" width="0.2mm" />
-      <trace from=".J_SWD > .SWCLK" to=".U_MCU > .SWCLK" />
+      <trace
+        name="SWCLK"
+        from=".J_SWD > .SWCLK"
+        to=".U_MCU > .SWCLK"
+        width="0.15mm"
+      />
       <trace from=".J_SWD > .NRST" to=".U_MCU > .NRST" />
 
       <trace from=".U_DRIVER > .VS1" to="net.VM" width="0.3mm" {...vm} />
@@ -523,7 +547,13 @@ export const Stm32StepperControllerCircuit = () => {
         {...vm}
       />
       <trace from=".U_DRIVER > .VSA" to="net.VM" {...vm} />
-      <trace from=".U_DRIVER > .VCC_IO" to="net.V3V3" {...v3v3} />
+      <trace
+        name="DRIVER_VCC_IO"
+        from=".U_DRIVER > .VCC_IO"
+        to="net.V3V3"
+        width="0.15mm"
+        {...v3v3}
+      />
       <trace from=".U_DRIVER > .GNDP1" to="net.GND" width="0.2mm" {...gnd} />
       <trace from=".U_DRIVER > .GNDP2" to="net.GND" width="0.2mm" {...gnd} />
       <trace from=".U_DRIVER > .GNDA" to="net.GND" {...gnd} />
@@ -537,8 +567,10 @@ export const Stm32StepperControllerCircuit = () => {
       <trace from=".C_VM > .pin1" to="net.VM" {...vm} />
       <trace from=".C_VM > .pin2" to="net.GND" {...gnd} />
       <trace
+        name="DRIVER_5VOUT"
         from=".U_DRIVER > .5VOUT"
         to=".C_5VOUT > .pin1"
+        width="0.15mm"
         maxLength="5mm"
         pcbPathRelativeTo=".U_DRIVER > .5VOUT"
         pcbPath={[
@@ -556,8 +588,10 @@ export const Stm32StepperControllerCircuit = () => {
       <trace from=".C_CP > .pin2" to=".U_DRIVER > .CPI" maxLength="8mm" />
       <trace from=".C_VCP > .pin1" to=".U_DRIVER > .VCP" maxLength="8mm" />
       <trace
+        name="DRIVER_VCP_RETURN"
         from=".C_VCP > .pin2"
         to=".U_DRIVER > .VS2"
+        width="0.15mm"
         maxLength="8mm"
         {...vm}
       />
@@ -613,7 +647,12 @@ export const Stm32StepperControllerCircuit = () => {
       />
 
       <trace name="STEP" from=".U_MCU > .PA6" to=".U_DRIVER > .STEP" />
-      <trace name="DIR" from=".U_MCU > .PA5" to=".U_DRIVER > .DIR" />
+      <trace
+        name="DIR"
+        from=".U_MCU > .PA5"
+        to=".U_DRIVER > .DIR"
+        width="0.15mm"
+      />
       <trace
         name="SPI_CS"
         from=".U_MCU > .PA4"
@@ -621,12 +660,18 @@ export const Stm32StepperControllerCircuit = () => {
         width="0.2mm"
       />
       <trace name="SPI_SCK" from=".U_MCU > .PA7" to=".U_DRIVER > .SCK_CFG2" />
-      <trace name="SPI_MOSI" from=".U_MCU > .PA12" to=".U_DRIVER > .SDI_CFG1" />
+      <trace
+        name="SPI_MOSI"
+        from=".U_MCU > .PA12"
+        to=".U_DRIVER > .SDI_CFG1"
+        width="0.15mm"
+      />
       <trace name="SPI_MISO" from=".U_DRIVER > .SDO_CFG0" to=".U_MCU > .PB3" />
       <trace
         name="DRIVER_ENABLE"
         from=".U_MCU > .PA8"
         to=".U_DRIVER > .DRV_ENN"
+        width="0.15mm"
       />
       <trace from=".U_DRIVER > .SD_MODE" to="net.V3V3" {...v3v3} />
       <trace from=".U_DRIVER > .SPI_MODE" to="net.V3V3" {...v3v3} />

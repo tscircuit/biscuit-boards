@@ -9,7 +9,36 @@ import {
 const pointKey = (point: { x: number; y: number }) =>
   `${point.x.toFixed(3)},${point.y.toFixed(3)}`
 
-test.skip("routes the STM32 stepper controller on BiscuitBoard", async () => {
+test("keeps protected controller traces at least 0.15 mm wide", async () => {
+  const circuit = new Circuit()
+  circuit.add(<Stm32StepperBiscuitBoard routingDisabled />)
+  await circuit.renderUntilSettled()
+
+  const circuitJson = circuit.getCircuitJson()
+  const board = circuitJson.find((element) => element.type === "pcb_board")
+
+  expect(board).toMatchObject({ min_trace_width: 0.15 })
+
+  for (const traceName of [
+    "SWCLK",
+    "REGULATOR_VM",
+    "DRIVER_VCC_IO",
+    "DRIVER_5VOUT",
+    "DRIVER_VCP_RETURN",
+    "DIR",
+    "SPI_MOSI",
+    "DRIVER_ENABLE",
+  ]) {
+    const trace = circuitJson.find(
+      (element) =>
+        element.type === "source_trace" && element.name === traceName,
+    )
+
+    expect(trace).toMatchObject({ min_trace_thickness: 0.15 })
+  }
+})
+
+test("routes the STM32 stepper controller on BiscuitBoard", async () => {
   const circuit = new Circuit()
   circuit.add(<Stm32StepperBiscuitBoard />)
   await circuit.renderUntilSettled()
@@ -53,6 +82,45 @@ test.skip("routes the STM32 stepper controller on BiscuitBoard", async () => {
       "Power indicator or barrel jack source component is missing",
     )
   }
+  const powerInputPort = circuitJson.find(
+    (element) =>
+      element.type === "source_port" &&
+      element.source_component_id === powerConnector.source_component_id &&
+      element.pin_number === 1,
+  )
+  if (powerInputPort?.type !== "source_port") {
+    throw new Error("Barrel jack power-input port is missing")
+  }
+  const powerInputPcbPort = circuitJson.find(
+    (element) =>
+      element.type === "pcb_port" &&
+      element.source_port_id === powerInputPort.source_port_id,
+  )
+  if (powerInputPcbPort?.type !== "pcb_port") {
+    throw new Error("Barrel jack power-input PCB port is missing")
+  }
+  const powerInputPcbTrace = circuitJson.find(
+    (element) =>
+      element.type === "pcb_trace" &&
+      element.route.some(
+        (point) =>
+          point.route_type === "wire" &&
+          point.start_pcb_port_id === powerInputPcbPort.pcb_port_id,
+      ),
+  )
+  if (powerInputPcbTrace?.type !== "pcb_trace") {
+    throw new Error("Barrel jack power-input PCB trace is missing")
+  }
+  const powerInputWirePoints = powerInputPcbTrace.route.filter(
+    (point) => point.route_type === "wire",
+  )
+  const [powerStart, powerExit, powerNext] = powerInputWirePoints
+  if (!powerStart || !powerExit || !powerNext) {
+    throw new Error("Barrel jack power-input exit path is incomplete")
+  }
+  const powerExitDirectionDot =
+    (powerExit.x - powerStart.x) * (powerNext.x - powerExit.x) +
+    (powerExit.y - powerStart.y) * (powerNext.y - powerExit.y)
   const powerConnectorPcb = circuitJson.find(
     (element) =>
       element.type === "pcb_component" &&
@@ -136,6 +204,7 @@ test.skip("routes the STM32 stepper controller on BiscuitBoard", async () => {
   )
 
   expect(errors).toEqual([])
+  expect(powerExitDirectionDot).toBeGreaterThanOrEqual(0)
   expect(swdioSegmentsBelowKeepout.length).toBeGreaterThan(0)
   expect(
     swdioSegmentsBelowKeepout.every(
