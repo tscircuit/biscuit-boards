@@ -9,10 +9,11 @@ export const Stm32StepperBiscuitBoard = (
   > = {},
 ) => (
   <BiscuitBoard
-    minTraceWidth={0.1}
+    minTraceWidth={0.15}
     nominalTraceWidth={0.2}
     autorouterEdgeClearance={0.7}
     autorouterOptions={{
+      gridClearance: 0.1,
       routeOrder: "signal_longest_first",
     }}
     {...props}
