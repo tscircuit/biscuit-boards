@@ -616,8 +616,9 @@ const Rp2040UsbSupport = ({
       name="USB_GND_BREAKOUT"
       from=".R_USB_GND > .pin1"
       to=".J_USB > .GND_A"
-      thickness="0.1mm"
-      pcbStraightLine
+      thickness="0.15mm"
+      pcbPathRelativeTo=".R_USB_GND > .pin1"
+      pcbPath={[{ x: -1.775, y: 0 }]}
     />
     <trace
       name="USB_VBUS"
@@ -633,7 +634,7 @@ const Rp2040UsbSupport = ({
       name="USB_CC1_GND_TO_INPUT_CAP"
       from=".R_CC1 > .pin2"
       to=".C_REG_IN > .pin2"
-      thickness="0.1mm"
+      thickness="0.15mm"
       pcbPath={[".R_CC1 > .pin2", ".C_REG_IN > .pin2"]}
     />
     <resistor
@@ -813,7 +814,7 @@ export const Rp2040PhotodiodeBiscuitBoardBase = ({
 } = {}) => (
   <BiscuitBoard
     {...props}
-    minTraceWidth={props.minTraceWidth ?? 0.1}
+    minTraceWidth={props.minTraceWidth ?? 0.15}
     nominalTraceWidth={props.nominalTraceWidth ?? 0.15}
     autorouterOptions={{
       gridClearance: 0.1,

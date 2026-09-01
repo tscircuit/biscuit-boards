@@ -12,6 +12,7 @@ test("builds the RP2040 USB flash board with programming buttons", async () => {
   await circuit.renderUntilSettled()
 
   const circuitJson = circuit.getCircuitJson()
+  const pcbBoard = circuitJson.find((element) => element.type === "pcb_board")
   const componentNames = new Set(
     circuitJson
       .filter((element) => element.type === "source_component")
@@ -69,6 +70,7 @@ test("builds the RP2040 USB flash board with programming buttons", async () => {
       .sort()
 
   expect(componentNames.has("J_USB")).toBe(true)
+  expect(pcbBoard?.type === "pcb_board" && pcbBoard.min_trace_width).toBe(0.15)
   expect(componentNames.has("U1")).toBe(true)
   expect(componentNames.has("U_FLASH")).toBe(true)
   expect(componentNames.has("R_BOOTSEL")).toBe(true)
