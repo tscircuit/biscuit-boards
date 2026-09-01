@@ -17,13 +17,9 @@ import {
 import { createLensDistortedLightBurnProject } from "../lib/lightburn-lens-distortion"
 
 const SOLDERPASTE_SCALE = 0.7
-const SOLDERPASTE_OFFSET_PERCENT = 0.3
 const TOP_PAD_LAYER_INDEX = 3
 const SOLDERPASTE_LAYER_INDEX = 17
 const SOLDERPASTE_LAYER_NAME = "Solderpaste Layer"
-const SOLDERPASTE_OFFSET_LAYER_NAME = "Solderpaste Layer - 30% Offset"
-
-type Point = { x: number; y: number }
 
 const scaleAround = (value: number, center: number) =>
   center + (value - center) * SOLDERPASTE_SCALE
@@ -80,116 +76,11 @@ const cloneScaledPadPath = (
     xform: [...source.xform],
   })
 
-const pointsAreEqual = (first: Point, second: Point) =>
-  Math.hypot(first.x - second.x, first.y - second.y) <= 1e-9
-
-const cross = (first: Point, second: Point) =>
-  first.x * second.y - first.y * second.x
-
-const getPathBounds = (path: ShapePath) => {
-  const xCoordinates = path.verts.map((vert) => vert.x)
-  const yCoordinates = path.verts.map((vert) => vert.y)
-  const minX = Math.min(...xCoordinates)
-  const maxX = Math.max(...xCoordinates)
-  const minY = Math.min(...yCoordinates)
-  const maxY = Math.max(...yCoordinates)
-  return { width: maxX - minX, height: maxY - minY }
-}
-
-const cloneInsetPadPath = (source: ShapePath) => {
-  const points = source.verts.map(({ x, y }) => ({ x, y }))
-  if (
-    points.length > 1 &&
-    pointsAreEqual(points[0], points[points.length - 1])
-  ) {
-    points.pop()
-  }
-  if (points.length < 3) {
-    throw new Error("Cannot offset a pad path with fewer than three vertices")
-  }
-
-  const signedArea = points.reduce((area, point, index) => {
-    const next = points[(index + 1) % points.length]
-    return area + point.x * next.y - next.x * point.y
-  }, 0)
-  if (Math.abs(signedArea) <= 1e-12) {
-    throw new Error("Cannot offset a zero-area pad path")
-  }
-
-  const bounds = getPathBounds(source)
-  const offsetDistance =
-    Math.min(bounds.width, bounds.height) * SOLDERPASTE_OFFSET_PERCENT
-  const orientation = Math.sign(signedArea)
-  const insetPoints = points.map((point, index) => {
-    const previous = points[(index - 1 + points.length) % points.length]
-    const next = points[(index + 1) % points.length]
-    const previousDirection = {
-      x: point.x - previous.x,
-      y: point.y - previous.y,
-    }
-    const nextDirection = {
-      x: next.x - point.x,
-      y: next.y - point.y,
-    }
-    const previousLength = Math.hypot(previousDirection.x, previousDirection.y)
-    const nextLength = Math.hypot(nextDirection.x, nextDirection.y)
-    if (previousLength <= 1e-12 || nextLength <= 1e-12) {
-      throw new Error("Cannot offset a pad path with duplicate vertices")
-    }
-
-    const previousNormal = {
-      x: (-orientation * previousDirection.y) / previousLength,
-      y: (orientation * previousDirection.x) / previousLength,
-    }
-    const nextNormal = {
-      x: (-orientation * nextDirection.y) / nextLength,
-      y: (orientation * nextDirection.x) / nextLength,
-    }
-    const previousOffsetPoint = {
-      x: point.x + previousNormal.x * offsetDistance,
-      y: point.y + previousNormal.y * offsetDistance,
-    }
-    const nextOffsetPoint = {
-      x: point.x + nextNormal.x * offsetDistance,
-      y: point.y + nextNormal.y * offsetDistance,
-    }
-    const determinant = cross(previousDirection, nextDirection)
-
-    if (Math.abs(determinant) <= 1e-12) {
-      return {
-        x: (previousOffsetPoint.x + nextOffsetPoint.x) / 2,
-        y: (previousOffsetPoint.y + nextOffsetPoint.y) / 2,
-      }
-    }
-
-    const betweenOffsetLines = {
-      x: nextOffsetPoint.x - previousOffsetPoint.x,
-      y: nextOffsetPoint.y - previousOffsetPoint.y,
-    }
-    const distanceAlongPrevious =
-      cross(betweenOffsetLines, nextDirection) / determinant
-    return {
-      x: previousOffsetPoint.x + previousDirection.x * distanceAlongPrevious,
-      y: previousOffsetPoint.y + previousDirection.y * distanceAlongPrevious,
-    }
-  })
-  const closedInsetPoints = [...insetPoints, { ...insetPoints[0] }]
-
-  return new ShapePath({
-    cutIndex: SOLDERPASTE_LAYER_INDEX,
-    verts: closedInsetPoints,
-    prims: closedInsetPoints.map(() => ({ type: 0 })),
-    isClosed: true,
-    locked: source.locked,
-    xform: [...source.xform],
-  })
-}
-
-const cloneSolderpasteCutSetting = (source: CutSetting, name: string) =>
+const cloneSolderpasteCutSetting = (source: CutSetting) =>
   new CutSetting({
     type: source.type,
     index: SOLDERPASTE_LAYER_INDEX,
-    name,
+    name: SOLDERPASTE_LAYER_NAME,
     priority: source.priority,
     minPower: source.minPower,
     maxPower: source.maxPower,
@@ -220,10 +111,6 @@ const addSolderpasteLayer = (
   project: LightBurnProject,
   circuitJson: CircuitJson,
   boardOrigin: { x: number; y: number },
-  options: {
-    layerName: string
-    createPadPath: (source: ShapePath, center: Point) => ShapePath
-  },
 ) => {
   const topPadCutSetting = project.children.find(
     (child): child is CutSetting =>
@@ -249,7 +136,7 @@ const addSolderpasteLayer = (
     pad.shape === "circle"
       ? []
       : [
-          options.createPadPath(
+          cloneScaledPadPath(
             topPadPaths[index],
             getPadCenter(pad, boardOrigin),
           ),
@@ -261,22 +148,10 @@ const addSolderpasteLayer = (
   project.children.splice(
     topPadCutSettingIndex + 1,
     0,
-    cloneSolderpasteCutSetting(topPadCutSetting, options.layerName),
+    cloneSolderpasteCutSetting(topPadCutSetting),
   )
   project.children.push(...solderpastePaths)
   return solderpastePaths.length
-}
-
-const removeSolderpasteLayer = (project: LightBurnProject) => {
-  project.children = project.children.filter(
-    (child) =>
-      !(
-        child instanceof CutSetting && child.index === SOLDERPASTE_LAYER_INDEX
-      ) &&
-      !(
-        child instanceof ShapePath && child.cutIndex === SOLDERPASTE_LAYER_INDEX
-      ),
-  )
 }
 
 const circuitFileArgument = Bun.argv[2]
@@ -358,26 +233,8 @@ const solderpasteShapeCount = addSolderpasteLayer(
   project,
   fabricationCircuitJson,
   boardOrigin,
-  {
-    layerName: SOLDERPASTE_LAYER_NAME,
-    createPadPath: cloneScaledPadPath,
-  },
 )
 const lensDistortionProject = createLensDistortedLightBurnProject(
-  project,
-  boardOrigin,
-)
-removeSolderpasteLayer(project)
-const offsetSolderpasteShapeCount = addSolderpasteLayer(
-  project,
-  fabricationCircuitJson,
-  boardOrigin,
-  {
-    layerName: SOLDERPASTE_OFFSET_LAYER_NAME,
-    createPadPath: cloneInsetPadPath,
-  },
-)
-const offsetLensDistortionProject = createLensDistortedLightBurnProject(
   project,
   boardOrigin,
 )
@@ -409,13 +266,6 @@ await Promise.all([
     lensDistortionProject.getString(),
   ),
   Bun.write(
-    resolve(
-      outputDirectory,
-      `${boardName}.lightburn-lensdistortion-solderpaste-30-percent-offset.lbrn2`,
-    ),
-    offsetLensDistortionProject.getString(),
-  ),
-  Bun.write(
     resolve(outputDirectory, `${boardName}.lightburn.svg`),
     baseProjectPreview,
   ),
@@ -439,7 +289,6 @@ await Promise.all([
           lightburnCircuitJson: `${boardName}.lightburn.circuit.json`,
           combinedLightburn: `${boardName}.lightburn.lbrn2`,
           lensDistortionLightburn: `${boardName}.lightburn-lensdistortion.lbrn2`,
-          solderpasteOffsetLightburn: `${boardName}.lightburn-lensdistortion-solderpaste-30-percent-offset.lbrn2`,
           preview: `${boardName}.lightburn.svg`,
           operations: layerFiles.map((file) => ({
             path: `layers/${file.fileName}`,
@@ -455,5 +304,5 @@ await Promise.all([
 ])
 
 console.log(
-  `Exported ${sourcePath} with ${layerFiles.length} LightBurn operation file(s), ${solderpasteShapeCount} scaled solderpaste shape(s), and ${offsetSolderpasteShapeCount} offset solderpaste shape(s) to ${outputDirectory}`,
+  `Exported ${sourcePath} with ${layerFiles.length} LightBurn operation file(s) and ${solderpasteShapeCount} scaled solderpaste shape(s) to ${outputDirectory}`,
 )
