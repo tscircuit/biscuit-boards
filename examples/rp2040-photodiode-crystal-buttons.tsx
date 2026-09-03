@@ -177,28 +177,28 @@ const B3FS_1000P = (props: PushButtonProps<typeof buttonPins>) => (
   />
 )
 
-// Local, deterministic rendering of KiCad's Package_TO_SOT_THT/TO-18-2:
-// 2.54 mm lead pitch, 0.7 mm drills, and the original 1.6 x 1.2 / 1.2 mm pads.
-const To18_2Footprint = () => (
+// Vishay BPW34: 2.54 mm lead pitch with drilled through-hole pads.
+const Bpw34Footprint = () => (
   <footprint insertionDirection="from_above">
-    <smtpad
+    <platedhole
       portHints={["pin1", "anode"]}
-      shape="rect"
-      width="1.2mm"
-      height="1.2mm"
+      shape="circular_hole_with_rect_pad"
+      holeDiameter="0.8mm"
+      rectPadWidth="1.6mm"
+      rectPadHeight="1.6mm"
       pcbX={0}
       pcbY={0}
     />
-    <smtpad
+    <platedhole
       portHints={["pin2", "cathode"]}
-      shape="rect"
-      width="1.2mm"
-      height="1.2mm"
+      shape="circle"
+      holeDiameter="0.8mm"
+      outerDiameter="1.6mm"
       pcbX={2.54}
       pcbY={0}
     />
-    <silkscreencircle pcbX={1.27} pcbY={0} radius="2.4mm" />
-    <courtyardcircle pcbX={1.27} pcbY={0} radius="2.55mm" />
+    <silkscreenrect pcbX={1.27} pcbY={0} width="5.4mm" height="4.3mm" />
+    <courtyardrect pcbX={1.27} pcbY={0} width="5.8mm" height="4.7mm" />
   </footprint>
 )
 
@@ -251,8 +251,8 @@ const Rp2040CrystalClock = () => (
       supplierPartNumbers={{ jlcpcb: ["C9002"] }}
       pinVariant="four_pin"
       footprint={<Crystal3225Footprint />}
-      pcbX={19.5}
-      pcbY={2}
+      pcbX={21.2}
+      pcbY={0.8}
       connections={{
         pin1: "net.XIN",
         pin2: "net.GND",
@@ -260,14 +260,22 @@ const Rp2040CrystalClock = () => (
         pin4: "net.GND",
       }}
     />
+    <resistor
+      name="R_XOUT"
+      schSectionName={schSections.clock}
+      resistance="1k"
+      footprint="0603"
+      pcbX={17.5}
+      pcbY={1.75}
+      connections={{ pin2: "net.XOUT" }}
+    />
     <capacitor
       name="C_XIN"
       schSectionName={schSections.clock}
       capacitance="18pF"
       footprint="0603"
-      pcbX={22.39208694455893}
-      pcbY={-1.3528782501030392}
-      pcbRotation={90}
+      pcbX={21}
+      pcbY={-2.3}
       connections={{ pin1: "net.XIN", pin2: "net.GND" }}
     />
     <capacitor
@@ -275,10 +283,15 @@ const Rp2040CrystalClock = () => (
       schSectionName={schSections.clock}
       capacitance="18pF"
       footprint="0603"
-      pcbX={16.76202007217947}
-      pcbY={7.152821859656601}
-      pcbRotation={270}
+      pcbX={25}
+      pcbY={1.65}
       connections={{ pin1: "net.XOUT", pin2: "net.GND" }}
+    />
+    <trace
+      name="CLOCK_XOUT_SERIES_IN"
+      from=".U1 > .XOUT"
+      to=".R_XOUT > .pin1"
+      maxLength="4mm"
     />
   </>
 )
@@ -322,18 +335,30 @@ const Rp2040UsbFlashSupport = () => (
       schSectionName={schSections.usbPower}
       resistance="27"
       footprint="0603"
-      pcbX={3.221677295959175}
-      pcbY={10.934772003275377}
-      connections={{ pin1: "net.USB_DM_CONN", pin2: "net.USB_DM_MCU" }}
+      pcbX={5.8}
+      pcbY={4.4}
+      connections={{ pin1: "net.USB_DM_CONN" }}
     />
     <resistor
       name="R_USB_DP"
       schSectionName={schSections.usbPower}
       resistance="27"
       footprint="0603"
-      pcbX={28}
-      pcbY={5.5}
-      connections={{ pin1: "net.USB_DP_CONN", pin2: "net.USB_DP_MCU" }}
+      pcbX={5.8}
+      pcbY={2.8}
+      connections={{ pin1: "net.USB_DP_CONN" }}
+    />
+    <trace
+      name="USB_DM_SERIES_TO_MCU"
+      from=".R_USB_DM > .pin2"
+      to=".U1 > .USB_DM"
+      maxLength="5mm"
+    />
+    <trace
+      name="USB_DP_SERIES_TO_MCU"
+      from=".R_USB_DP > .pin2"
+      to=".U1 > .USB_DP"
+      maxLength="5mm"
     />
 
     <chip
@@ -361,9 +386,19 @@ const Rp2040UsbFlashSupport = () => (
         GND: "net.GND",
         IO0: "net.QSPI_SD0",
         CLK: "net.QSPI_SCLK",
-        IO3: "net.QSPI_SD3",
-        VCC: "net.V3V3",
+        VCC: "net.V3V3_FLASH",
       }}
+    />
+    <trace
+      name="QSPI_SD3_TO_FLASH"
+      from=".U1 > .QSPI_SD3"
+      to=".U_FLASH > .IO3"
+      maxLength="14mm"
+      pcbRouteHints={[
+        { x: 6, y: 1.3 },
+        { x: 4, y: -1.5 },
+        { x: 0.5, y: -1.5 },
+      ]}
     />
     <capacitor
       name="C_FLASH"
@@ -373,7 +408,7 @@ const Rp2040UsbFlashSupport = () => (
       pcbX={1.7724082588547496}
       pcbY={-4.8}
       pcbRotation={90}
-      connections={{ pin1: "net.V3V3", pin2: "net.GND" }}
+      connections={{ pin1: "net.V3V3_FLASH", pin2: "net.GND" }}
     />
     <resistor
       name="R_POWER_LED"
@@ -382,7 +417,7 @@ const Rp2040UsbFlashSupport = () => (
       footprint="0603"
       pcbX={20.67729272879607}
       pcbY={15.462605756372557}
-      connections={{ pin1: "net.V3V3", pin2: "net.POWER_LED_A" }}
+      connections={{ pin1: "net.V3V3_STATUS", pin2: "net.POWER_LED_A" }}
     />
     <led
       name="D_POWER"
@@ -479,10 +514,10 @@ const PhotodiodeTransimpedanceAmplifier = () => (
       name="D_PHOTO"
       schSectionName={schSections.photodiode}
       photo
-      manufacturerPartNumber="Generic TO-18 photodiode"
-      footprint={<To18_2Footprint />}
-      pcbX={26.37600493542221}
-      pcbY={-18.446727608992035}
+      manufacturerPartNumber="BPW34"
+      footprint={<Bpw34Footprint />}
+      pcbX={27}
+      pcbY={-18}
       pcbRotation={90}
       connections={{ anode: "net.GND", cathode: "net.PD_SUM" }}
     />
@@ -490,16 +525,16 @@ const PhotodiodeTransimpedanceAmplifier = () => (
     <opamp
       name="U_TIA"
       schSectionName={schSections.photodiode}
-      manufacturerPartNumber="IC OPAMP GP 1 CIRCUIT SOT-23-5"
+      manufacturerPartNumber="OPA320AIDBVR"
       footprint="sot23_5"
-      pcbX={6.910875970132144}
-      pcbY={-15.168175721233348}
+      pcbX={19}
+      pcbY={-17}
       pcbRotation={90}
       connections={{
         inverting_input: "net.PD_SUM",
         non_inverting_input: "net.PD_BIAS",
         output: "net.PD_ADC",
-        positive_supply: "net.V3V3",
+        positive_supply: "net.V3V3_ANALOG",
         negative_supply: "net.GND",
       }}
     />
@@ -509,8 +544,8 @@ const PhotodiodeTransimpedanceAmplifier = () => (
       schSectionName={schSections.photodiode}
       resistance="100k"
       footprint="0603"
-      pcbX={14.285033835654147}
-      pcbY={-15.61022262903019}
+      pcbX={23}
+      pcbY={-17}
       connections={{ pin1: "net.PD_ADC", pin2: "net.PD_SUM" }}
     />
     <capacitor
@@ -518,8 +553,8 @@ const PhotodiodeTransimpedanceAmplifier = () => (
       schSectionName={schSections.photodiode}
       capacitance="15pF"
       footprint="0603"
-      pcbX={14.414210990841724}
-      pcbY={-22.55012586225068}
+      pcbX={23}
+      pcbY={-20}
       connections={{ pin1: "net.PD_ADC", pin2: "net.PD_SUM" }}
     />
 
@@ -528,18 +563,18 @@ const PhotodiodeTransimpedanceAmplifier = () => (
       schSectionName={schSections.photodiode}
       resistance="100k"
       footprint="0603"
-      pcbX={8.515108507753547}
-      pcbY={-10.940583980088094}
+      pcbX={11}
+      pcbY={-12.5}
       pcbRotation={90}
-      connections={{ pin1: "net.V3V3", pin2: "net.PD_BIAS" }}
+      connections={{ pin1: "net.V3V3_ANALOG", pin2: "net.PD_BIAS" }}
     />
     <resistor
       name="R_BIAS_BOTTOM"
       schSectionName={schSections.photodiode}
       resistance="100k"
       footprint="0603"
-      pcbX={11.019635671453589}
-      pcbY={-6.02970800995595}
+      pcbX={13.5}
+      pcbY={-12.5}
       pcbRotation={90}
       connections={{ pin1: "net.PD_BIAS", pin2: "net.GND" }}
     />
@@ -548,10 +583,19 @@ const PhotodiodeTransimpedanceAmplifier = () => (
       schSectionName={schSections.photodiode}
       capacitance="100nF"
       footprint="0603"
-      pcbX={14.861023283171463}
-      pcbY={-6.118832039823808}
+      pcbX={15.5}
+      pcbY={-13.5}
       pcbRotation={90}
       connections={{ pin1: "net.PD_BIAS", pin2: "net.GND" }}
+    />
+    <capacitor
+      name="C_TIA_SUPPLY"
+      schSectionName={schSections.photodiode}
+      capacitance="100nF"
+      footprint="0603"
+      pcbX={15}
+      pcbY={-17}
+      connections={{ pin1: "net.V3V3_ANALOG", pin2: "net.GND" }}
     />
 
     <silkscreentext
@@ -580,17 +624,19 @@ const Rp2040UsbSupport = ({
       pcbY={0}
       pcbRotation={270}
       noConnect={[
-        "SHIELD1",
-        "SHIELD2",
-        "SHIELD3",
-        "SHIELD4",
         "SBU1",
         "SBU2",
-        "GND_B",
-        "VBUS_B",
         ...(withCrystal ? [] : (["DP_A", "DP_B", "DN_A", "DN_B"] as const)),
       ]}
       connections={{
+        SHIELD1: "net.GND",
+        SHIELD2: "net.GND",
+        SHIELD3: "net.GND",
+        SHIELD4: "net.GND",
+        GND_A: "net.GND",
+        GND_B: "net.GND",
+        VBUS_A: "net.VBUS",
+        VBUS_B: "net.VBUS",
         CC1: "net.CC1",
         CC2: "net.CC2",
         ...(withCrystal
@@ -610,42 +656,7 @@ const Rp2040UsbSupport = ({
       footprint="0603"
       pcbX={-14.002452168183709}
       pcbY={18.66257971969382}
-      connections={{ pin1: "net.CC1" }}
-    />
-    <trace
-      name="USB_GND_BREAKOUT"
-      from=".R_USB_GND > .pin1"
-      to=".J_USB > .GND_A"
-      thickness="0.15mm"
-      pcbPathRelativeTo=".R_USB_GND > .pin1"
-      pcbPath={[{ x: -1.775, y: 0 }]}
-    />
-    <trace
-      name="USB_VBUS"
-      from=".J_USB > .VBUS_A"
-      to=".U_REG > .VIN"
-      pcbRouteHints={[
-        { x: -27.5, y: 1.5 },
-        { x: -20, y: 1.5 },
-        { x: -20, y: 8 },
-      ]}
-    />
-    <trace
-      name="USB_CC1_GND_TO_INPUT_CAP"
-      from=".R_CC1 > .pin2"
-      to=".C_REG_IN > .pin2"
-      thickness="0.15mm"
-      pcbPath={[".R_CC1 > .pin2", ".C_REG_IN > .pin2"]}
-    />
-    <resistor
-      name="R_USB_GND"
-      schSectionName={schSections.usbPower}
-      resistance="0"
-      footprint="0603"
-      pcbX={-28.7}
-      pcbY={5.8}
-      pcbRotation={90}
-      connections={{ pin2: "net.GND" }}
+      connections={{ pin1: "net.CC1", pin2: "net.GND" }}
     />
     <resistor
       name="R_CC2"
@@ -675,7 +686,7 @@ const Rp2040UsbSupport = ({
       connections={{
         VIN: "net.VBUS",
         GND: "net.GND",
-        VOUT: "net.V3V3",
+        VOUT: "net.V3V3_REG",
       }}
     />
     <trace
@@ -692,20 +703,79 @@ const Rp2040UsbSupport = ({
       schSectionName={schSections.usbPower}
       capacitance="1uF"
       footprint="0603"
-      pcbX={-6.995642292807567}
-      pcbY={18.865601697931403}
-      pcbRotation={180}
-      connections={{ pin1: "net.VBUS", pin2: "net.GND" }}
+      pcbX={-20.5}
+      pcbY={9.1}
     />
     <capacitor
       name="C_REG_OUT"
       schSectionName={schSections.usbPower}
       capacitance="10uF"
       footprint="0805"
-      pcbX={-5.434152799899344}
-      pcbY={-17.10474353531565}
+      pcbX={-29}
+      pcbY={9.1}
       pcbRotation={withProgrammingButtons ? 0 : 180}
-      connections={{ pin1: "net.V3V3", pin2: "net.GND" }}
+    />
+    <trace
+      name="REGULATOR_INPUT_DECOUPLING"
+      from=".C_REG_IN > .pin1"
+      to=".U_REG > .VIN"
+      maxLength="6mm"
+    />
+    <trace
+      name="REGULATOR_OUTPUT_DECOUPLING"
+      from=".C_REG_OUT > .pin1"
+      to=".U_REG > .VOUT"
+      maxLength="6mm"
+    />
+    <trace
+      name="REGULATOR_INPUT_CAP_GROUND"
+      from=".C_REG_IN > .pin2"
+      to="net.GND"
+      maxLength="6mm"
+    />
+    <trace
+      name="REGULATOR_OUTPUT_CAP_GROUND"
+      from=".C_REG_OUT > .pin2"
+      to="net.GND"
+      maxLength="6mm"
+    />
+    <resistor
+      name="R_3V3_REG_FEED"
+      schSectionName={schSections.usbPower}
+      resistance="0"
+      footprint="0603"
+      pcbX={2}
+      pcbY={15.5}
+      connections={{ pin1: "net.V3V3_REG", pin2: "net.V3V3_CORE" }}
+    />
+    {withCrystal && (
+      <resistor
+        name="R_3V3_FLASH_FEED"
+        schSectionName={schSections.mcu}
+        resistance="0"
+        footprint="0603"
+        pcbX={3}
+        pcbY={-8}
+        connections={{ pin1: "net.V3V3_CORE", pin2: "net.V3V3_FLASH" }}
+      />
+    )}
+    <resistor
+      name="R_3V3_STATUS_FEED"
+      schSectionName={schSections.mcu}
+      resistance="0"
+      footprint="0603"
+      pcbX={15}
+      pcbY={10}
+      connections={{ pin1: "net.V3V3_CORE", pin2: "net.V3V3_STATUS" }}
+    />
+    <resistor
+      name="R_3V3_ANALOG_FEED"
+      schSectionName={schSections.photodiode}
+      resistance="0"
+      footprint="0603"
+      pcbX={12}
+      pcbY={-8}
+      connections={{ pin1: "net.V3V3_CORE", pin2: "net.V3V3_ANALOG" }}
     />
     <Rp2040
       name="U1"
@@ -730,34 +800,31 @@ const Rp2040UsbSupport = ({
             ] as const)),
       ]}
       connections={{
-        IOVDD1: "net.V3V3",
-        IOVDD2: "net.V3V3",
-        IOVDD3: "net.V3V3",
-        IOVDD4: "net.V3V3",
-        IOVDD5: "net.V3V3",
-        IOVDD6: "net.V3V3",
+        IOVDD1: "net.V3V3_CORE",
+        IOVDD2: "net.V3V3_CORE",
+        IOVDD3: "net.V3V3_CORE",
+        IOVDD4: "net.V3V3_CORE",
+        IOVDD5: "net.V3V3_CORE",
+        IOVDD6: "net.V3V3_CORE",
         DVDD1: "net.V1V1",
         DVDD2: "net.V1V1",
-        VREG_IN: "net.V3V3",
+        VREG_IN: "net.V3V3_CORE",
         VREG_VOUT: "net.V1V1",
-        ADC_AVDD: "net.V3V3",
-        USB_VDD: "net.V3V3",
+        ADC_AVDD: "net.V3V3_CORE",
+        USB_VDD: "net.V3V3_CORE",
         TESTEN: "net.GND",
         GND: "net.GND",
         RUN: "net.RUN",
         GPIO26_ADC0: "net.PD_ADC",
         GPIO25: "net.USER_LED",
-        ...(withCrystal ? { XIN: "net.XIN", XOUT: "net.XOUT" } : undefined),
+        ...(withCrystal ? { XIN: "net.XIN" } : undefined),
         ...(withCrystal
           ? {
-              USB_DM: "net.USB_DM_MCU",
-              USB_DP: "net.USB_DP_MCU",
               QSPI_SS: "net.QSPI_SS",
               QSPI_SCLK: "net.QSPI_SCLK",
               QSPI_SD0: "net.QSPI_SD0",
               QSPI_SD1: "net.QSPI_SD1",
               QSPI_SD2: "net.QSPI_SD2",
-              QSPI_SD3: "net.QSPI_SD3",
             }
           : undefined),
       }}
@@ -771,26 +838,94 @@ const Rp2040UsbSupport = ({
       footprint="0603"
       pcbX={8}
       pcbY={11}
-      connections={{ pin1: "net.RUN", pin2: "net.V3V3" }}
+      connections={{ pin1: "net.RUN", pin2: "net.V3V3_STATUS" }}
     />
     <capacitor
       name="C_3V3_A"
       schSectionName={schSections.mcu}
       capacitance="100nF"
       footprint="0603"
-      pcbX={20.981957998290216}
-      pcbY={5.778986284818476}
-      connections={{ pin1: "net.V3V3", pin2: "net.GND" }}
+      pcbX={9}
+      pcbY={7.3}
+      connections={{ pin1: "net.V3V3_CORE", pin2: "net.GND" }}
+    />
+    <capacitor
+      name="C_VREG_IN"
+      schSectionName={schSections.mcu}
+      capacitance="1uF"
+      footprint="0603"
+      pcbX={3.5}
+      pcbY={5.8}
+      pcbRotation={90}
+    />
+    <capacitor
+      name="C_IOVDD_TOP"
+      schSectionName={schSections.mcu}
+      capacitance="100nF"
+      footprint="0603"
+      pcbX={12.5}
+      pcbY={7.5}
+      connections={{ pin1: "net.V3V3_CORE", pin2: "net.GND" }}
+    />
+    <capacitor
+      name="C_IOVDD_RIGHT"
+      schSectionName={schSections.mcu}
+      capacitance="100nF"
+      footprint="0603"
+      pcbX={18}
+      pcbY={6.7}
+      connections={{ pin1: "net.V3V3_CORE", pin2: "net.GND" }}
+    />
+    <capacitor
+      name="C_IOVDD_BOTTOM"
+      schSectionName={schSections.mcu}
+      capacitance="100nF"
+      footprint="0603"
+      pcbX={11.5}
+      pcbY={-3.4}
+      connections={{ pin1: "net.V3V3_CORE", pin2: "net.GND" }}
+    />
+    <capacitor
+      name="C_USB_IOVDD"
+      schSectionName={schSections.mcu}
+      capacitance="100nF"
+      footprint="0603"
+      pcbX={8}
+      pcbY={-3.5}
+      connections={{ pin1: "net.V3V3_CORE", pin2: "net.GND" }}
     />
     <capacitor
       name="C_V1V1"
       schSectionName={schSections.mcu}
       capacitance="1uF"
       footprint="0603"
-      pcbX={6}
-      pcbY={4.7}
-      pcbRotation={180}
-      connections={{ pin1: "net.V1V1", pin2: "net.GND" }}
+      pcbX={5.5}
+      pcbY={6.8}
+      pcbRotation={90}
+    />
+    <trace
+      name="VREG_INPUT_LOCAL_DECOUPLING"
+      from=".C_VREG_IN > .pin1"
+      to=".U1 > .VREG_IN"
+      maxLength="5mm"
+    />
+    <trace
+      name="VREG_OUTPUT_LOCAL_DECOUPLING"
+      from=".C_V1V1 > .pin1"
+      to=".U1 > .VREG_VOUT"
+      maxLength="5mm"
+    />
+    <trace
+      name="VREG_INPUT_CAP_GROUND"
+      from=".C_VREG_IN > .pin2"
+      to="net.GND"
+      maxLength="8mm"
+    />
+    <trace
+      name="VREG_OUTPUT_CAP_GROUND"
+      from=".C_V1V1 > .pin2"
+      to="net.GND"
+      maxLength="8mm"
     />
   </>
 )
@@ -821,9 +956,9 @@ export const Rp2040PhotodiodeBiscuitBoardBase = ({
       expandTraces: true,
       maxBlockersPerSearch: 1_024,
       maxRipsPerRoute: 1_000,
-      maxTotalRips: 10_000,
+      maxTotalRips: 30_000,
       maxSearchStates: 2_000_000,
-      routeOrder: "signal_longest_first",
+      routeOrder: "adaptive",
       ...props.autorouterOptions,
     }}
   >

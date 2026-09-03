@@ -13,37 +13,47 @@ test("builds the RP2040 USB flash board with programming buttons", async () => {
 
   const circuitJson = circuit.getCircuitJson()
   const pcbBoard = circuitJson.find((element) => element.type === "pcb_board")
+  const sourceComponents = circuitJson.filter(
+    (element) => element.type === "source_component",
+  )
   const componentNames = new Set(
-    circuitJson
-      .filter((element) => element.type === "source_component")
-      .map((component) => component.name),
+    sourceComponents.map((component) => component.name),
   )
   const traceNames = new Set(
     circuitJson
       .filter((element) => element.type === "source_trace")
       .map((trace) => trace.display_name),
   )
+  const explicitTraceNames = new Set(
+    circuitJson.flatMap((element) =>
+      element.type === "source_trace" && element.name ? [element.name] : [],
+    ),
+  )
   const allowedViaPositions = new Set(BISCUIT_BOARD_VIA_POSITIONS.map(pointKey))
   const vias = circuitJson.filter((element) => element.type === "pcb_via")
-  const usbGroundTraceId = circuitJson
-    .flatMap((element) =>
-      element.type === "source_trace" && element.name === "USB_GND_BREAKOUT"
-        ? [element.source_trace_id]
-        : [],
-    )
-    .at(0)
-  const usbGroundPcbTraceId = circuitJson
-    .flatMap((element) =>
-      element.type === "pcb_trace" &&
-      element.source_trace_id === usbGroundTraceId
-        ? [element.pcb_trace_id]
-        : [],
-    )
-    .at(0)
-  const usbGroundVias = vias.filter(
-    (via) => via.pcb_trace_id === usbGroundPcbTraceId,
-  )
   const assignableVias = vias.filter((via) => via.net_is_assignable === true)
+  const photodiode = sourceComponents.find(
+    (component) => component.name === "D_PHOTO",
+  )
+  const tia = sourceComponents.find((component) => component.name === "U_TIA")
+  const photodiodePcbComponentId = circuitJson
+    .flatMap((element) =>
+      element.type === "pcb_component" &&
+      element.source_component_id === photodiode?.source_component_id
+        ? [element.pcb_component_id]
+        : [],
+    )
+    .at(0)
+  const photodiodePlatedHoles = circuitJson.filter(
+    (element) =>
+      element.type === "pcb_plated_hole" &&
+      element.pcb_component_id === photodiodePcbComponentId,
+  )
+  const photodiodeSmtPads = circuitJson.filter(
+    (element) =>
+      element.type === "pcb_smtpad" &&
+      element.pcb_component_id === photodiodePcbComponentId,
+  )
   const bootselButton = circuitJson.find(
     (element) =>
       element.type === "source_component" && element.name === "SW_BOOTSEL",
@@ -78,6 +88,21 @@ test("builds the RP2040 USB flash board with programming buttons", async () => {
   expect(componentNames.has("SW_RESET")).toBe(true)
   expect(componentNames.has("D_POWER")).toBe(true)
   expect(componentNames.has("D_USER")).toBe(true)
+  expect(componentNames.has("R_XOUT")).toBe(true)
+  expect(componentNames.has("C_VREG_IN")).toBe(true)
+  expect(componentNames.has("C_IOVDD_TOP")).toBe(true)
+  expect(componentNames.has("C_IOVDD_RIGHT")).toBe(true)
+  expect(componentNames.has("C_IOVDD_BOTTOM")).toBe(true)
+  expect(componentNames.has("C_USB_IOVDD")).toBe(true)
+  expect(componentNames.has("C_TIA_SUPPLY")).toBe(true)
+  expect(componentNames.has("R_3V3_REG_FEED")).toBe(true)
+  expect(componentNames.has("R_3V3_FLASH_FEED")).toBe(true)
+  expect(componentNames.has("R_3V3_STATUS_FEED")).toBe(true)
+  expect(componentNames.has("R_3V3_ANALOG_FEED")).toBe(true)
+  expect(photodiode?.manufacturer_part_number).toBe("BPW34")
+  expect(tia?.manufacturer_part_number).toBe("OPA320AIDBVR")
+  expect(photodiodePlatedHoles).toHaveLength(2)
+  expect(photodiodeSmtPads).toHaveLength(0)
   expect(internallyConnectedPinPairs).toEqual(["1-3", "2-4"])
 
   expect(traceNames.has(".R_BOOTSEL > .pin1 to net.QSPI_SS")).toBe(true)
@@ -86,8 +111,18 @@ test("builds the RP2040 USB flash board with programming buttons", async () => {
   expect(traceNames.has(".SW_BOOTSEL > .B_ALT to net.GND")).toBe(true)
   expect(traceNames.has(".SW_RESET > .A to net.RUN")).toBe(true)
   expect(traceNames.has(".SW_RESET > .B_ALT to net.GND")).toBe(true)
+  expect(traceNames.has(".J_USB > .VBUS_A to net.VBUS")).toBe(true)
+  expect(traceNames.has(".J_USB > .VBUS_B to net.VBUS")).toBe(true)
+  expect(traceNames.has(".J_USB > .GND_A to net.GND")).toBe(true)
+  expect(traceNames.has(".J_USB > .GND_B to net.GND")).toBe(true)
+  for (const shield of ["SHIELD1", "SHIELD2", "SHIELD3", "SHIELD4"]) {
+    expect(traceNames.has(`.J_USB > .${shield} to net.GND`)).toBe(true)
+  }
+  expect(explicitTraceNames.has("CLOCK_XOUT_SERIES_IN")).toBe(true)
+  expect(traceNames.has(".U1 > .XIN to net.XIN")).toBe(true)
+  expect(traceNames.has(".Y1 > .pin1 to net.XIN")).toBe(true)
+  expect(traceNames.has(".R_XOUT > .pin2 to net.XOUT")).toBe(true)
 
-  expect(usbGroundVias).toHaveLength(0)
   expect(assignableVias).toHaveLength(BISCUIT_BOARD_VIA_POSITIONS.length)
   expect(
     assignableVias.every(
