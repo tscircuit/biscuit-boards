@@ -9,6 +9,7 @@ import {
   BISCUIT_BOARD_V2_HEIGHT,
   BISCUIT_BOARD_V2_MOUNTING_HOLE_DIAMETER,
   BISCUIT_BOARD_V2_MOUNTING_HOLE_POSITIONS,
+  BISCUIT_BOARD_V2_VIA_ANNULAR_RING_WIDTH,
   BISCUIT_BOARD_V2_VIA_HOLE_DIAMETER,
   BISCUIT_BOARD_V2_VIA_PAD_DIAMETER,
   BISCUIT_BOARD_V2_VIA_POSITIONS,
@@ -67,6 +68,11 @@ test("renders BiscuitBoard V2 without changing the original board", async () => 
         via.outer_diameter === BISCUIT_BOARD_V2_VIA_PAD_DIAMETER,
     ),
   ).toBe(true)
+  expect(
+    (BISCUIT_BOARD_V2_VIA_PAD_DIAMETER -
+      BISCUIT_BOARD_V2_VIA_HOLE_DIAMETER) /
+      2,
+  ).toBe(BISCUIT_BOARD_V2_VIA_ANNULAR_RING_WIDTH)
   expect(errorsAndWarnings).toEqual([])
 })
 
