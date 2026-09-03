@@ -1,26 +1,4 @@
 {
   "mainEntrypoint": "index.tsx",
-  "includeBoardFiles": [
-    "examples/biscuit-board-usb-led.tsx",
-    "examples/clad-panel.tsx",
-    "examples/four-board-clad-panel.tsx",
-    "examples/xiao-pair-clad-panel.tsx",
-    "examples/arduino-shield-clad.tsx",
-    "examples/stm32c071-display-arduino-shield.tsx",
-    "examples/boosterpack-clad.tsx",
-    "examples/breadboard-clad.tsx",
-    "examples/breadboard-clad-0.8mm-vias.tsx",
-    "examples/clad-32x32.tsx",
-    "examples/clad-40x40.tsx",
-    "examples/xiao-clad-with-pin-headers.tsx",
-    "examples/feather-clad-with-pin-headers.tsx",
-    "examples/xiao-clad-with-perforated-pin-headers.tsx",
-    "examples/xiao-stm32-usb.tsx",
-    "examples/stm32c071.tsx",
-    "examples/stm32c071-display-boosterpack.tsx",
-    "examples/rp2040.tsx",
-    "examples/stm32-stepper-biscuit-board.tsx",
-    "examples/rp2040-photodiode-crystal-buttons.tsx"
-  ],
   "siteDefaultComponentPath": "examples/stm32c071.tsx"
 }

@@ -16,6 +16,22 @@ const schSections = {
   photodiode: "photodiode",
 } as const
 
+export interface Rp2040PhotodiodePlacementOverrides {
+  [componentName: string]: { x: number; y: number } | undefined
+}
+
+const placementX = (
+  placements: Rp2040PhotodiodePlacementOverrides | undefined,
+  componentName: string,
+  fallback: number,
+) => placements?.[componentName]?.x ?? fallback
+
+const placementY = (
+  placements: Rp2040PhotodiodePlacementOverrides | undefined,
+  componentName: string,
+  fallback: number,
+) => placements?.[componentName]?.y ?? fallback
+
 const rp2040Pins = {
   pin1: ["IOVDD6"],
   pin2: ["GPIO0"],
@@ -240,7 +256,11 @@ const Crystal3225Footprint = () => (
   </footprint>
 )
 
-const Rp2040CrystalClock = () => (
+const Rp2040CrystalClock = ({
+  placements,
+}: {
+  placements?: Rp2040PhotodiodePlacementOverrides
+} = {}) => (
   <>
     <crystal
       name="Y1"
@@ -251,8 +271,8 @@ const Rp2040CrystalClock = () => (
       supplierPartNumbers={{ jlcpcb: ["C9002"] }}
       pinVariant="four_pin"
       footprint={<Crystal3225Footprint />}
-      pcbX={19.5}
-      pcbY={2}
+      pcbX={placementX(placements, "Y1", 19.5)}
+      pcbY={placementY(placements, "Y1", 2)}
       connections={{
         pin1: "net.XIN",
         pin2: "net.GND",
@@ -265,8 +285,8 @@ const Rp2040CrystalClock = () => (
       schSectionName={schSections.clock}
       capacitance="18pF"
       footprint="0603"
-      pcbX={22.39208694455893}
-      pcbY={-1.3528782501030392}
+      pcbX={placementX(placements, "C_XIN", 22.39208694455893)}
+      pcbY={placementY(placements, "C_XIN", -1.3528782501030392)}
       pcbRotation={90}
       connections={{ pin1: "net.XIN", pin2: "net.GND" }}
     />
@@ -275,8 +295,8 @@ const Rp2040CrystalClock = () => (
       schSectionName={schSections.clock}
       capacitance="18pF"
       footprint="0603"
-      pcbX={16.76202007217947}
-      pcbY={7.152821859656601}
+      pcbX={placementX(placements, "C_XOUT", 16.76202007217947)}
+      pcbY={placementY(placements, "C_XOUT", 7.152821859656601)}
       pcbRotation={270}
       connections={{ pin1: "net.XOUT", pin2: "net.GND" }}
     />
@@ -315,15 +335,21 @@ const W25q16UsOn8Footprint = () => {
   )
 }
 
-const Rp2040UsbFlashSupport = () => (
+const Rp2040UsbFlashSupport = ({
+  userLedXOffset = 0,
+  placements,
+}: {
+  userLedXOffset?: number
+  placements?: Rp2040PhotodiodePlacementOverrides
+} = {}) => (
   <>
     <resistor
       name="R_USB_DM"
       schSectionName={schSections.usbPower}
       resistance="27"
       footprint="0603"
-      pcbX={3.221677295959175}
-      pcbY={10.934772003275377}
+      pcbX={placementX(placements, "R_USB_DM", 3.221677295959175)}
+      pcbY={placementY(placements, "R_USB_DM", 10.934772003275377)}
       connections={{ pin1: "net.USB_DM_CONN", pin2: "net.USB_DM_MCU" }}
     />
     <resistor
@@ -331,8 +357,8 @@ const Rp2040UsbFlashSupport = () => (
       schSectionName={schSections.usbPower}
       resistance="27"
       footprint="0603"
-      pcbX={28}
-      pcbY={5.5}
+      pcbX={placementX(placements, "R_USB_DP", 28)}
+      pcbY={placementY(placements, "R_USB_DP", 5.5)}
       connections={{ pin1: "net.USB_DP_CONN", pin2: "net.USB_DP_MCU" }}
     />
 
@@ -351,8 +377,8 @@ const Rp2040UsbFlashSupport = () => (
       }}
       manufacturerPartNumber="W25Q16JVUXIQ"
       footprint={<W25q16UsOn8Footprint />}
-      pcbX={2.039780348458317}
-      pcbY={0.15}
+      pcbX={placementX(placements, "U_FLASH", 2.039780348458317)}
+      pcbY={placementY(placements, "U_FLASH", 0.15)}
       pcbRotation={180}
       connections={{
         CS: "net.QSPI_SS",
@@ -370,8 +396,8 @@ const Rp2040UsbFlashSupport = () => (
       schSectionName={schSections.flash}
       capacitance="100nF"
       footprint="0603"
-      pcbX={1.7724082588547496}
-      pcbY={-4.8}
+      pcbX={placementX(placements, "C_FLASH", 1.7724082588547496)}
+      pcbY={placementY(placements, "C_FLASH", -4.8)}
       pcbRotation={90}
       connections={{ pin1: "net.V3V3", pin2: "net.GND" }}
     />
@@ -399,7 +425,7 @@ const Rp2040UsbFlashSupport = () => (
       schSectionName={schSections.status}
       resistance="1k"
       footprint="0603"
-      pcbX={6.373903260227841}
+      pcbX={6.373903260227841 + userLedXOffset}
       pcbY={24.414823963280423}
       connections={{ pin1: "net.USER_LED", pin2: "net.USER_LED_A" }}
     />
@@ -409,7 +435,7 @@ const Rp2040UsbFlashSupport = () => (
       color="blue"
       footprint="0603"
       manufacturerPartNumber="GENERIC-0603-BLUE-LED"
-      pcbX={6.308924492916013}
+      pcbX={6.308924492916013 + userLedXOffset}
       pcbY={21.684614343444117}
       connections={{ anode: "net.USER_LED_A", cathode: "net.GND" }}
     />
@@ -430,7 +456,11 @@ const Rp2040UsbFlashSupport = () => (
   </>
 )
 
-const Rp2040ProgrammingButtons = () => (
+const Rp2040ProgrammingButtons = ({
+  placements,
+}: {
+  placements?: Rp2040PhotodiodePlacementOverrides
+} = {}) => (
   <>
     <resistor
       name="R_BOOTSEL"
@@ -445,15 +475,15 @@ const Rp2040ProgrammingButtons = () => (
     <B3FS_1000P
       name="SW_BOOTSEL"
       schSectionName={schSections.controls}
-      pcbX={21.5}
-      pcbY={-9.326788109515467}
+      pcbX={placementX(placements, "SW_BOOTSEL", 21.5)}
+      pcbY={placementY(placements, "SW_BOOTSEL", -9.326788109515467)}
       connections={{ A: "net.BOOTSEL", B_ALT: "net.GND" }}
     />
     <B3FS_1000P
       name="SW_RESET"
       schSectionName={schSections.controls}
-      pcbX={-4.811672514377253}
-      pcbY={12.284453124000493}
+      pcbX={placementX(placements, "SW_RESET", -4.811672514377253)}
+      pcbY={placementY(placements, "SW_RESET", 12.284453124000493)}
       connections={{ A: "net.RUN", B_ALT: "net.GND" }}
     />
     <silkscreentext
@@ -473,7 +503,13 @@ const Rp2040ProgrammingButtons = () => (
   </>
 )
 
-const PhotodiodeTransimpedanceAmplifier = () => (
+const PhotodiodeTransimpedanceAmplifier = ({
+  photoPcbX = 26.37600493542221,
+  placements,
+}: {
+  photoPcbX?: number
+  placements?: Rp2040PhotodiodePlacementOverrides
+} = {}) => (
   <>
     <diode
       name="D_PHOTO"
@@ -481,8 +517,8 @@ const PhotodiodeTransimpedanceAmplifier = () => (
       photo
       manufacturerPartNumber="Generic TO-18 photodiode"
       footprint={<To18_2Footprint />}
-      pcbX={26.37600493542221}
-      pcbY={-18.446727608992035}
+      pcbX={placementX(placements, "D_PHOTO", photoPcbX)}
+      pcbY={placementY(placements, "D_PHOTO", -18.446727608992035)}
       pcbRotation={90}
       connections={{ anode: "net.GND", cathode: "net.PD_SUM" }}
     />
@@ -492,8 +528,8 @@ const PhotodiodeTransimpedanceAmplifier = () => (
       schSectionName={schSections.photodiode}
       manufacturerPartNumber="IC OPAMP GP 1 CIRCUIT SOT-23-5"
       footprint="sot23_5"
-      pcbX={6.910875970132144}
-      pcbY={-15.168175721233348}
+      pcbX={placementX(placements, "U_TIA", 6.910875970132144)}
+      pcbY={placementY(placements, "U_TIA", -15.168175721233348)}
       pcbRotation={90}
       connections={{
         inverting_input: "net.PD_SUM",
@@ -567,9 +603,13 @@ const PhotodiodeTransimpedanceAmplifier = () => (
 const Rp2040UsbSupport = ({
   withCrystal = false,
   withProgrammingButtons = false,
+  userLedXOffset = 0,
+  placements,
 }: {
   withCrystal?: boolean
   withProgrammingButtons?: boolean
+  userLedXOffset?: number
+  placements?: Rp2040PhotodiodePlacementOverrides
 }) => (
   <>
     {/* The crystal variant also connects USB data for ROM BOOTSEL flashing. */}
@@ -608,8 +648,8 @@ const Rp2040UsbSupport = ({
       schSectionName={schSections.usbPower}
       resistance="5.1k"
       footprint="0603"
-      pcbX={-14.002452168183709}
-      pcbY={18.66257971969382}
+      pcbX={placementX(placements, "R_CC1", -14.002452168183709)}
+      pcbY={placementY(placements, "R_CC1", 18.66257971969382)}
       connections={{ pin1: "net.CC1" }}
     />
     <trace
@@ -641,8 +681,8 @@ const Rp2040UsbSupport = ({
       schSectionName={schSections.usbPower}
       resistance="0"
       footprint="0603"
-      pcbX={-28.7}
-      pcbY={5.8}
+      pcbX={placementX(placements, "R_USB_GND", -28.7)}
+      pcbY={placementY(placements, "R_USB_GND", 5.8)}
       pcbRotation={90}
       connections={{ pin2: "net.GND" }}
     />
@@ -691,8 +731,8 @@ const Rp2040UsbSupport = ({
       schSectionName={schSections.usbPower}
       capacitance="1uF"
       footprint="0603"
-      pcbX={-6.995642292807567}
-      pcbY={18.865601697931403}
+      pcbX={placementX(placements, "C_REG_IN", -6.995642292807567)}
+      pcbY={placementY(placements, "C_REG_IN", 18.865601697931403)}
       pcbRotation={180}
       connections={{ pin1: "net.VBUS", pin2: "net.GND" }}
     />
@@ -709,8 +749,8 @@ const Rp2040UsbSupport = ({
     <Rp2040
       name="U1"
       schSectionName={schSections.mcu}
-      pcbX={11.718003908900288}
-      pcbY={1.9530006514833822}
+      pcbX={placementX(placements, "U1", 11.718003908900288)}
+      pcbY={placementY(placements, "U1", 1.9530006514833822)}
       pcbRotation={90}
       noConnect={[
         ...(withCrystal ? [] : (["XIN", "XOUT"] as const)),
@@ -761,8 +801,13 @@ const Rp2040UsbSupport = ({
           : undefined),
       }}
     />
-    {withCrystal && <Rp2040CrystalClock />}
-    {withCrystal && <Rp2040UsbFlashSupport />}
+    {withCrystal && <Rp2040CrystalClock placements={placements} />}
+    {withCrystal && (
+      <Rp2040UsbFlashSupport
+        userLedXOffset={userLedXOffset}
+        placements={placements}
+      />
+    )}
     <resistor
       name="R_RUN"
       schSectionName={schSections.controls}
@@ -786,8 +831,8 @@ const Rp2040UsbSupport = ({
       schSectionName={schSections.mcu}
       capacitance="1uF"
       footprint="0603"
-      pcbX={6}
-      pcbY={4.7}
+      pcbX={placementX(placements, "C_V1V1", 6)}
+      pcbY={placementY(placements, "C_V1V1", 4.7)}
       pcbRotation={180}
       connections={{ pin1: "net.V1V1", pin2: "net.GND" }}
     />
@@ -802,6 +847,50 @@ export type Rp2040PhotodiodeBiscuitBoardProps = Pick<
   | "nominalTraceWidth"
   | "routingDisabled"
 >
+
+export const Rp2040PhotodiodeCircuit = ({
+  withCrystal = false,
+  withProgrammingButtons = false,
+  photoPcbX,
+  userLedXOffset,
+  placements,
+}: {
+  withCrystal?: boolean
+  withProgrammingButtons?: boolean
+  photoPcbX?: number
+  userLedXOffset?: number
+  placements?: Rp2040PhotodiodePlacementOverrides
+} = {}) => (
+  <>
+    <schematicsection name={schSections.usbPower} displayName="USB + Power" />
+    <schematicsection name={schSections.mcu} displayName="RP2040 Core" />
+    <schematicsection name={schSections.clock} displayName="12 MHz Clock" />
+    <schematicsection name={schSections.flash} displayName="QSPI Flash" />
+    <schematicsection name={schSections.status} displayName="Status LEDs" />
+    <schematicsection
+      name={schSections.controls}
+      displayName="Programming Controls"
+    />
+    <schematicsection
+      name={schSections.photodiode}
+      displayName="Photodiode TIA"
+    />
+
+    <Rp2040UsbSupport
+      withCrystal={withCrystal}
+      withProgrammingButtons={withProgrammingButtons}
+      userLedXOffset={userLedXOffset}
+      placements={placements}
+    />
+    {withCrystal && withProgrammingButtons && (
+      <Rp2040ProgrammingButtons placements={placements} />
+    )}
+    <PhotodiodeTransimpedanceAmplifier
+      photoPcbX={photoPcbX}
+      placements={placements}
+    />
+  </>
+)
 
 export const Rp2040PhotodiodeBiscuitBoardBase = ({
   withCrystal = false,
@@ -826,26 +915,10 @@ export const Rp2040PhotodiodeBiscuitBoardBase = ({
       ...props.autorouterOptions,
     }}
   >
-    <schematicsection name={schSections.usbPower} displayName="USB + Power" />
-    <schematicsection name={schSections.mcu} displayName="RP2040 Core" />
-    <schematicsection name={schSections.clock} displayName="12 MHz Clock" />
-    <schematicsection name={schSections.flash} displayName="QSPI Flash" />
-    <schematicsection name={schSections.status} displayName="Status LEDs" />
-    <schematicsection
-      name={schSections.controls}
-      displayName="Programming Controls"
-    />
-    <schematicsection
-      name={schSections.photodiode}
-      displayName="Photodiode TIA"
-    />
-
-    <Rp2040UsbSupport
+    <Rp2040PhotodiodeCircuit
       withCrystal={withCrystal}
       withProgrammingButtons={withProgrammingButtons}
     />
-    {withCrystal && withProgrammingButtons && <Rp2040ProgrammingButtons />}
-    <PhotodiodeTransimpedanceAmplifier />
   </BiscuitBoard>
 )
 
