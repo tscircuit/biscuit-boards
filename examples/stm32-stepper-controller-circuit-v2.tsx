@@ -63,6 +63,10 @@ const PREFABRICATED_VIA_ROUTE_HINTS = {
     { x: 0, y: -26.2, via: true, to_layer: "bottom" as const },
     { x: -5, y: -26.2, via: true, to_layer: "top" as const },
   ],
+  v3v3: [
+    { x: 26.1, y: -21.2, via: true, to_layer: "bottom" as const },
+    { x: 5, y: -23.7, via: true, to_layer: "top" as const },
+  ],
 } as const
 
 const V3V3_POINT_TO_POINT_TARGETS: Record<string, string> = {
@@ -126,9 +130,11 @@ const adaptControllerChild = (child: ReactNode): ReactNode => {
 
   if (child.props.name === "DRIVER_5VOUT") {
     return cloneElement(child, {
-      pcbPath: [
-        { x: 5.35, y: 1.25 },
-        { x: 5.35, y: fiveV.y - driver.y },
+      pcbPathRelativeTo: undefined,
+      pcbPath: undefined,
+      pcbRouteHints: [
+        { x: driver.x + 5.35, y: driver.y + 1.25 },
+        { x: driver.x + 5.35, y: fiveV.y },
       ],
     })
   }
@@ -179,11 +185,7 @@ const adaptControllerChild = (child: ReactNode): ReactNode => {
     return cloneElement(child, {
       to: ".U_REG > .OUT",
       maxLength: 50,
-      pcbRouteHints: [
-        { x: 19.8496653112997, y: -17 },
-        { x: 23, y: -17 },
-        { x: 23, y: -10.05 },
-      ],
+      pcbRouteHints: [...PREFABRICATED_VIA_ROUTE_HINTS.v3v3],
     })
   }
 

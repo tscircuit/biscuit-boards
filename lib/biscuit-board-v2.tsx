@@ -185,6 +185,7 @@ export interface BiscuitBoardV2Props {
   autorouter?: AutorouterProp
   autorouterOptions?: BiscuitBoardAutorouterOptions
   minTraceWidth?: number
+  minTraceToPadEdgeClearance?: number
   nominalTraceWidth?: number
   reservedAutorouterObstacles?: SimpleRouteJson["obstacles"]
   autorouterEdgeClearance?: number
@@ -197,6 +198,7 @@ export const BiscuitBoardV2 = ({
   autorouter,
   autorouterOptions,
   minTraceWidth,
+  minTraceToPadEdgeClearance,
   nominalTraceWidth = 0.3,
   reservedAutorouterObstacles,
   autorouterEdgeClearance,
@@ -210,6 +212,11 @@ export const BiscuitBoardV2 = ({
     borderRadius="2mm"
     layers={2}
     minTraceWidth={`${minTraceWidth ?? 0.15}mm`}
+    minTraceToPadEdgeClearance={
+      minTraceToPadEdgeClearance === undefined
+        ? undefined
+        : `${minTraceToPadEdgeClearance}mm`
+    }
     minBoardEdgeClearance={`${BISCUIT_BOARD_V2_EDGE_CLEARANCE - BISCUIT_BOARD_V2_EDGE_CLEARANCE_VALIDATION_TOLERANCE}mm`}
     minViaHoleDiameter={`${BISCUIT_BOARD_V2_VIA_HOLE_DIAMETER}mm`}
     minViaPadDiameter={`${BISCUIT_BOARD_V2_VIA_PAD_DIAMETER}mm`}
