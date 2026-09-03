@@ -5,19 +5,39 @@ import {
   type ReactElement,
   type ReactNode,
 } from "react"
-import manualEdits from "../manual-edits.json"
 import { Stm32StepperControllerCircuit } from "./stm32-stepper-controller-circuit"
 
-const placementCenter = (selector: string) => {
-  const placement = manualEdits.pcb_placements.find(
-    (candidate) => candidate.selector === selector,
-  )
-  if (!placement) throw new Error(`Missing manual placement for ${selector}`)
-  return placement.center
-}
+export const STM32_STEPPER_V2_COMPONENT_POSITIONS = {
+  U_REG: { x: 12, y: -11 },
+  U_MCU: { x: 0.07390575447752923, y: -0.0732804798867619 },
+  C_MCU: { x: -4.5, y: -5 },
+  J_SWD: { x: 15.849665311299699, y: -22.501329360584194 },
+  J_MOTOR: { x: 33.5528833811294, y: 1.1846847201103152 },
+  C_5VOUT: { x: 23.18609955472588, y: 0.248611313238193 },
+  U_DRIVER: { x: 15.90246227931054, y: -0.2089600471488957 },
+  R_VCC: { x: 25.315869005838094, y: 4.047667978628961 },
+  R_SENSE_B: { x: 20.181181829631604, y: -8.379033608290456 },
+  C_CP: { x: 22, y: 8.2 },
+  C_VCC: { x: 25.275734451291293, y: 8.53500341434159 },
+  C_VCP: { x: 17.799635720801433, y: 6.933647288098026 },
+  C_VSA: { x: 11.201349275267265, y: 6.88944435482054 },
+  C_VIO: { x: -1.5, y: -5 },
+  C_REG_OUT: { x: 3, y: -8 },
+  C_REG_IN: { x: -19.044208260027165, y: 4.109262740425663 },
+  D_PWR: { x: -9, y: 6 },
+  R_PWR_LED: { x: -6, y: 6 },
+  C_VM_BULK: { x: 5.09759697460208, y: 15.415331482986516 },
+  C_VM: { x: 10.118912406454285, y: 15.542739472034405 },
+  J_PWR: { x: -14.448853395069655, y: 22.073335950715514 },
+  R_SENSE_A: { x: 11.418168466690886, y: 10.458746702625106 },
+} as const satisfies Record<string, { x: number; y: number }>
+
+const placementCenter = (
+  selector: keyof typeof STM32_STEPPER_V2_COMPONENT_POSITIONS,
+) => STM32_STEPPER_V2_COMPONENT_POSITIONS[selector]
 
 const placementCenters = new Map(
-  manualEdits.pcb_placements.map(({ selector, center }) => [selector, center]),
+  Object.entries(STM32_STEPPER_V2_COMPONENT_POSITIONS),
 )
 
 const jPower = placementCenter("J_PWR")

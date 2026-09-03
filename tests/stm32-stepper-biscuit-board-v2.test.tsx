@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { Circuit } from "@tscircuit/core"
 import { Stm32StepperBiscuitBoardV2 } from "../examples/stm32-stepper-biscuit-board-v2"
-import manualEdits from "../manual-edits.json"
+import { STM32_STEPPER_V2_COMPONENT_POSITIONS } from "../examples/stm32-stepper-controller-circuit-v2"
 import {
   BISCUIT_BOARD_V2_VIA_POSITIONS,
   BISCUIT_BOARD_V2_WIDTH,
@@ -49,10 +49,12 @@ test("places the existing STM32 stepper controller on BiscuitBoard V2", async ()
     ),
   )
 
-  for (const { selector, center } of manualEdits.pcb_placements) {
-    expect(pcbComponentsByName.get(selector)).toMatchObject({
-      display_offset_x: center.x,
-      display_offset_y: center.y,
+  for (const [name, position] of Object.entries(
+    STM32_STEPPER_V2_COMPONENT_POSITIONS,
+  )) {
+    expect(pcbComponentsByName.get(name)).toMatchObject({
+      display_offset_x: position.x,
+      display_offset_y: position.y,
     })
   }
 
