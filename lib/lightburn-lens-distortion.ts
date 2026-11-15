@@ -3,8 +3,10 @@ import {
   type Mat,
   type Prim,
   ShapeBase,
+  ShapeEllipse,
   ShapeGroup,
   ShapePath,
+  ShapeRect,
   type Vert,
 } from "lbrnts"
 import {
@@ -309,6 +311,97 @@ const tessellateAndDistortPath = (
   }
 }
 
+const CUBIC_BEZIER_K = 0.5522847498
+
+const closedPrimitivePath = (
+  shape: ShapeBase,
+  verts: Vert[],
+  prims: Prim[],
+): ShapePath =>
+  new ShapePath({
+    verts,
+    prims,
+    isClosed: true,
+    cutIndex: shape.cutIndex,
+    locked: shape.locked,
+    xform: [...shape.xform],
+  })
+
+const rectToPath = (shape: ShapeRect): ShapePath => {
+  const width = shape.w ?? 0
+  const height = shape.h ?? 0
+  const cornerRadius = Math.min(shape.cr ?? 0, width / 2, height / 2)
+
+  if (cornerRadius <= 0) {
+    const verts: Vert[] = [
+      { x: 0, y: 0 },
+      { x: width, y: 0 },
+      { x: width, y: height },
+      { x: 0, y: height },
+    ]
+    return closedPrimitivePath(
+      shape,
+      verts,
+      verts.map(() => ({ type: 0 })),
+    )
+  }
+
+  const k = cornerRadius * CUBIC_BEZIER_K
+  const verts: Vert[] = [
+    { x: cornerRadius, y: 0, c1x: cornerRadius - k, c1y: 0 },
+    {
+      x: width - cornerRadius,
+      y: 0,
+      c0x: width - cornerRadius + k,
+      c0y: 0,
+    },
+    { x: width, y: cornerRadius, c1x: width, c1y: cornerRadius - k },
+    {
+      x: width,
+      y: height - cornerRadius,
+      c0x: width,
+      c0y: height - cornerRadius + k,
+    },
+    {
+      x: width - cornerRadius,
+      y: height,
+      c1x: width - cornerRadius + k,
+      c1y: height,
+    },
+    { x: cornerRadius, y: height, c0x: cornerRadius - k, c0y: height },
+    { x: 0, y: height - cornerRadius, c1x: 0, c1y: height - cornerRadius + k },
+    { x: 0, y: cornerRadius, c0x: 0, c0y: cornerRadius - k },
+  ]
+  const prims: Prim[] = verts.map((_, index) => ({
+    type: index % 2 === 0 ? 0 : 1,
+  }))
+  return closedPrimitivePath(shape, verts, prims)
+}
+
+const ellipseToPath = (shape: ShapeEllipse): ShapePath => {
+  const rx = shape.rx ?? 0
+  const ry = shape.ry ?? 0
+  const kx = rx * CUBIC_BEZIER_K
+  const ky = ry * CUBIC_BEZIER_K
+  const verts: Vert[] = [
+    { x: rx, y: 0, c0x: rx, c0y: ky, c1x: rx, c1y: -ky },
+    { x: 0, y: ry, c0x: -kx, c0y: ry, c1x: kx, c1y: ry },
+    { x: -rx, y: 0, c0x: -rx, c0y: -ky, c1x: -rx, c1y: ky },
+    { x: 0, y: -ry, c0x: kx, c0y: -ry, c1x: -kx, c1y: -ry },
+  ]
+  return closedPrimitivePath(
+    shape,
+    verts,
+    verts.map(() => ({ type: 1 })),
+  )
+}
+
+const primitiveShapeToPath = (shape: ShapeBase): ShapePath | null => {
+  if (shape instanceof ShapeRect) return rectToPath(shape)
+  if (shape instanceof ShapeEllipse) return ellipseToPath(shape)
+  return null
+}
+
 const distortShape = (
   shape: ShapeBase,
   parentMatrix: Mat,
@@ -366,6 +459,9 @@ const cloneShape = (shape: ShapeBase): ShapeBase => {
     )
     return cloned
   }
+
+  const asPath = primitiveShapeToPath(shape)
+  if (asPath) return asPath
 
   throw new Error(`Unsupported LightBurn shape for cloning: ${shape.token}`)
 }
